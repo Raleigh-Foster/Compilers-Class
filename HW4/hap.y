@@ -132,7 +132,7 @@ Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {I
 
 
 data E a = Ok a | Failed String
-
+                deriving Show
 thenE :: E a -> (a -> E b) -> E b
 m `thenE` k = case m of Ok a -> k a
 	                Failed e -> Failed e
@@ -232,10 +232,10 @@ getTokens s = case runAlex s gather of
                    Right x -> (map fst x)
 
 
-programPrint :: Program -> IO ()
+programPrint :: E Program -> IO ()
 programPrint p = print p
 
-{-getProgram :: IO Program-}
+getProgram :: IO ( E Program)
 getProgram = do
              s <- getContents
              pure (calc $ getTokens s)
@@ -363,8 +363,10 @@ generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FF
 
 
 
-addBuiltIns :: Program -> Program
-addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
+addBuiltIns :: Maybe Program -> Program
+addBuiltIns (Just (Program classDefs statements)) = undefined {-Program (classDefs ++ [generateObject]) statements-}
+addBuiltIns _ = undefined
+
 
 {- I am assuming for now that the user did not add in anything called "Object", etc.
 That is not a reasonable assumption, but this is due soon.
@@ -462,9 +464,9 @@ okClassBody (ClassBody statements methods) = (concat $ map okStatement statement
 okClassDef :: ClassDef -> [String]
 okClassDef (ClassDef _ classBody) = okClassBody classBody
 
-okProgram :: Program -> [String]
-okProgram (Program classDefs statements) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
-
+okProgram :: Maybe Program -> [String]
+okProgram (Just (Program classDefs statements)) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
+okProgram Nothing = undefined
 
 
 
@@ -519,12 +521,17 @@ toPrintErroneousConstructorCalls :: [String] -> Either String String
 toPrintErroneousConstructorCalls [] = Left ""
 toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I claim!:\n\n" ++ show x)
 
+
+hate :: E Program -> Maybe Program
+hate (Ok program) = Just program
+hate _ = Nothing
+
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
 main = do
        x <- getProgram
-       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)-}
-       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
-       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate x)-}
+       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate x)
+       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram $ hate x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate  x) )
        {-programPrint (addBuiltIns x)-}
        pure ()
 }
