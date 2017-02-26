@@ -161,20 +161,17 @@ catchE m k = case m of Ok a -> Ok a
 
 
 
-
-
-
-
-
-
-
 {-I'm currently throwing away typing information in my AST.-}
 
 
 {-parseError :: [Token] -> a-}
 {-parseError _ = error "Parse error"-}
 
+
+
+
 parseError tokens = failE "Parse error"
+
 
 data Program = Program [ClassDef] [Statement]
              deriving Show
@@ -232,7 +229,7 @@ getTokens s = case runAlex s gather of
                    Right x -> (map fst x)
 
 
-programPrint :: E Program -> IO ()
+programPrint :: Program -> IO ()
 programPrint p = print p
 
 getProgram :: IO ( E Program)
@@ -363,9 +360,8 @@ generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FF
 
 
 
-addBuiltIns :: E Program -> Program
-addBuiltIns (Ok (Program classDefs statements)) = Program (classDefs ++ [generateObject]) statements
-addBuiltIns _ = undefined
+addBuiltIns :: Program -> Program
+addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
 
 
 {- I am assuming for now that the user did not add in anything called "Object", etc.
@@ -464,9 +460,8 @@ okClassBody (ClassBody statements methods) = (concat $ map okStatement statement
 okClassDef :: ClassDef -> [String]
 okClassDef (ClassDef _ classBody) = okClassBody classBody
 
-okProgram :: Maybe Program -> [String]
-okProgram (Just (Program classDefs statements)) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
-okProgram Nothing = undefined
+okProgram :: Program -> [String]
+okProgram (Program classDefs statements) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
 
 
 
@@ -522,18 +517,38 @@ toPrintErroneousConstructorCalls [] = Left ""
 toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I claim!:\n\n" ++ show x)
 
 
-hate :: E Program -> Maybe Program
-hate (Ok program) = Just program
-hate _ = Nothing
 
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
+
+dealWith :: E Program -> IO ()
+dealWith (Ok x) = do
+ _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+ {-programPrint (addBuiltIns x)-}
+ pure ()
+
+dealWith (Failed s) = print s
+
 main = do
        x <- getProgram
+       dealWith x
+       
+       
+       
+       {-
+       
+       
+       
+       
        {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)-}
        _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
-       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram $ hate x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
        {-programPrint (addBuiltIns x)-}
        pure ()
+-}
+
+
 }
 
 
