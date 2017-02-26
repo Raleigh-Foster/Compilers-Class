@@ -363,8 +363,8 @@ generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FF
 
 
 
-addBuiltIns :: Maybe Program -> Program
-addBuiltIns (Just (Program classDefs statements)) = undefined {-Program (classDefs ++ [generateObject]) statements-}
+addBuiltIns :: E Program -> Program
+addBuiltIns (Ok (Program classDefs statements)) = Program (classDefs ++ [generateObject]) statements
 addBuiltIns _ = undefined
 
 
@@ -529,9 +529,9 @@ hate _ = Nothing
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
 main = do
        x <- getProgram
-       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate x)-}
-       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate x)
-       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram $ hate x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns $ hate  x) )
+       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)-}
+       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram $ hate x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
        {-programPrint (addBuiltIns x)-}
        pure ()
 }
