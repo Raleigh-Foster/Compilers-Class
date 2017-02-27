@@ -572,6 +572,25 @@ checkCompatibleSubtype :: HashMap
 
 
 
+
+
+{-
+
+
+Because we are making all fields public, there should be a datatype which is the actual type (included inherited stuff) of each class.
+
+This would include fields and their types, and methods.
+
+
+Note that children cannot override the type of fields declared in superclasses. (because it would have to both be a subtype and a supertype)
+
+
+-}
+
+
+
+
+
 typecheck' :: (Program, HashMap.Map String String) -> HashMap.Map String (Maybe String, ClassDef) -> (Program, [(String,String)])
 typecheck' programWithTypeMap classHierarchy = undefined
 
