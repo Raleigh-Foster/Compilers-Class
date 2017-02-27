@@ -500,14 +500,24 @@ getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (se
 
 
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
-getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++ 
+getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
+   [("Nothing", (Just "Object", generateNothing )),
+     ("Int",(Just "Object", generateInt)),
+       ("String", (Just "Object", generateString )),
+         ("Boolean", (Just "Object", generateBoolean )),
+           ("Object", (Nothing, generateObject))
+             ]
+              
+
+
+{-
  [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
  ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
  ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
  ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
  ("Object", (Nothing, ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [] )))
  ]
-
+-}
 
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
