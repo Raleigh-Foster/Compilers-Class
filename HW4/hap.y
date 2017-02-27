@@ -478,8 +478,25 @@ getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
+
+
+
+{-ARG!!! I HAVE TO ADD BUILTINS FOR NOTHING, ETC!!!-}
+
+
+{-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
+
+
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
-getHierarchy (Program classDefs _) = map getSelfParentDef classDefs
+getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
+ [("Nothing", (Just "Object", undefined)), ("Int",(Just "Object", undefined)), ("String", (Just "Object", undefined)), ("Boolean", (Just "Object", undefined))]
+
+
+
+
+
+
+
 
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
@@ -544,6 +561,31 @@ isSupertype supertype subtype map = isSubtype subtype supertype map
 
 
 
+data MethodType = MethodType String [String] String {-name, argument types, return type-}
+
+data ClassType = ClassType String [(String, String)] [MethodType] {- class name fields (name,type), Methods -}
+
+data RawClassType = RawClassType String [MethodType]
+
+
+{-This ignores statements-}
+
+data TypedProgram = TypedProgram [ClassType]
+
+
+
+
+
+generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
+generateRawMethodTypesSingleClass _ = undefined                                  
+{-This doesn't care about constructors or the contents of methods. IT ALSO DOES NOT VALIDATE METHODS. IT ALSO DOES NOT PUT IN INHERITED STUFF-}
+generateRawMethodTypes :: Program -> [(String, [MethodType])]
+generateRawMethodTypes (Program [] _) = []
+generateRawMethodTypes (Program (classDef:classDefs) statements) = (generateRawMethodTypesSingleClass classDef) : (generateRawMethodTypes (Program classDefs statements))
+
+
+
+
 
 
 {-
@@ -563,12 +605,12 @@ Because of subtyping, I will need to make sure that subclass methods have compat
 
 
 {-Given the methods and their type signatures, and the class hierarchy, generate the full signature of each class. If there is a type error, return the error -}
-generateFullSignature :: ClassDef ->  -> HashMap.Map String (Maybe String, ClassDef) -> 
-
+{-generateFullSignature :: ClassDef ->  -> HashMap.Map String (Maybe String, ClassDef) -> 
+-}
 
 {-Given full signatures for each class, and a call to a method, -}
-checkCompatibleSubtype :: HashMap 
-
+{-checkCompatibleSubtype :: HashMap 
+-}
 
 
 
@@ -600,6 +642,9 @@ typecheck' programWithTypeMap classHierarchy = undefined
 
 typecheck :: Program -> Either Program String
 typecheck _ = undefined
+
+
+
 
 
 {-
