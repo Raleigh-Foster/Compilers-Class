@@ -625,8 +625,44 @@ collectMaybe :: [Maybe a] -> [a]
 collectMaybe arg = concat $ (map listMaybe arg)
 
 
+
+
+
+
+{-
+
+This is where I need to be working with maps from String to Method Type.
+
+Oh, and I also need to be making sure that there are no duplicates, but redefinitions of what appears in a parent is okay.
+
+IGNORING THIS FOR NOW.
+
+
+-}
+
+{-
+data MethodType = MethodType String [String] String {-name, argument types, return type-}
+-}
+
+
+generateMethodMap :: [MethodType] -> HashMap.Map String MethodType
+generateMethodMap [] = HashMap.empty
+generateMethodMap ((MethodType name argTypes returnType):xs) = HashMap.insert name (MethodType name argTypes returnType) (generateMethodMap xs)
+
+getMethodName :: MethodType -> String
+getMethodName (MethodType name _ _ ) = name
+
+
 checkClassMethodsCompatibleWithOneAncestor :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [MethodType] -> [String]
-checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods = collectMaybe $ zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods 
+checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
+ let parentMethodMap = generateMethodMap parentMethods in
+ let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> Nothing
+                                                                         Just parentMethod -> checkClassSingleMethodCompatibleWithParent myMap x parentMethod) in
+ collectMaybe $ map f childMethods
+
+
+{- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
+
 
 
 checkClassMethodsCompatibleWithAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [[MethodType]] -> [String]
@@ -679,16 +715,35 @@ methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap i
 
 
 
-okWithParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
-okWithParent myMap name = undefined {- checkClassMethodsCompatibleWithParent (undefined) (undefined) myMap -}
-
-
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
 generateRawMethodTypesSingleClass (ClassDef (ClassSignature className classArguments classParent) (ClassBody statements methods)) = (className, map generateRawMethodSubtypeSingleMethod methods)                                 
 {-This doesn't care about constructors or the contents of methods. IT ALSO DOES NOT VALIDATE METHODS. IT ALSO DOES NOT PUT IN INHERITED STUFF-}
 generateRawMethodTypes :: Program -> [(String, [MethodType])]
 generateRawMethodTypes (Program [] _) = []
 generateRawMethodTypes (Program (classDef:classDefs) statements) = (generateRawMethodTypesSingleClass classDef) : (generateRawMethodTypes (Program classDefs statements))
+
+
+
+{-This generates the actual method types for a single class, given the base methods in the class and the parents.
+  It assumes that everything typechecks.
+
+  Assuming this, all that needs to happen is to iteratively traverse the ancestors to the root, adding methods as they do not exist.
+
+-}
+
+{-THIS ASSUMES THAT THE LIST OF ANCESTORS INCLUDES THE CURRENT CLASS!!!-}
+
+
+
+
+{-REALLY INEFFICIENT!!-}
+fuse :: [MethodType] -> [MethodType] -> [MethodType]
+fuse x [] = x
+fuse x (y:ys) = if exists (getMethodName y) (map getMethodName x) then fuse x ys else fuse (y:x) ys
+
+generateCompleteMethodTypes :: [[MethodType]] -> [MethodType]
+generateCompleteMethodTypes [] = []
+generateCompleteMethodTypes (currentClassMethodList:rest) = let x = generateCompleteMethodTypes rest in fuse currentClassMethodList x
 
 
 {-
