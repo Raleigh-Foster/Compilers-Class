@@ -487,19 +487,22 @@ getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (se
 {-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
 
 
+
+
+
+{-HAVE TO BUILD ALL OF THE FFI CALLS HERE INTO A CLASS DEF THAT I MAKE.... -}
+
+
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
 getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
  [("Nothing", (Just "Object", undefined)), ("Int",(Just "Object", undefined)), ("String", (Just "Object", undefined)), ("Boolean", (Just "Object", undefined))]
 
 
 
-
-
-
-
-
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
+
+
 
 {-Now I have to distinguish between Nothing (not found) and Just Nothing (Object) -}
 
@@ -576,13 +579,42 @@ data TypedProgram = TypedProgram [ClassType]
 
 
 
+
+{-WHERE DO WE CARE ABOUT CLASS SIGNATURE IN TERMS OF TYPING!?!?!?!?-}
+
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
-generateRawMethodTypesSingleClass _ = undefined                                  
+generateRawMethodTypesSingleClass (ClassDef classSignature classBody) = undefined                                  
 {-This doesn't care about constructors or the contents of methods. IT ALSO DOES NOT VALIDATE METHODS. IT ALSO DOES NOT PUT IN INHERITED STUFF-}
 generateRawMethodTypes :: Program -> [(String, [MethodType])]
 generateRawMethodTypes (Program [] _) = []
 generateRawMethodTypes (Program (classDef:classDefs) statements) = (generateRawMethodTypesSingleClass classDef) : (generateRawMethodTypes (Program classDefs statements))
 
+
+{-
+
+
+
+ data Method = TypedMethod String [(String,String)] String [Statement]
+              | InferredMethod String [(String,String)] [Statement]
+                           | FFIMethod String [(String, String)] String
+                                        deriving Show
+                                         {- Formal arguments have to supply a type? -}
+                                          
+                                           
+                                            {-
+                                             data FormalArgs = FormalArgs [(String, String)]
+                                                              deriving Show
+                                                               -}
+                                                                
+                                                                 data ClassBody = ClassBody [Statement] [Method]
+                                                                                 deriving Show
+                                                                                  data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
+                                                                                                       deriving Show
+                                                                                                        data ClassDef = ClassDef ClassSignature ClassBody
+                                                                                                                       deriving Show
+
+
+-}
 
 
 
