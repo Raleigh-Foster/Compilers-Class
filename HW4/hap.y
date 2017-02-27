@@ -476,9 +476,13 @@ getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (se
 
 
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
-getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
- [("Nothing", (Just "Object", undefined)), ("Int",(Just "Object", undefined)), ("String", (Just "Object", undefined)), ("Boolean", (Just "Object", undefined))]
+getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++ 
+ [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
+ ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
+ ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
+ ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])))]
 
+{-Do I need to include object here?-}
 
 
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
@@ -653,7 +657,8 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 {-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
-
+                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
+                                                                 Nothing -> error name
 
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
@@ -768,28 +773,12 @@ Note that children cannot override the type of fields declared in superclasses. 
 
 
 
-typecheck' :: (Program, HashMap.Map String String) -> HashMap.Map String (Maybe String, ClassDef) -> (Program, [(String,String)])
-typecheck' programWithTypeMap classHierarchy = undefined
-
-
-{- Just checks to make sure everything is defined-}
-
-
-typecheck :: Program -> Either Program String
-typecheck _ = undefined
-
-
-
-
-
 {-
 
 I am going to assume that there is no shadowing of anything anywhere.
 
 
 -}
-
-
 
 
 
