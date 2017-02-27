@@ -93,10 +93,10 @@ Elif : elif RExpr lbracket Statements rbracket { ($2,$4)}
 RExpr : number {RExprIntLiteral $1}
       | string {RExprStringLiteral $1}
       | LExpr {RExprFromLExpr $1}
-      | RExpr sum RExpr {RExprPlus $1 $3}
-      | RExpr difference RExpr {RExprMinus $1 $3}
-      | RExpr product RExpr {RExprTimes $1 $3}
-      | RExpr quotient RExpr {RExprDivide $1 $3}
+      | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3]}
+      | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3]}
+      | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
+      | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
       | lparen RExpr rparen {$2}
       | RExpr eq RExpr {RExprEquality $1 $3}
       | RExpr leq RExpr {RExprLeq $1 $3}
@@ -207,10 +207,6 @@ data LExpr = LExprId String
 data RExpr = RExprStringLiteral String
            | RExprIntLiteral String
            | RExprFromLExpr LExpr
-           | RExprPlus RExpr RExpr
-           | RExprMinus RExpr RExpr
-           | RExprTimes RExpr RExpr
-           | RExprDivide RExpr RExpr
            | RExprEquality RExpr RExpr
            | RExprLeq RExpr RExpr
            | RExprLt RExpr RExpr
@@ -419,10 +415,6 @@ okRExpr :: RExpr -> [String]
 okRExpr (RExprStringLiteral _ ) = []
 okRExpr (RExprIntLiteral _ )= []
 okRExpr (RExprFromLExpr lexpr) = okLExpr lexpr
-okRExpr (RExprPlus rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprMinus rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprTimes rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprDivide rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprEquality rexpr1 rexpr2) =(okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprLeq rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprLt rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
@@ -525,8 +517,8 @@ dealWith (Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
- {-programPrint (addBuiltIns x)-}
- pure ()
+ programPrint (addBuiltIns x)
+ {-pure ()-}
 
 dealWith (Failed s) = print s
 
@@ -534,19 +526,56 @@ main = do
        x <- getProgram
        dealWith x
        
-       
-       
-       {-
-       
-       
-       
-       
-       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)-}
-       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
-       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
-       {-programPrint (addBuiltIns x)-}
-       pure ()
+
+
+isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
+isSubtype subtype supertype map = undefined
+
+isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
+isSupertype supertype subtype map = isSubtype subtype supertype map
+
+
+typecheck' :: (Program, HashMap.Map String String) -> HashMap.Map String (Maybe String, ClassDef) -> (Program, [(String,String)])
+typecheck' programWithTypeMap classHierarchy = undefined
+
+
+typecheck :: Program -> Either Program String
+typecheck _ = undefined
+
+
+{-
+
+I am going to assume that there is no shadowing of anything anywhere.
+
+
 -}
+
+
+
+
+
+ {-
+
+Potential use of a uninitialized variable on any program execution path
+Potential type error.  The type of the test in an 'if', 'elif', or 'while' must be a subtype of Boolean.  Most other type errors will typically show up either as an actual argument type that is not a subtype of the corresponding actual argument, an actual argument list that is too long or short, or a method not found in a class.  The last is particularly likely when the type of the receiver object is not correct, e.g., when the static type of variable x is "above" the class that has the
+desired method. 
+
+Potential call of undefined method
+
+Illegal redefinition of a name that is in scope (e.g., creating a variable x where a variable x is already in scope)
+
+Method returns wrong type  (includes ending without returning)
+
+Incompatible overridden method  (should have same number of arguments, each formal argument a supertype of overridden method, return type a subtype of returned type of overridden method)
+
+-}
+
+
+
+
+
+
+
 
 
 }
