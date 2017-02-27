@@ -282,6 +282,10 @@ getAncestry name hierarchy = case get name hierarchy of Nothing -> [name] {-ERRO
                                                         Just Nothing -> [name]
                                                         Just (Just parentName) -> name : (getAncestry parentName hierarchy)
 
+
+getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]
+getAncestry' name myMap = getAncestry name (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
+
 getUsefulAncestry :: String -> [(String, Maybe String)] -> [String]
 getUsefulAncestry className hierarchy = reverse $ getAncestry className hierarchy
 
@@ -603,6 +607,7 @@ allTrue (False:_) = False
 
 checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
 checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
+ if not ((length parentArgumentType) == (length argumentType)) then Just $ "Method " ++ methodName ++ " has different number of arguments to method in parent" else 
  if isSubtype returnType parentReturnType myMap then (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in if allTrue b then Nothing
  else Just $ "Method " ++ methodName ++ " argument types violate contravariance when compared to parent method")
  else Just $ "Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType
