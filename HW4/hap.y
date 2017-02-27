@@ -638,9 +638,11 @@ generateRawMethodSubtypeSingleMethod (FFIMethod methodName methodArguments retur
 
 {-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
 getMethodTypeListParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
-getMethodTypeListParent myMap childName = case HashMap.lookup childName myMap of Just (Just parentName, parentClassDef) -> let (_, methods) = generateRawMethodTypesSingleClass parentClassDef in methods
+getMethodTypeListParent myMap childName = case HashMap.lookup childName myMap of Just (Just parentName, childClassDef) -> case HashMap.lookup parentName myMap of Just (_, parentClassDef) -> let (_, methods) = generateRawMethodTypesSingleClass parentClassDef in methods
 
 
+okWithParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
+okWithParent myMap name = checkClassMethodsCompatibleWithParent (undefined) (undefined) myMap
 
 
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
