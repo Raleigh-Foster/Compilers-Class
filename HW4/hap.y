@@ -520,6 +520,7 @@ dealWith (Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+ _ <- print $ allMethodsWorkForProgram x
  programPrint (addBuiltIns x)
  {-pure ()-}
 
@@ -550,11 +551,11 @@ isSupertype' myMap a b = isSupertype a b myMap
 
 
 data MethodType = MethodType String [String] String {-name, argument types, return type-}
-
+                deriving Show
 data ClassType = ClassType String [(String, String)] [MethodType] {- class name fields (name,type), Methods -}
-
+               deriving Show
 data RawClassType = RawClassType String [MethodType]
-
+                  deriving Show
 
 {-This ignores statements-}
 
@@ -665,11 +666,27 @@ methodsWorkForAllAncestorsAllClasses myMap names = concat $ map (methodsWorkForA
 
 
 
+getAncestry'' :: HashMap.Map String (Maybe String, ClassDef) -> String -> (String, [String])
+getAncestry'' a b = (b, (getAncestry' b a))
 
+
+convertS :: HashMap.Map String (Maybe String, ClassDef) -> (String, [String]) -> (String, [[MethodType]])
+convertS myMap (s, ss) = (s, map (getMethodTypeList myMap) ss)
 
 {-YAY!!!!-}
-allMethodsWorkForProgram :: Program -> [String]
-allMethodsWorkForProgram program = let myMap = buildHierarchyMap program in let k = HashMap.keys myMap in methodsWorkForAllAncestorsAllClasses myMap k                   
+allMethodsWorkForProgram :: Program -> Either [(String, [MethodType])] [String]
+allMethodsWorkForProgram program =
+ let myMap = buildHierarchyMap program in
+ let k = HashMap.keys myMap in
+ let ancestries = map (getAncestry'' myMap) k in
+ let methodLists = map (convertS myMap) ancestries in
+ let y = map generateCompleteMethodTypesAndName methodLists in
+ let x = methodsWorkForAllAncestorsAllClasses myMap k in
+ case x of [] -> Right x
+           _ -> Left y                   
+
+
+{-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
 
 
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
@@ -701,6 +718,9 @@ fuse x (y:ys) = if exists (getMethodName y) (map getMethodName x) then fuse x ys
 generateCompleteMethodTypes :: [[MethodType]] -> [MethodType]
 generateCompleteMethodTypes [] = []
 generateCompleteMethodTypes (currentClassMethodList:rest) = let x = generateCompleteMethodTypes rest in fuse currentClassMethodList x
+
+generateCompleteMethodTypesAndName :: (String, [[MethodType]]) -> (String, [MethodType])
+generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)                        
 
 
 {-
