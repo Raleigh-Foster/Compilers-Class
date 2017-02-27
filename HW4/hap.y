@@ -508,6 +508,7 @@ buildHierarchyMap program = HashMap.fromList $ getHierarchy program
 
 
 
+
 {-Now I have to distinguish between Nothing (not found) and Just Nothing (Object) -}
 
 {-Am I also factoring in the fact that I should at some point know that
@@ -624,10 +625,12 @@ collectMaybe :: [Maybe a] -> [a]
 collectMaybe arg = concat $ (map listMaybe arg)
 
 
-checkClassMethodsCompatibleWithParent :: [MethodType] -> [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> [String]
-checkClassMethodsCompatibleWithParent childMethods parentMethods myMap = collectMaybe $ zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods 
+checkClassMethodsCompatibleWithOneAncestor :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [MethodType] -> [String]
+checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods = collectMaybe $ zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods 
 
 
+checkClassMethodsCompatibleWithAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [[MethodType]] -> [String]
+checkClassMethodsCompatibleWithAllAncestors myMap childMethods ancestorsMethods = concat $ map (checkClassMethodsCompatibleWithOneAncestor myMap childMethods) ancestorsMethods
 
 
 generateRawMethodSubtypeSingleMethod :: Method -> MethodType
@@ -640,14 +643,33 @@ generateRawMethodSubtypeSingleMethod (FFIMethod methodName methodArguments retur
 
 
 {-UH OH..... CHILDREN CAN ALSO INHERIT FROM THEIR GRANDPARENTS, ETC!!-}
+{-
+What I need to do now, is to create a function which from the ancestry will build the actual type of a class, by adding both fields and methods as it makes its way up the hierarchy.
+
+I AM NOT HANDLING FIELDS YET, ONLY METHODS.
+
+-}
+
+
+
+
+
+
 
 {-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
-getMethodTypeListParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
-getMethodTypeListParent myMap childName = case HashMap.lookup childName myMap of Just (Just parentName, childClassDef) -> case HashMap.lookup parentName myMap of Just (_, parentClassDef) -> let (_, methods) = generateRawMethodTypesSingleClass parentClassDef in methods
+getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
+getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
+
+
+
+{-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
+methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
+methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap in let methodTypes = map (getMethodTypeList myMap) ancestry in checkClassMethodsCompatibleWithAllAncestors myMap (getMethodTypeList myMap name) methodTypes
+
 
 
 okWithParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
-okWithParent myMap name = checkClassMethodsCompatibleWithParent (undefined) (undefined) myMap
+okWithParent myMap name = undefined {- checkClassMethodsCompatibleWithParent (undefined) (undefined) myMap -}
 
 
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
