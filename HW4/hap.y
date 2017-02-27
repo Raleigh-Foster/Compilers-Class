@@ -459,34 +459,12 @@ okClassDef (ClassDef _ classBody) = okClassBody classBody
 okProgram :: Program -> [String]
 okProgram (Program classDefs statements) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 {-Some repeated information. I will likely reorganize later when I know what I'm doing.....-}
 getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
-
-
-
 {-ARG!!! I HAVE TO ADD BUILTINS FOR NOTHING, ETC!!!-}
-
 
 {-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
 
@@ -583,13 +561,7 @@ data RawClassType = RawClassType String [MethodType]
 data TypedProgram = TypedProgram [ClassType]
 
 
-
-
-
-
 {-WHERE DO WE CARE ABOUT CLASS SIGNATURE IN TERMS OF TYPING!?!?!?!? DO WE CARE ABOUT THE FORMAL ARGUMENTS TO A CLASS??? HOW DO THESE HAVE TO TYPECHECK????-}
-
-
 
 {-I allow the user to override a method and change its argument names-}
 
@@ -599,13 +571,7 @@ allTrue [] = True
 allTrue (True:xs) = allTrue xs
 allTrue (False:_) = False
 
-
-
 {-I don't say which argument in particular violates contravariance yet-}
-
-{-I NEED A SEPARATE CHECK TO MAKE SURE THAT THE ARGUMENT LISTS ARE THE SAME LENGTH-}
-
-
 checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
 checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
  if not ((length parentArgumentType) == (length argumentType)) then Just $ "Method " ++ methodName ++ " has different number of arguments to method in parent" else 
@@ -675,30 +641,10 @@ generateRawMethodSubtypeSingleMethod (InferredMethod methodName methodArguments 
 generateRawMethodSubtypeSingleMethod (FFIMethod methodName methodArguments returnType) = MethodType methodName (map snd methodArguments) returnType
 
 
-
-
-
-{-UH OH..... CHILDREN CAN ALSO INHERIT FROM THEIR GRANDPARENTS, ETC!!-}
 {-
-What I need to do now, is to create a function which from the ancestry will build the actual type of a class, by adding both fields and methods as it makes its way up the hierarchy.
-
 I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
-
-
-
-
-
-
-
-Instead of having a list of method types, it might be better for me to create a map. 
-
 -}
-
-
-
-
-
 
 
 
@@ -713,6 +659,17 @@ getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, c
 methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
 methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap in let methodTypes = map (getMethodTypeList myMap) ancestry in checkClassMethodsCompatibleWithAllAncestors myMap (getMethodTypeList myMap name) methodTypes
 
+
+methodsWorkForAllAncestorsAllClasses :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [String]
+methodsWorkForAllAncestorsAllClasses myMap names = concat $ map (methodsWorkForAllAncestors myMap) names
+
+
+
+
+
+{-YAY!!!!-}
+allMethodsWorkForProgram :: Program -> [String]
+allMethodsWorkForProgram program = let myMap = buildHierarchyMap program in let k = HashMap.keys myMap in methodsWorkForAllAncestorsAllClasses myMap k                   
 
 
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
@@ -744,36 +701,6 @@ fuse x (y:ys) = if exists (getMethodName y) (map getMethodName x) then fuse x ys
 generateCompleteMethodTypes :: [[MethodType]] -> [MethodType]
 generateCompleteMethodTypes [] = []
 generateCompleteMethodTypes (currentClassMethodList:rest) = let x = generateCompleteMethodTypes rest in fuse currentClassMethodList x
-
-
-{-
-
-
-
- data Method = TypedMethod String [(String,String)] String [Statement]
-              | InferredMethod String [(String,String)] [Statement]
-                           | FFIMethod String [(String, String)] String
-                                        deriving Show
-                                         {- Formal arguments have to supply a type? -}
-                                          
-                                           
-                                            {-
-                                             data FormalArgs = FormalArgs [(String, String)]
-                                                              deriving Show
-                                                               -}
-                                                                
-                                                                 data ClassBody = ClassBody [Statement] [Method]
-                                                                                 deriving Show
-                                                                                  data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
-                                                                                                       deriving Show
-                                                                                                        data ClassDef = ClassDef ClassSignature ClassBody
-                                                                                                                       deriving Show
-
-
--}
-
-
-
 
 
 {-
