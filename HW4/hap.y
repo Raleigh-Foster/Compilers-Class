@@ -529,14 +529,54 @@ main = do
 
 
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
-isSubtype subtype supertype map = undefined
+isSubtype subtype supertype map =
+ if supertype == "Object" || subtype == supertype
+  then True
+  else
+   if subtype == "Object"
+    then False
+    else case HashMap.lookup subtype map of Nothing -> undefined {-ERROR CASE-}
+                                            Just (Just a,_) -> isSubtype a supertype map
+                                            Just _ -> undefined
 
 isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSupertype supertype subtype map = isSubtype subtype supertype map
 
 
+
+
+
+{-
+
+Data structures that I need:
+
+
+map from string to list of strings, types, to keep track of what methods are available to each class.
+
+Once I have that, I can check the code for each class.
+
+
+Because of subtyping, I will need to make sure that subclass methods have compatible subtypes. (NOT JUST THE SAME SUBTYPE).
+
+
+-}
+
+
+{-Given the methods and their type signatures, and the class hierarchy, generate the full signature of each class. If there is a type error, return the error -}
+generateFullSignature :: ClassDef ->  -> HashMap.Map String (Maybe String, ClassDef) -> 
+
+
+{-Given full signatures for each class, and a call to a method, -}
+checkCompatibleSubtype :: HashMap 
+
+
+
+
 typecheck' :: (Program, HashMap.Map String String) -> HashMap.Map String (Maybe String, ClassDef) -> (Program, [(String,String)])
 typecheck' programWithTypeMap classHierarchy = undefined
+
+
+{- Just checks to make sure everything is defined-}
 
 
 typecheck :: Program -> Either Program String
