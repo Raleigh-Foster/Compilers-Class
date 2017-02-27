@@ -98,7 +98,7 @@ RExpr : number {RExprIntLiteral $1}
       | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
       | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
       | lparen RExpr rparen {$2}
-      | RExpr eq RExpr {RExprEquality $1 $3}
+      | RExpr eq RExpr {RExprMethodInvocation $1 "Equality" [$3]}
       | RExpr leq RExpr {RExprLeq $1 $3}
       | RExpr lt RExpr {RExprLt $1 $3}
       | RExpr geq RExpr {RExprGeq $1 $3}
@@ -354,8 +354,32 @@ getSubtypeHierarchy = map getSubtypeHierarchy'
 
 {-For now, I'm only going to add in Object and its methods to the built in stuff. Eventually I may need to add more-}
 
+
+
+
+{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
 generateObject :: ClassDef
-generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "",FFIMethod "toStr" [] ""]) {-Saying "" now for unit, although I might want to change.-}
+generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "Equality" [("argumentName", "Object")] "Boolean"])
+
+
+
+{-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
+
+generateNothing :: ClassDef
+generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
+
+
+generateString :: ClassDef
+generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])
+
+
+generateInt :: ClassDef
+generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
+ [FFIMethod "PLUS" [("argumentName", "Int")] "Int", FFIMethod "MINUS" [("argumentName", "Int")] "Int", FFIMethod "PRODUCT" [("argumentName", "Int")] "Int", FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int"])
+
+
+generateBoolean :: ClassDef
+generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [])
 
 
 
