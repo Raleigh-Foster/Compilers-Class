@@ -480,9 +480,9 @@ getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
  [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
  ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
  ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
- ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])))]
-
-{-Do I need to include object here?-}
+ ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
+ ("Object", (Nothing, ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [] )))
+ ]
 
 
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
@@ -658,8 +658,12 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
                                                                  Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
-                                                                 Nothing -> error name
+                                                                 Nothing -> error ("Error when considering" ++ name)
 
+
+
+
+{- I THINK I DO NOT HAVE AN FFI OR DEFAULT METHOD FOR EQUALITY CURRENTLY-}
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
 methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
@@ -687,8 +691,8 @@ allMethodsWorkForProgram program =
  let methodLists = map (convertS myMap) ancestries in
  let y = map generateCompleteMethodTypesAndName methodLists in
  let x = methodsWorkForAllAncestorsAllClasses myMap k in
- case x of [] -> Right x
-           _ -> Left y                   
+ case x of [] -> Left y
+           _ -> Right x                  
 
 
 {-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
