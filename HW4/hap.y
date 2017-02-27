@@ -648,7 +648,18 @@ What I need to do now, is to create a function which from the ancestry will buil
 
 I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
+
+
+
+
+
+
+
+Instead of having a list of method types, it might be better for me to create a map. 
+
 -}
+
+
 
 
 
