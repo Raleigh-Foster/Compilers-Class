@@ -562,6 +562,8 @@ isSubtype subtype supertype map =
 isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSupertype supertype subtype map = isSubtype subtype supertype map
 
+isSupertype' :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> Bool
+isSupertype' myMap a b = isSupertype a b myMap
 
 
 data MethodType = MethodType String [String] String {-name, argument types, return type-}
@@ -580,10 +582,69 @@ data TypedProgram = TypedProgram [ClassType]
 
 
 
-{-WHERE DO WE CARE ABOUT CLASS SIGNATURE IN TERMS OF TYPING!?!?!?!?-}
+{-WHERE DO WE CARE ABOUT CLASS SIGNATURE IN TERMS OF TYPING!?!?!?!? DO WE CARE ABOUT THE FORMAL ARGUMENTS TO A CLASS??? HOW DO THESE HAVE TO TYPECHECK????-}
+
+
+
+{-I allow the user to override a method and change its argument names-}
+
+
+allTrue :: [Bool] -> Bool
+allTrue [] = True
+allTrue (True:xs) = allTrue xs
+allTrue (False:_) = False
+
+
+
+{-I don't say which argument in particular violates contravariance yet-}
+
+{-I NEED A SEPARATE CHECK TO MAKE SURE THAT THE ARGUMENT LISTS ARE THE SAME LENGTH-}
+
+
+checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
+checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
+ if isSubtype returnType parentReturnType myMap then (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in if allTrue b then Nothing
+ else Just $ "Method " ++ methodName ++ " argument types violate contravariance when compared to parent method")
+ else Just $ "Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType
+
+{-Currently this only returns a single error... hmm....-}
+
+
+
+listMaybe :: Maybe a -> [a]
+listMaybe (Just s) = [s]
+listMaybe Nothing = []
+
+collectMaybe :: [Maybe a] -> [a]
+collectMaybe arg = concat $ (map listMaybe arg)
+
+
+checkClassMethodsCompatibleWithParent :: [MethodType] -> [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> [String]
+checkClassMethodsCompatibleWithParent childMethods parentMethods myMap = collectMaybe $ zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods 
+
+
+
+
+generateRawMethodSubtypeSingleMethod :: Method -> MethodType
+generateRawMethodSubtypeSingleMethod (TypedMethod methodName methodArguments returnType _) = MethodType methodName (map snd methodArguments) returnType
+generateRawMethodSubtypeSingleMethod (InferredMethod methodName methodArguments _ ) = MethodType methodName (map snd methodArguments) "Nothing"
+generateRawMethodSubtypeSingleMethod (FFIMethod methodName methodArguments returnType) = MethodType methodName (map snd methodArguments) returnType
+
+
+
+
+
+{-UH OH..... CHILDREN CAN ALSO INHERIT FROM THEIR GRANDPARENTS, ETC!!-}
+
+{-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
+getMethodTypeListParent :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
+getMethodTypeListParent myMap childName = case HashMap.lookup childName myMap of Just (Just parentName, parentClassDef) -> let (_, methods) = generateRawMethodTypesSingleClass parentClassDef in methods
+
+
+
 
 generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
-generateRawMethodTypesSingleClass (ClassDef classSignature classBody) = undefined                                  
+generateRawMethodTypesSingleClass (ClassDef (ClassSignature className classArguments classParent) (ClassBody statements methods)) = (className, map generateRawMethodSubtypeSingleMethod methods)                                 
 {-This doesn't care about constructors or the contents of methods. IT ALSO DOES NOT VALIDATE METHODS. IT ALSO DOES NOT PUT IN INHERITED STUFF-}
 generateRawMethodTypes :: Program -> [(String, [MethodType])]
 generateRawMethodTypes (Program [] _) = []
