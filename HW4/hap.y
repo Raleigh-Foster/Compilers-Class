@@ -14,40 +14,40 @@ import Data.List
 %lexer { lexer } { eof }
 
 %token
- class {Class}
- while {While}
- elif {Elif}
- extends {Extends}
- else {Else}
- if {If}
- identifier {Identifier $$}
- colon {Colon}
- lparen  {Lparen}
- rparen {Rparen}
- lbracket {Lbracket}
- rbracket {Rbracket}
- comma {Comma}
- semicolon {Semicolon}
- dot {Dot}
- equals {Equals}
- def {Def}
- return {Return}
- sum {Sum}
- difference {Difference}
- product {Product}
- quotient {Quotient}
- number {Number $$}
- string {TargetString $$}
- lex_error {Error $$} {- WAIT A MINUTE... I DON'T WANT THIS!!! -}
- eq {Equality}
- leq {LEQ}
- lt {Lt}
- geq {GEQ}
- gt {Gt}
- and {And}
- or {Or}
- not {Not}
- eof {EOFToken} {- NO NO NO I do not want this either!!!!! -}
+ class {Token Class $$}
+ while {Token While $$ }
+ elif {Token Elif $$}
+ extends {Token Extends $$}
+ else {Token Else $$}
+ if {Token If $$}
+ identifier {Token (Identifier $$) $$}
+ colon {Token Colon $$}
+ lparen  {{-Lparen-} undefined}
+ rparen {{-Rparen-} undefined}
+ lbracket {{-Lbracket-} undefined}
+ rbracket {{-Rbracket-} undefined}
+ comma {{-Comma-} undefined}
+ semicolon {{-Semicolon-} undefined}
+ dot {{-Dot-} undefined}
+ equals {{-Equals-} undefined}
+ def {{-Def-} undefined}
+ return {{-Return-} undefined}
+ sum {{-Sum-} undefined}
+ difference {{-Difference-} undefined}
+ product {{-Product-} undefined}
+ quotient {{-Quotient-} undefined}
+ number {{-Number $$-} undefined}
+ string {{-TargetString $$-} undefined}
+ lex_error {{-Error $$-} undefined} {- WAIT A MINUTE... I DON'T WANT THIS!!! -}
+ eq {{-Equality-} undefined}
+ leq {{-LEQ-} undefined}
+ lt {{-Lt-} undefined}
+ geq {{-GEQ-} undefined}
+ gt {{-Gt-} undefined}
+ and {{-And-} undefined}
+ or {{-Or-} undefined}
+ not {{-Not-} undefined}
+ eof {{-EOFToken-} undefined} {- NO NO NO I do not want this either!!!!! -}
 
 %nonassoc gt lt eq leq geq
 
@@ -148,9 +148,18 @@ catchP m k = \s -> case m s of Ok a -> Ok a
                                Failed e -> k e s
 
 
-lexer :: (Token -> P a) -> P a
-lexer cont s = undefined {- cont token s'0-}
 
+{-
+fooBar :: ((Token,Int) -> P a) -> P a
+fooBar  = (alexMonadScan >>=)
+-}
+
+
+
+lexer :: (Token -> P a) -> P a
+lexer = undefined {-(alexMonadScan >>=)-}
+{-lexer cont = undefined `thenP` \token -> cont token
+-}
 
 {-
 
@@ -238,19 +247,22 @@ data RExpr = RExprStringLiteral String
            deriving Show
 
 getTokens :: String -> [Token] {-For now, no error handling-}
-getTokens s = case runAlex s gather of
+getTokens s = undefined {- case runAlex s gather of
                    Left _ -> []
-                   Right x -> (map fst x)
-
+                   Right x -> x {-(map fst x)-}
+-}
 
 programPrint :: Program -> IO ()
 programPrint p = print p
 
-getProgram :: IO ( E Program)
-getProgram = do
+getProgram :: IO (P Program)
+getProgram = undefined
+
+
+ {-do
              s <- getContents
              pure (calc $ getTokens s)
-
+-}
 
 
 
@@ -581,7 +593,7 @@ getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
 
 
-dealWith :: P Program -> IO ()
+{-dealWith :: P Program -> IO ()-}
 dealWith (Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
@@ -594,11 +606,12 @@ dealWith (Ok x) = do
 
 dealWith (Failed s) = print s
 
+
+
 main = do
        x <- getProgram
-       dealWith x
-       
-
+       dealWith (x "")
+{-added "" to make typecheck-}
 
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSubtype subtype supertype map =
