@@ -20,34 +20,34 @@ import Data.List
  extends {Token Extends $$}
  else {Token Else $$}
  if {Token If $$}
- identifier {Token (Identifier $$) $$}
+ identifier {Token (Identifier $$) (_)}
  colon {Token Colon $$}
- lparen  {{-Lparen-} undefined}
- rparen {{-Rparen-} undefined}
- lbracket {{-Lbracket-} undefined}
- rbracket {{-Rbracket-} undefined}
- comma {{-Comma-} undefined}
- semicolon {{-Semicolon-} undefined}
- dot {{-Dot-} undefined}
- equals {{-Equals-} undefined}
- def {{-Def-} undefined}
- return {{-Return-} undefined}
- sum {{-Sum-} undefined}
- difference {{-Difference-} undefined}
- product {{-Product-} undefined}
- quotient {{-Quotient-} undefined}
- number {{-Number $$-} undefined}
- string {{-TargetString $$-} undefined}
- lex_error {{-Error $$-} undefined} {- WAIT A MINUTE... I DON'T WANT THIS!!! -}
- eq {{-Equality-} undefined}
- leq {{-LEQ-} undefined}
- lt {{-Lt-} undefined}
- geq {{-GEQ-} undefined}
- gt {{-Gt-} undefined}
- and {{-And-} undefined}
- or {{-Or-} undefined}
- not {{-Not-} undefined}
- eof {{-EOFToken-} undefined} {- NO NO NO I do not want this either!!!!! -}
+ lparen  {Token Lparen $$}
+ rparen {Token Rparen $$}
+ lbracket {Token Lbracket $$}
+ rbracket {Token Rbracket $$}
+ comma {Token Comma $$}
+ semicolon {Token Semicolon $$}
+ dot {Token Dot $$}
+ equals {Token Equals $$}
+ def {Token Def $$}
+ return {Token Return $$ }
+ sum {Token Sum $$}
+ difference {Token Difference $$}
+ product {Token Product $$}
+ quotient {Token Quotient $$}
+ number {Token (Number $$) (_)}
+ string {Token (TargetString $$) (_)}
+ lex_error {Token (Error $$) (_)} {- WAIT A MINUTE... I DON'T WANT THIS!!! -}
+ eq {Token Equality $$}
+ leq {Token LEQ $$}
+ lt {Token Lt $$}
+ geq {Token GEQ $$}
+ gt {Token Gt $$}
+ and {Token And $$}
+ or {Token Or $$}
+ not {Token Not $$}
+ eof {Token EOFToken $$} {- NO NO NO I do not want this either!!!!! -}
 
 %nonassoc gt lt eq leq geq
 
