@@ -784,53 +784,35 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 
 
 
-
-
-data LExpr = LExprId String
-           | LExprDotted RExpr String
-                      deriving Show
-
-data RExpr = RExprStringLiteral String
-           | RExprIntLiteral String
-                      | RExprFromLExpr LExpr
-                                 | RExprEquality RExpr RExpr
-                                            | RExprLeq RExpr RExpr
-                                                       | RExprLt RExpr RExpr
-                                                                  | RExprGeq RExpr RExpr
-                                                                             | RExprGt RExpr RExpr
-                                                                                        | RExprAnd RExpr RExpr
-                                                                                                   | RExprOr RExpr RExpr
-                                                                                                              | RExprNot RExpr
-                                                                                                                         | RExprMethodInvocation RExpr String [RExpr]
-                                                                                                                                    | RExprConstructorInvocation String [RExpr]
-                                                                                                                                               deriving Show
-
 -}
 
 
 collectIdentifiersStatement :: Statement -> [String]
-collectIdentifiersStatement _ = undefined
+collectIdentifiersStatement (ParserIfWithElse rExpr statements list statements2) = undefined
+collectIdentifiersStatement (ParserIfWithoutElse rExpr statements list statements2) = undefined
+collectIdentifiersStatement (ParserWhile rExpr statements)
+collectIdentifiersStatement
+collectIdentifiersStatement
+collectIdentifiersStatement
+
 
 {-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
 {-RExpr Equality, etc.... should be a method call? What about LEQ? YES I CAN REMOVE THE EQUALITY TAG-}
+
+
+{- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
+
 
 collectIdentifiersRExpr :: RExpr -> [String]
 collectIdentifiersRExpr (RExprStringLiteral _ ) = []
 collectIdentifiersRExpr (RExprIntLiteral _ ) = []
 collectIdentifiersRExpr (RExprFromLExpr lExpr) = collectIdentifiersLExpr lExpr
-collectIdentifiersRExpr (RExprEquality rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
-collectIdentifiersRExpr (RExprLeq rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
-collectIdentifiersRExpr (RExprLt rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
-collectIdentifiersRExpr (RExprGeq rExpr1 rExpr2) = undefined
-{-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
-collectIdentifiersRExpr
--}
+collectIdentifiersRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
+collectIdentifiersRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2) 
+collectIdentifiersRExpr (RExprNot rExpr) = collectIdentifiersRExpr rExpr
+collectIdentifiersRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersRExpr arguments)
+collectIdentifiersRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersRExpr arguments
+
 collectIdentifiersLExpr :: LExpr -> [String]
 collectIdentifiersLExpr (LExprId s) = [s]
 collectIdentifiersLExpr (LExprDotted rExpr s) = s:(collectIdentifiersRExpr rExpr)
