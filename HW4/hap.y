@@ -766,6 +766,109 @@ generateCompleteMethodTypesAndName :: (String, [[MethodType]]) -> (String, [Meth
 generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)                        
 
 
+
+
+
+
+{-
+
+data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
+                              | ParserWhile RExpr [Statement]
+                                             | ParserReturn RExpr
+                                                            | ParserReturnUnit
+                                                                           | ParserAssign LExpr {- type : String-} RExpr
+                                                                                          | ParserBareExpression RExpr
+                                                                                                         deriving Show
+
+
+
+
+
+
+
+data LExpr = LExprId String
+           | LExprDotted RExpr String
+                      deriving Show
+
+data RExpr = RExprStringLiteral String
+           | RExprIntLiteral String
+                      | RExprFromLExpr LExpr
+                                 | RExprEquality RExpr RExpr
+                                            | RExprLeq RExpr RExpr
+                                                       | RExprLt RExpr RExpr
+                                                                  | RExprGeq RExpr RExpr
+                                                                             | RExprGt RExpr RExpr
+                                                                                        | RExprAnd RExpr RExpr
+                                                                                                   | RExprOr RExpr RExpr
+                                                                                                              | RExprNot RExpr
+                                                                                                                         | RExprMethodInvocation RExpr String [RExpr]
+                                                                                                                                    | RExprConstructorInvocation String [RExpr]
+                                                                                                                                               deriving Show
+
+-}
+
+
+collectIdentifiersStatement :: Statement -> [String]
+collectIdentifiersStatement _ = undefined
+
+{-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
+{-RExpr Equality, etc.... should be a method call? What about LEQ? YES I CAN REMOVE THE EQUALITY TAG-}
+
+collectIdentifiersRExpr :: RExpr -> [String]
+collectIdentifiersRExpr (RExprStringLiteral _ ) = []
+collectIdentifiersRExpr (RExprIntLiteral _ ) = []
+collectIdentifiersRExpr (RExprFromLExpr lExpr) = collectIdentifiersLExpr lExpr
+collectIdentifiersRExpr (RExprEquality rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
+collectIdentifiersRExpr (RExprLeq rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
+collectIdentifiersRExpr (RExprLt rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
+collectIdentifiersRExpr (RExprGeq rExpr1 rExpr2) = undefined
+{-collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+collectIdentifiersRExpr
+-}
+collectIdentifiersLExpr :: LExpr -> [String]
+collectIdentifiersLExpr (LExprId s) = [s]
+collectIdentifiersLExpr (LExprDotted rExpr s) = s:(collectIdentifiersRExpr rExpr)
+
+
+
+
+checkInitializationBeforeUse :: [Statement] -> [String]
+checkInitializationBeforeUse statements = undefined 
+
+
+{-
+
+
+ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
+                              | ParserWhile RExpr [Statement]
+                                             | ParserReturn RExpr
+                                                            | ParserReturnUnit
+                                                                           | ParserAssign LExpr {- type : String-} RExpr
+                                                                                          | ParserBareExpression RExpr
+
+-}
+
+{-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
+typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
+typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = undefined
+
+
+
+
+
+
+
+
+
+
 {-
 
 Data structures that I need:
