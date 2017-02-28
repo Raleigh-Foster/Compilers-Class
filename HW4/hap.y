@@ -98,11 +98,11 @@ RExpr : number {RExprIntLiteral $1}
       | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
       | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
       | lparen RExpr rparen {$2}
-      | RExpr eq RExpr {RExprMethodInvocation $1 "Equality" [$3]}
-      | RExpr leq RExpr {RExprLeq $1 $3}
-      | RExpr lt RExpr {RExprLt $1 $3}
-      | RExpr geq RExpr {RExprGeq $1 $3}
-      | RExpr gt RExpr {RExprGt $1 $3}
+      | RExpr eq RExpr {RExprMethodInvocation $1 "EQUALS" [$3]}
+      | RExpr leq RExpr {RExprMethodInvocation $1 "ATMOST" [$3]}
+      | RExpr lt RExpr {RExprMethodInvocation $1 "LESS" [$3]}
+      | RExpr geq RExpr {RExprMethodInvocation $1 "ATLEAST" [$3]}
+      | RExpr gt RExpr {RExprMethodInvocation $1 "MORE" [$3]}
       | RExpr and RExpr {RExprAnd $1 $3}
       | RExpr or RExpr {RExprOr $1 $3}
       | not RExpr {RExprNot $2}
@@ -207,11 +207,6 @@ data LExpr = LExprId String
 data RExpr = RExprStringLiteral String
            | RExprIntLiteral String
            | RExprFromLExpr LExpr
-           | RExprEquality RExpr RExpr
-           | RExprLeq RExpr RExpr
-           | RExprLt RExpr RExpr
-           | RExprGeq RExpr RExpr
-           | RExprGt RExpr RExpr
            | RExprAnd RExpr RExpr
            | RExprOr RExpr RExpr
            | RExprNot RExpr
@@ -359,7 +354,7 @@ getSubtypeHierarchy = map getSubtypeHierarchy'
 
 {-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
 generateObject :: ClassDef
-generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "Equality" [("argumentName", "Object")] "Boolean"])
+generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Object")] "Boolean"])
 
 
 
@@ -375,7 +370,16 @@ generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBod
 
 generateInt :: ClassDef
 generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
- [FFIMethod "PLUS" [("argumentName", "Int")] "Int", FFIMethod "MINUS" [("argumentName", "Int")] "Int", FFIMethod "PRODUCT" [("argumentName", "Int")] "Int", FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int"])
+ [FFIMethod "PLUS" [("argumentName", "Int")] "Int",
+  FFIMethod "MINUS" [("argumentName", "Int")] "Int",
+  FFIMethod "PRODUCT" [("argumentName", "Int")] "Int",
+  FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int",
+  FFIMethod "ATMOST" [("argumentName", "Int")] "Int",
+  FFIMethod "LESS" [("argumentName", "Int")] "Int",
+  FFIMethod "ATLEAST" [("argumentName", "Int")] "Int",
+  FFIMethod "MORE" [("argumentName", "Int")] "Int"
+  
+  ])
 
 
 generateBoolean :: ClassDef
@@ -443,11 +447,6 @@ okRExpr :: RExpr -> [String]
 okRExpr (RExprStringLiteral _ ) = []
 okRExpr (RExprIntLiteral _ )= []
 okRExpr (RExprFromLExpr lexpr) = okLExpr lexpr
-okRExpr (RExprEquality rexpr1 rexpr2) =(okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprLeq rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprLt rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprGeq rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprGt rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprAnd rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprOr rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprNot rexpr) = okRExpr rexpr
