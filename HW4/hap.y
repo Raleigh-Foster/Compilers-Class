@@ -1020,8 +1020,38 @@ Incompatible overridden method  (should have same number of arguments, each form
 
 
 
+{-
+
+data RExpr = RExprStringLiteral String
+           | RExprIntLiteral String
+                      | RExprFromLExpr LExpr
+                                 | RExprAnd RExpr RExpr
+                                            | RExprOr RExpr RExpr
+                                                       | RExprNot RExpr
+                                                                  | RExprMethodInvocation RExpr String [RExpr]
+                                                                             | RExprConstructorInvocation String [RExpr]
+                                                                                        deriving Show
 
 
+data LExpr = LExprId String
+           | LExprDotted RExpr String
+-}
+
+
+
+makeSureBooleanL :: LExpr -> Bool
+makeSureBooleanL (LExprId s) = undefined
+makeSureBooleanL (LExprDotted rExpr fieldName)
+
+makeSureBoolean :: RExpr -> Bool
+makeSureBoolean (RExprStringLiteral _) = False
+makeSureBoolean (RExprIntLiteral _) = False
+makeSureBoolean (RExprFromLExpr lExpr ) = makeSureBooleanL lExpr
+makeSureBoolean (RExprAnd rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprOr rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprNot rExpr) = makeSureBoolean rExpr
+makeSureBoolean (RExprMethodInvocation rExpr methodName arguments) = undefined {-lots of type checking to do here.-}
+makeSureBoolean (RExprConstructorInvocation constructorName arguments) = undefined
 
 
 }
