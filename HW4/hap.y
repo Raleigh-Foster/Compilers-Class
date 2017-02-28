@@ -10,8 +10,8 @@ import Data.List
 %name calc
 %tokentype {Token}
 %error {parseError}
-%monad {E} {thenE} {returnE}
-
+%monad {P} {thenP} {returnP}
+%lexer { lexer } { eof }
 
 %token
  class {Class}
@@ -130,7 +130,29 @@ Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {I
 
 
 
+data ParseResult a = Ok a | Failed String
+type P a = String -> ParseResult a
 
+thenP :: P a -> (a -> P b) -> P b
+m `thenP` k = \s -> case m s of Ok a -> k a s
+                                Failed e -> Failed e
+
+returnP :: a -> P a
+returnP a = \s -> Ok a
+
+failP :: String -> P a
+failP err = \s -> Failed err
+
+catchP :: P a -> (String -> P a) -> P a
+catchP m k = \s -> case m s of Ok a -> Ok a
+                               Failed e -> k e s
+
+
+lexer :: (Token -> P a) -> P a
+lexer cont s = undefined {- cont token s'0-}
+
+
+{-
 
 data E a = Ok a | Failed String
                 deriving Show
@@ -148,7 +170,7 @@ catchE :: E a -> (String -> E a) -> E a
 catchE m k = case m of Ok a -> Ok a
 	               Failed e -> k e
 
-
+-}
 
 
 
@@ -171,7 +193,7 @@ catchE m k = case m of Ok a -> Ok a
 
 
 
-parseError tokens = failE "Parse error"
+parseError tokens = failP "Parse error"
 
 
 data Program = Program [ClassDef] [Statement]
@@ -559,7 +581,7 @@ getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
 
 
-dealWith :: E Program -> IO ()
+dealWith :: P Program -> IO ()
 dealWith (Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
@@ -1041,7 +1063,7 @@ data LExpr = LExprId String
 
 makeSureBooleanL :: LExpr -> Bool
 makeSureBooleanL (LExprId s) = undefined
-makeSureBooleanL (LExprDotted rExpr fieldName)
+makeSureBooleanL (LExprDotted rExpr fieldName) = undefined
 
 makeSureBoolean :: RExpr -> Bool
 makeSureBoolean (RExprStringLiteral _) = False
