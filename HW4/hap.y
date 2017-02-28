@@ -3,6 +3,7 @@ module Main where
 
 import Tokens
 import qualified Data.Map.Strict as HashMap
+import Data.List
 }
 
 
@@ -793,7 +794,7 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 
 
 
-
+{-considering some impossible cases below -}
 
 
 
@@ -801,13 +802,14 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 
 
 collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
-collectIdentifiersDeclarationStatementHelper (x,y) = (collectIdentifiersDeclarationRExpr x) ++ (concat $ map collectIdentifiersDeclarationStatement y)
+collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifiersDeclarationRExpr x) (concat $ map collectIdentifiersDeclarationStatement y)
 
 collectIdentifiersDeclarationStatement :: Statement -> [String]
-collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
-                                                                                   ++ (concat $ map collectIdentifiersDeclarationStatementHelper list) ++ (concat $ map collectIdentifiersDeclarationStatement statements2)
-collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
-                                                                          ++ (concat $ map collectIdentifiersDeclarationStatementHelper list)
+collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) =
+ intersect (concat $ map collectIdentifiersDeclarationStatement statements)
+ $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
+
+collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = []
 collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
 collectIdentifiersDeclarationStatement (ParserReturn rExpr) = collectIdentifiersDeclarationRExpr rExpr
 collectIdentifiersDeclarationStatement (ParserReturnUnit) = []
@@ -883,10 +885,25 @@ collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageR
 
 
 
+{-ignores recursive case with while for now-}
 
+
+checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [String]
+checkInitializationBeforeUseSingleStatement statements statement =
+ let doRecursiveCase = case statement of (ParserWhile _ statements2) -> checkInitializationBeforeUse (statements2 ++ statements)
+                                         _ -> []
+ in                                        
+ let defined = collectIdentifiersDeclarationStatement statement in
+ let used = collectIdentifiersUsageStatement statement in
+ (filter (\x -> exists x defined) used) ++ doRecursiveCase
+
+checkInitializationBeforeUse' :: [Statement] -> [String]
+checkInitializationBeforeUse' (statement:statements) =
+ (checkInitializationBeforeUseSingleStatement statements statement) ++ 
+ (checkInitializationBeforeUse statements)
 
 checkInitializationBeforeUse :: [Statement] -> [String]
-checkInitializationBeforeUse statements = undefined 
+checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
 
 
 {-
