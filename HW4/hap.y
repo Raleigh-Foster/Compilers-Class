@@ -787,13 +787,42 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 -}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-Let's use these for uses of an identifier. Then there can be another for checking for declaration-}
+
+collectIdentifiersStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersStatementHelper (x,y) = (collectIdentifiersRExpr x) ++ (concat $ map collectIdentifiersStatement y)
+
 collectIdentifiersStatement :: Statement -> [String]
-collectIdentifiersStatement (ParserIfWithElse rExpr statements list statements2) = undefined
-collectIdentifiersStatement (ParserIfWithoutElse rExpr statements list statements2) = undefined
-collectIdentifiersStatement (ParserWhile rExpr statements)
-collectIdentifiersStatement
-collectIdentifiersStatement
-collectIdentifiersStatement
+collectIdentifiersStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
+                                                                                   ++ (concat $ map collectIdentifiersStatementHelper list) ++ (concat $ map collectIdentifiersStatement statements2)
+collectIdentifiersStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
+                                                                          ++ (concat $ map collectIdentifiersStatementHelper list)
+collectIdentifiersStatement (ParserWhile rExpr statements) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
+collectIdentifiersStatement (ParserReturn rExpr) = collectIdentifiersRExpr rExpr
+collectIdentifiersStatement (ParserReturnUnit) = []
+collectIdentifiersStatement (ParserAssign lExpr rExpr) = {-(collectIdentifiersLExpr lExpr) ++-} (collectIdentifiersRExpr rExpr)
+collectIdentifiersStatement (ParserBareExpression rExpr) = collectIdentifiersRExpr rExpr
 
 
 {-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
