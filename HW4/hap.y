@@ -14,40 +14,40 @@ import Data.List
 %lexer { lexer } { eof }
 
 %token
- class {Token Class $$}
- while {Token While $$ }
- elif {Token Elif $$}
- extends {Token Extends $$}
- else {Token Else $$}
- if {Token If $$}
+ class {Token Class (_)}
+ while {Token While (_) }
+ elif {Token Elif (_)}
+ extends {Token Extends (_)}
+ else {Token Else (_)}
+ if {Token If (_)}
  identifier {Token (Identifier $$) (_)}
- colon {Token Colon $$}
- lparen  {Token Lparen $$}
- rparen {Token Rparen $$}
- lbracket {Token Lbracket $$}
- rbracket {Token Rbracket $$}
- comma {Token Comma $$}
- semicolon {Token Semicolon $$}
- dot {Token Dot $$}
- equals {Token Equals $$}
- def {Token Def $$}
- return {Token Return $$ }
- sum {Token Sum $$}
- difference {Token Difference $$}
- product {Token Product $$}
- quotient {Token Quotient $$}
+ colon {Token Colon (_)}
+ lparen  {Token Lparen (_)}
+ rparen {Token Rparen (_)}
+ lbracket {Token Lbracket (_)}
+ rbracket {Token Rbracket (_)}
+ comma {Token Comma (_)}
+ semicolon {Token Semicolon (_)}
+ dot {Token Dot (_)}
+ equals {Token Equals (_)}
+ def {Token Def (_)}
+ return {Token Return (_)}
+ sum {Token Sum (_)}
+ difference {Token Difference (_)}
+ product {Token Product (_)}
+ quotient {Token Quotient (_)}
  number {Token (Number $$) (_)}
  string {Token (TargetString $$) (_)}
  lex_error {Token (Error $$) (_)} {- WAIT A MINUTE... I DON'T WANT THIS!!! -}
- eq {Token Equality $$}
- leq {Token LEQ $$}
- lt {Token Lt $$}
- geq {Token GEQ $$}
- gt {Token Gt $$}
- and {Token And $$}
- or {Token Or $$}
- not {Token Not $$}
- eof {Token EOFToken $$} {- NO NO NO I do not want this either!!!!! -}
+ eq {Token Equality (_)}
+ leq {Token LEQ (_)}
+ lt {Token Lt (_)}
+ geq {Token GEQ (_)}
+ gt {Token Gt (_)}
+ and {Token And (_)}
+ or {Token Or (_)}
+ not {Token Not (_)}
+ eof {Token EOFToken (_)} {- NO NO NO I do not want this either!!!!! -}
 
 %nonassoc gt lt eq leq geq
 
