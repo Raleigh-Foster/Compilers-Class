@@ -800,29 +800,19 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 
 
 
+collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersDeclarationStatementHelper (x,y) = (collectIdentifiersDeclarationRExpr x) ++ (concat $ map collectIdentifiersDeclarationStatement y)
 
-
-
-
-
-
-
-
-{-Let's use these for uses of an identifier. Then there can be another for checking for declaration-}
-
-collectIdentifiersStatementHelper :: (RExpr,[Statement]) -> [String]
-collectIdentifiersStatementHelper (x,y) = (collectIdentifiersRExpr x) ++ (concat $ map collectIdentifiersStatement y)
-
-collectIdentifiersStatement :: Statement -> [String]
-collectIdentifiersStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
-                                                                                   ++ (concat $ map collectIdentifiersStatementHelper list) ++ (concat $ map collectIdentifiersStatement statements2)
-collectIdentifiersStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
-                                                                          ++ (concat $ map collectIdentifiersStatementHelper list)
-collectIdentifiersStatement (ParserWhile rExpr statements) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersStatement statements)
-collectIdentifiersStatement (ParserReturn rExpr) = collectIdentifiersRExpr rExpr
-collectIdentifiersStatement (ParserReturnUnit) = []
-collectIdentifiersStatement (ParserAssign lExpr rExpr) = {-(collectIdentifiersLExpr lExpr) ++-} (collectIdentifiersRExpr rExpr)
-collectIdentifiersStatement (ParserBareExpression rExpr) = collectIdentifiersRExpr rExpr
+collectIdentifiersDeclarationStatement :: Statement -> [String]
+collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+                                                                                   ++ (concat $ map collectIdentifiersDeclarationStatementHelper list) ++ (concat $ map collectIdentifiersDeclarationStatement statements2)
+collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+                                                                          ++ (concat $ map collectIdentifiersDeclarationStatementHelper list)
+collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+collectIdentifiersDeclarationStatement (ParserReturn rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserReturnUnit) = []
+collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationStatement (ParserBareExpression rExpr) = collectIdentifiersDeclarationRExpr rExpr
 
 
 {-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
@@ -832,19 +822,65 @@ collectIdentifiersStatement (ParserBareExpression rExpr) = collectIdentifiersREx
 {- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
 
 
-collectIdentifiersRExpr :: RExpr -> [String]
-collectIdentifiersRExpr (RExprStringLiteral _ ) = []
-collectIdentifiersRExpr (RExprIntLiteral _ ) = []
-collectIdentifiersRExpr (RExprFromLExpr lExpr) = collectIdentifiersLExpr lExpr
-collectIdentifiersRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2)
-collectIdentifiersRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersRExpr rExpr1) ++ (collectIdentifiersRExpr rExpr2) 
-collectIdentifiersRExpr (RExprNot rExpr) = collectIdentifiersRExpr rExpr
-collectIdentifiersRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersRExpr rExpr) ++ (concat $ map collectIdentifiersRExpr arguments)
-collectIdentifiersRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersRExpr arguments
+collectIdentifiersDeclarationRExpr :: RExpr -> [String]
+collectIdentifiersDeclarationRExpr (RExprStringLiteral _ ) = []
+collectIdentifiersDeclarationRExpr (RExprIntLiteral _ ) = []
+collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
+collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
+collectIdentifiersDeclarationRExpr (RExprNot rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
+collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersDeclarationRExpr arguments
 
-collectIdentifiersLExpr :: LExpr -> [String]
-collectIdentifiersLExpr (LExprId s) = [s]
-collectIdentifiersLExpr (LExprDotted rExpr s) = s:(collectIdentifiersRExpr rExpr)
+collectIdentifiersDeclarationLExpr :: LExpr -> [String]
+collectIdentifiersDeclarationLExpr (LExprId s) = [s]
+collectIdentifiersDeclarationLExpr (LExprDotted rExpr s) = s:(collectIdentifiersDeclarationRExpr rExpr)
+
+
+
+
+
+
+
+
+collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersUsageStatementHelper (x,y) = (collectIdentifiersUsageRExpr x) ++ (concat $ map collectIdentifiersUsageStatement y)
+
+collectIdentifiersUsageStatement :: Statement -> [String]
+collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+                                                                                   ++ (concat $ map collectIdentifiersUsageStatementHelper list) ++ (concat $ map collectIdentifiersUsageStatement statements2)
+collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+                                                                          ++ (concat $ map collectIdentifiersUsageStatementHelper list)
+collectIdentifiersUsageStatement (ParserWhile rExpr statements) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserReturn rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserReturnUnit) = []
+collectIdentifiersUsageStatement (ParserAssign lExpr rExpr) = (collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageStatement (ParserBareExpression rExpr) = collectIdentifiersUsageRExpr rExpr
+
+
+
+{- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
+
+
+collectIdentifiersUsageRExpr :: RExpr -> [String]
+collectIdentifiersUsageRExpr (RExprStringLiteral _ ) = []
+collectIdentifiersUsageRExpr (RExprIntLiteral _ ) = []
+collectIdentifiersUsageRExpr (RExprFromLExpr lExpr) = collectIdentifiersUsageLExpr lExpr
+collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
+collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
+collectIdentifiersUsageRExpr (RExprNot rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
+collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersUsageRExpr arguments
+
+collectIdentifiersUsageLExpr :: LExpr -> [String]
+collectIdentifiersUsageLExpr (LExprId s) = [s]
+collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageRExpr rExpr)
+
+
+
+
+
+
 
 
 
