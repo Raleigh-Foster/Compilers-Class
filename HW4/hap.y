@@ -553,12 +553,20 @@ toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I 
 
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
 
+
+
+getStatements :: Program -> [Statement]
+getStatements (Program _ statements) = statements
+
+
 dealWith :: E Program -> IO ()
 dealWith (Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
  _ <- print $ allMethodsWorkForProgram x
+ _ <- putStrLn "used before init errors:"
+ _ <- print $ checkInitializationBeforeUse $ getStatements x
  programPrint (addBuiltIns x)
  {-pure ()-}
 
@@ -806,8 +814,8 @@ collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifie
 
 collectIdentifiersDeclarationStatement :: Statement -> [String]
 collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) =
- intersect (concat $ map collectIdentifiersDeclarationStatement statements)
- $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
+ case list of [] ->  intersect (concat $ map collectIdentifiersDeclarationStatement statements) (concat $ map collectIdentifiersDeclarationStatement statements2)
+              _ -> intersect (concat $ map collectIdentifiersDeclarationStatement statements) $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
 
 collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = []
 collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
@@ -893,14 +901,20 @@ checkInitializationBeforeUseSingleStatement statements statement =
  let doRecursiveCase = case statement of (ParserWhile _ statements2) -> checkInitializationBeforeUse (statements2 ++ statements)
                                          _ -> []
  in                                        
- let defined = collectIdentifiersDeclarationStatement statement in
+ let defined = concat $ map collectIdentifiersDeclarationStatement statements in
  let used = collectIdentifiersUsageStatement statement in
- (filter (\x -> exists x defined) used) ++ doRecursiveCase
+ let foo = (filter (\x -> not (exists x defined)) used) ++ doRecursiveCase
+ in foo
+
+
 
 checkInitializationBeforeUse' :: [Statement] -> [String]
+checkInitializationBeforeUse' [] = []
 checkInitializationBeforeUse' (statement:statements) =
  (checkInitializationBeforeUseSingleStatement statements statement) ++ 
- (checkInitializationBeforeUse statements)
+ (checkInitializationBeforeUse' statements)
+
+
 
 checkInitializationBeforeUse :: [Statement] -> [String]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
