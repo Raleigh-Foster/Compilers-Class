@@ -19,7 +19,7 @@ import Data.List
  extends {Token Extends (_)}
  else {Token Else (_)}
  if {Token If (_)}
- identifier {Token (Identifier $$) (_)}
+ identifier {Token (Identifier _) (_)}
  colon {Token Colon (_)}
  lparen  {Token Lparen (_)}
  rparen {Token Rparen (_)}
@@ -74,8 +74,8 @@ Classes : {[]}
 Statements : {[]}
            | Statement Statements {$1 : $2}
 Class : ClassSignature ClassBody {ClassDef $1 $2}
-ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature $2 $4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}}
-               | class identifier lparen FormalArgs rparen extends identifier {ClassSignature $2 $4 (Just $7)}
+ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature (stringFromIdentifierToken $2) $4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}}
+               | class identifier lparen FormalArgs rparen extends identifier {ClassSignature (stringFromIdentifierToken $2) $4 (Just (stringFromIdentifierToken $7))}
 ClassBody : lbracket Statements Methods rbracket {ClassBody $2 $3}
 Statement : if RExpr lbracket Statements rbracket Elifs {ParserIfWithoutElse $2 $4 $6 (lineNumberFromToken $1)}
           | if RExpr lbracket Statements rbracket Elifs else lbracket Statements rbracket {ParserIfWithElse $2 $4 $6 $9 (lineNumberFromToken $1)}
@@ -90,45 +90,46 @@ Elifs : {[]}
       | Elif Elifs {$1 : $2}
 Elif : elif RExpr lbracket Statements rbracket { ($2,$4)}
 
-RExpr : number {RExprIntLiteral $1}
-      | string {RExprStringLiteral $1}
-      | LExpr {RExprFromLExpr $1}
-      | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3]}
-      | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3]}
-      | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
-      | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
+RExpr : number {RExprIntLiteral $1 (lineNumberFromToken undefined)}
+      | string {RExprStringLiteral $1 (lineNumberFromToken undefined)}
+      | LExpr {RExprFromLExpr $1 undefined}
+      | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3] (lineNumberFromToken $2)}
+      | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3] (lineNumberFromToken $2)}
+      | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3] (lineNumberFromToken $2)}
+      | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3] (lineNumberFromToken $2)}
       | lparen RExpr rparen {$2}
-      | RExpr eq RExpr {RExprMethodInvocation $1 "EQUALS" [$3]}
-      | RExpr leq RExpr {RExprMethodInvocation $1 "ATMOST" [$3]}
-      | RExpr lt RExpr {RExprMethodInvocation $1 "LESS" [$3]}
-      | RExpr geq RExpr {RExprMethodInvocation $1 "ATLEAST" [$3]}
-      | RExpr gt RExpr {RExprMethodInvocation $1 "MORE" [$3]}
-      | RExpr and RExpr {RExprAnd $1 $3}
-      | RExpr or RExpr {RExprOr $1 $3}
-      | not RExpr {RExprNot $2}
-      | RExpr dot identifier lparen ActualArgs rparen {RExprMethodInvocation $1 $3 $5}
-      | identifier lparen ActualArgs rparen {RExprConstructorInvocation $1 $3}
+      | RExpr eq RExpr {RExprMethodInvocation $1 "EQUALS" [$3] (lineNumberFromToken $2)}
+      | RExpr leq RExpr {RExprMethodInvocation $1 "ATMOST" [$3] (lineNumberFromToken $2)}
+      | RExpr lt RExpr {RExprMethodInvocation $1 "LESS" [$3] (lineNumberFromToken $2)}
+      | RExpr geq RExpr {RExprMethodInvocation $1 "ATLEAST" [$3] (lineNumberFromToken $2)}
+      | RExpr gt RExpr {RExprMethodInvocation $1 "MORE" [$3] (lineNumberFromToken $2)}
+      | RExpr and RExpr {RExprAnd $1 $3 (lineNumberFromToken $2)}
+      | RExpr or RExpr {RExprOr $1 $3 (lineNumberFromToken $2)}
+      | not RExpr {RExprNot $2 (lineNumberFromToken $1)}
+      | RExpr dot identifier lparen ActualArgs rparen {RExprMethodInvocation $1 (stringFromIdentifierToken $3) $5 (lineNumberFromToken $4)}
+      | identifier lparen ActualArgs rparen {RExprConstructorInvocation (stringFromIdentifierToken $1) $3 (lineNumberFromToken $1)}
 ActualArgs : {[]}
            | RExpr FinishActualArgs {$1 : $2}
 FinishActualArgs : {[]} 
                  | comma RExpr FinishActualArgs {$2 : $3}
-LExpr : identifier {LExprId $1}
-      | RExpr dot identifier {LExprDotted $1 $3}
+LExpr : identifier {LExprId (stringFromIdentifierToken $1) (lineNumberFromToken $1)}
+      | RExpr dot identifier {LExprDotted $1 (stringFromIdentifierToken $3) (lineNumberFromToken undefined)}
 FormalArgs : {[]}
-           | identifier colon identifier FinishFormalArgs {($1,$3):$4}
+           | identifier colon identifier FinishFormalArgs {((stringFromIdentifierToken $1),(stringFromIdentifierToken $3)):$4}
 FinishFormalArgs : {[]}
-                 | comma identifier colon identifier FinishFormalArgs {($2,$4):$5}
+                 | comma identifier colon identifier FinishFormalArgs {((stringFromIdentifierToken $2),(stringFromIdentifierToken $4)):$5}
 Methods : {[]}
         | Method Methods {$1:$2}
-Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {InferredMethod $2 $4 $7}
-       | def identifier lparen FormalArgs rparen colon identifier lbracket Statements rbracket {TypedMethod $2 $4 $7 $9}
+Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {InferredMethod (stringFromIdentifierToken $2) $4 $7}
+       | def identifier lparen FormalArgs rparen colon identifier lbracket Statements rbracket {TypedMethod (stringFromIdentifierToken $2) $4 (stringFromIdentifierToken $7) $9}
 
 
 
 {
 
 
-
+stringFromIdentifierToken :: Token -> String
+stringFromIdentifierToken (Token (Identifier s) _) = s
 
 
 lineNumberFromToken :: Token -> Int
@@ -280,17 +281,17 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
                | ParserAssign LExpr {- type : String-} RExpr Int
                | ParserBareExpression RExpr Int
                deriving Show
-data LExpr = LExprId String
-           | LExprDotted RExpr String
+data LExpr = LExprId String Int
+           | LExprDotted RExpr String Int
            deriving Show
-data RExpr = RExprStringLiteral String
-           | RExprIntLiteral String
-           | RExprFromLExpr LExpr
-           | RExprAnd RExpr RExpr
-           | RExprOr RExpr RExpr
-           | RExprNot RExpr
-           | RExprMethodInvocation RExpr String [RExpr]
-           | RExprConstructorInvocation String [RExpr]
+data RExpr = RExprStringLiteral String Int
+           | RExprIntLiteral String Int
+           | RExprFromLExpr LExpr Int
+           | RExprAnd RExpr RExpr Int
+           | RExprOr RExpr RExpr Int
+           | RExprNot RExpr Int
+           | RExprMethodInvocation RExpr String [RExpr] Int
+           | RExprConstructorInvocation String [RExpr] Int
            deriving Show
 {-
 getTokens :: String -> [Token] {-For now, no error handling-}
@@ -529,18 +530,18 @@ data ClassDef = ClassDef ClassSignature ClassBody
 
 
 okLExpr :: LExpr -> [String]
-okLExpr (LExprId _) = []
-okLExpr (LExprDotted rexpr string) = okRExpr rexpr
+okLExpr (LExprId _ lineNumber) = []
+okLExpr (LExprDotted rexpr string lineNumber) = okRExpr rexpr
 
 okRExpr :: RExpr -> [String]
-okRExpr (RExprStringLiteral _ ) = []
-okRExpr (RExprIntLiteral _ )= []
-okRExpr (RExprFromLExpr lexpr) = okLExpr lexpr
-okRExpr (RExprAnd rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprOr rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprNot rexpr) = okRExpr rexpr
-okRExpr (RExprMethodInvocation rexpr string listRExpr) = okRExpr rexpr ++ (concat $ map okRExpr listRExpr)
-okRExpr (RExprConstructorInvocation string listRExpr) = string : (concat $ map okRExpr listRExpr)
+okRExpr (RExprStringLiteral _ lineNumber) = []
+okRExpr (RExprIntLiteral _ lineNumber)= []
+okRExpr (RExprFromLExpr lexpr lineNumber) = okLExpr lexpr
+okRExpr (RExprAnd rexpr1 rexpr2 lineNumber) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
+okRExpr (RExprOr rexpr1 rexpr2 lineNumber) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
+okRExpr (RExprNot rexpr lineNumber) = okRExpr rexpr
+okRExpr (RExprMethodInvocation rexpr string listRExpr lineNumber) = okRExpr rexpr ++ (concat $ map okRExpr listRExpr)
+okRExpr (RExprConstructorInvocation string listRExpr lineNumber) = string : (concat $ map okRExpr listRExpr)
 
 
 okStatementHelper :: (RExpr,[Statement]) -> [String]
@@ -909,18 +910,18 @@ collectIdentifiersDeclarationStatement (ParserBareExpression rExpr lineNumber) =
 
 
 collectIdentifiersDeclarationRExpr :: RExpr -> [String]
-collectIdentifiersDeclarationRExpr (RExprStringLiteral _ ) = []
-collectIdentifiersDeclarationRExpr (RExprIntLiteral _ ) = []
-collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr) = collectIdentifiersDeclarationLExpr lExpr
-collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
-collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
-collectIdentifiersDeclarationRExpr (RExprNot rExpr) = collectIdentifiersDeclarationRExpr rExpr
-collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
-collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersDeclarationRExpr arguments
+collectIdentifiersDeclarationRExpr (RExprStringLiteral _ lineNumber) = []
+collectIdentifiersDeclarationRExpr (RExprIntLiteral _ lineNumber) = []
+collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2 lineNumber) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
+collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2 lineNumber) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
+collectIdentifiersDeclarationRExpr (RExprNot rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
+collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersDeclarationRExpr arguments
 
 collectIdentifiersDeclarationLExpr :: LExpr -> [String]
-collectIdentifiersDeclarationLExpr (LExprId s) = [s]
-collectIdentifiersDeclarationLExpr (LExprDotted rExpr s) = s:(collectIdentifiersDeclarationRExpr rExpr)
+collectIdentifiersDeclarationLExpr (LExprId s lineNumber) = [s]
+collectIdentifiersDeclarationLExpr (LExprDotted rExpr s lineNumber) = s:(collectIdentifiersDeclarationRExpr rExpr)
 
 
 
@@ -949,18 +950,18 @@ collectIdentifiersUsageStatement (ParserBareExpression rExpr lineNumber) = colle
 
 
 collectIdentifiersUsageRExpr :: RExpr -> [String]
-collectIdentifiersUsageRExpr (RExprStringLiteral _ ) = []
-collectIdentifiersUsageRExpr (RExprIntLiteral _ ) = []
-collectIdentifiersUsageRExpr (RExprFromLExpr lExpr) = collectIdentifiersUsageLExpr lExpr
-collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
-collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
-collectIdentifiersUsageRExpr (RExprNot rExpr) = collectIdentifiersUsageRExpr rExpr
-collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
-collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersUsageRExpr arguments
+collectIdentifiersUsageRExpr (RExprStringLiteral _ lineNumber) = []
+collectIdentifiersUsageRExpr (RExprIntLiteral _ lineNumber) = []
+collectIdentifiersUsageRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersUsageLExpr lExpr
+collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2 lineNumber) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
+collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2 lineNumber) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
+collectIdentifiersUsageRExpr (RExprNot rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
+collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersUsageRExpr arguments
 
 collectIdentifiersUsageLExpr :: LExpr -> [String]
-collectIdentifiersUsageLExpr (LExprId s) = [s]
-collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageLExpr (LExprId s lineNumber) = [s]
+collectIdentifiersUsageLExpr (LExprDotted rExpr s lineNumber) = s:(collectIdentifiersUsageRExpr rExpr)
 
 
 
@@ -1019,18 +1020,18 @@ typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = 
 
 
 makeSureBooleanL :: LExpr -> Bool
-makeSureBooleanL (LExprId s) = undefined
-makeSureBooleanL (LExprDotted rExpr fieldName) = undefined
+makeSureBooleanL (LExprId s lineNumber) = undefined
+makeSureBooleanL (LExprDotted rExpr fieldName lineNumber) = undefined
 
 makeSureBoolean :: RExpr -> Bool
-makeSureBoolean (RExprStringLiteral _) = False
-makeSureBoolean (RExprIntLiteral _) = False
-makeSureBoolean (RExprFromLExpr lExpr ) = makeSureBooleanL lExpr
-makeSureBoolean (RExprAnd rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprOr rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprNot rExpr) = makeSureBoolean rExpr
-makeSureBoolean (RExprMethodInvocation rExpr methodName arguments) = undefined {-lots of type checking to do here.-}
-makeSureBoolean (RExprConstructorInvocation constructorName arguments) = undefined
+makeSureBoolean (RExprStringLiteral _ lineNumber) = False
+makeSureBoolean (RExprIntLiteral _ lineNumber) = False
+makeSureBoolean (RExprFromLExpr lExpr lineNumber) = makeSureBooleanL lExpr
+makeSureBoolean (RExprAnd rExpr1 rExpr2 lineNumber) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprOr rExpr1 rExpr2 lineNumber) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprNot rExpr lineNumber) = makeSureBoolean rExpr
+makeSureBoolean (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
+makeSureBoolean (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
 
 
 }
