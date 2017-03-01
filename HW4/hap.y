@@ -886,10 +886,10 @@ generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)
 
 
 
-collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [(String, Int)]
 collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifiersDeclarationRExpr x) (concat $ map collectIdentifiersDeclarationStatement y)
 
-collectIdentifiersDeclarationStatement :: Statement -> [String]
+collectIdentifiersDeclarationStatement :: Statement -> [(String, Int)]
 collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) =
  case list of [] ->  intersect (concat $ map collectIdentifiersDeclarationStatement statements) (concat $ map collectIdentifiersDeclarationStatement statements2)
               _ -> intersect (concat $ map collectIdentifiersDeclarationStatement statements) $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
@@ -909,7 +909,7 @@ collectIdentifiersDeclarationStatement (ParserBareExpression rExpr lineNumber) =
 {- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
 
 
-collectIdentifiersDeclarationRExpr :: RExpr -> [String]
+collectIdentifiersDeclarationRExpr :: RExpr -> [(String, Int)]
 collectIdentifiersDeclarationRExpr (RExprStringLiteral _ lineNumber) = []
 collectIdentifiersDeclarationRExpr (RExprIntLiteral _ lineNumber) = []
 collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersDeclarationLExpr lExpr
@@ -919,9 +919,9 @@ collectIdentifiersDeclarationRExpr (RExprNot rExpr lineNumber) = collectIdentifi
 collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
 collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersDeclarationRExpr arguments
 
-collectIdentifiersDeclarationLExpr :: LExpr -> [String]
-collectIdentifiersDeclarationLExpr (LExprId s lineNumber) = [s]
-collectIdentifiersDeclarationLExpr (LExprDotted rExpr s lineNumber) = s:(collectIdentifiersDeclarationRExpr rExpr)
+collectIdentifiersDeclarationLExpr :: LExpr -> [(String, Int)]
+collectIdentifiersDeclarationLExpr (LExprId s lineNumber) = [(s, lineNumber)]
+collectIdentifiersDeclarationLExpr (LExprDotted rExpr s lineNumber) = (s, lineNumber):(collectIdentifiersDeclarationRExpr rExpr)
 
 
 
@@ -930,10 +930,10 @@ collectIdentifiersDeclarationLExpr (LExprDotted rExpr s lineNumber) = s:(collect
 
 
 
-collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [(String,Int)]
 collectIdentifiersUsageStatementHelper (x,y) = (collectIdentifiersUsageRExpr x) ++ (concat $ map collectIdentifiersUsageStatement y)
 
-collectIdentifiersUsageStatement :: Statement -> [String]
+collectIdentifiersUsageStatement :: Statement -> [(String,Int)]
 collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
                                                                                    ++ (concat $ map collectIdentifiersUsageStatementHelper list) ++ (concat $ map collectIdentifiersUsageStatement statements2)
 collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
@@ -949,7 +949,7 @@ collectIdentifiersUsageStatement (ParserBareExpression rExpr lineNumber) = colle
 {- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
 
 
-collectIdentifiersUsageRExpr :: RExpr -> [String]
+collectIdentifiersUsageRExpr :: RExpr -> [(String,Int)]
 collectIdentifiersUsageRExpr (RExprStringLiteral _ lineNumber) = []
 collectIdentifiersUsageRExpr (RExprIntLiteral _ lineNumber) = []
 collectIdentifiersUsageRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersUsageLExpr lExpr
@@ -959,9 +959,9 @@ collectIdentifiersUsageRExpr (RExprNot rExpr lineNumber) = collectIdentifiersUsa
 collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
 collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersUsageRExpr arguments
 
-collectIdentifiersUsageLExpr :: LExpr -> [String]
-collectIdentifiersUsageLExpr (LExprId s lineNumber) = [s]
-collectIdentifiersUsageLExpr (LExprDotted rExpr s lineNumber) = s:(collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageLExpr :: LExpr -> [(String,Int)]
+collectIdentifiersUsageLExpr (LExprId s lineNumber) = [(s,lineNumber)]
+collectIdentifiersUsageLExpr (LExprDotted rExpr s lineNumber) = (s, lineNumber):(collectIdentifiersUsageRExpr rExpr)
 
 
 
@@ -973,7 +973,7 @@ collectIdentifiersUsageLExpr (LExprDotted rExpr s lineNumber) = s:(collectIdenti
 {-ignores recursive case with while for now-}
 
 
-checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [String]
+checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [(String,Int)]
 checkInitializationBeforeUseSingleStatement statements statement =
  let doRecursiveCase = case statement of (ParserWhile _ statements2 lineNumber) -> checkInitializationBeforeUse (statements2 ++ statements)
                                          _ -> []
@@ -985,7 +985,7 @@ checkInitializationBeforeUseSingleStatement statements statement =
 
 
 
-checkInitializationBeforeUse' :: [Statement] -> [String]
+checkInitializationBeforeUse' :: [Statement] -> [(String, Int)]
 checkInitializationBeforeUse' [] = []
 checkInitializationBeforeUse' (statement:statements) =
  (checkInitializationBeforeUseSingleStatement statements statement) ++ 
@@ -993,7 +993,7 @@ checkInitializationBeforeUse' (statement:statements) =
 
 
 
-checkInitializationBeforeUse :: [Statement] -> [String]
+checkInitializationBeforeUse :: [Statement] -> [(String,Int)]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
 
 
