@@ -122,6 +122,7 @@ project (_,_,_,x) = x
 -- The token type:
 
 data Token = Token TokenInner Int
+        deriving Show
 data TokenInner =
   Class
   | While

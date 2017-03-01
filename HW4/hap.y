@@ -128,7 +128,7 @@ Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {I
 {
 
 
-
+{-
 
 data ParseResult a = Ok a | Failed String
 type P a = String -> ParseResult a
@@ -148,6 +148,32 @@ catchP m k = \s -> case m s of Ok a -> Ok a
                                Failed e -> k e s
 
 
+-}
+
+
+
+
+
+
+type P a = Alex a
+
+thenP = (>>=)
+
+returnP = return
+
+failP = fail
+
+catchP m c = fail "catch not implemented"
+
+
+
+
+
+
+
+
+
+
 
 {-
 fooBar :: ((Token,Int) -> P a) -> P a
@@ -157,7 +183,9 @@ fooBar  = (alexMonadScan >>=)
 
 
 lexer :: (Token -> P a) -> P a
-lexer = undefined {-(alexMonadScan >>=)-}
+lexer = (alexMonadScan >>=)
+
+
 {-lexer cont = undefined `thenP` \token -> cont token
 -}
 
@@ -245,12 +273,19 @@ data RExpr = RExprStringLiteral String
            | RExprMethodInvocation RExpr String [RExpr]
            | RExprConstructorInvocation String [RExpr]
            deriving Show
-
+{-
 getTokens :: String -> [Token] {-For now, no error handling-}
 getTokens s = undefined {- case runAlex s gather of
                    Left _ -> []
                    Right x -> x {-(map fst x)-}
 -}
+-}
+
+
+
+getTokens :: String -> [Token] {-For now, no error handling-}
+getTokens s = case runAlex s gather of Left _ -> []
+                                       Right x -> x {-(map fst x)-}
 
 programPrint :: Program -> IO ()
 programPrint p = print p
@@ -594,7 +629,12 @@ getStatements (Program _ statements) = statements
 
 
 {-dealWith :: P Program -> IO ()-}
-dealWith (Ok x) = do
+dealWith = undefined
+
+
+
+{-
+(Ok x) = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
@@ -605,14 +645,27 @@ dealWith (Ok x) = do
  {-pure ()-}
 
 dealWith (Failed s) = print s
-
+-}
 
 
 main = do
+ s <- getContents
+ print $ getTokens s
+ {-
+ case runAlex s calc of Right x -> print x
+                        Left y -> print y
+-}
+
+
+
+
+
+
+{-do
        x <- getProgram
        dealWith (x "")
 {-added "" to make typecheck-}
-
+-}
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSubtype subtype supertype map =
  if supertype == "Object" || subtype == supertype
