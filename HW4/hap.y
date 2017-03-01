@@ -1003,7 +1003,7 @@ collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageR
 
 checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [String]
 checkInitializationBeforeUseSingleStatement statements statement =
- let doRecursiveCase = case statement of (ParserWhile _ statements2) -> checkInitializationBeforeUse (statements2 ++ statements)
+ let doRecursiveCase = case statement of (ParserWhile _ statements2 lineNumber) -> checkInitializationBeforeUse (statements2 ++ statements)
                                          _ -> []
  in                                        
  let defined = concat $ map collectIdentifiersDeclarationStatement statements in
