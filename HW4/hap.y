@@ -69,63 +69,17 @@ import Data.List
 
 %%
 
-Program : Classes Statements {Program $1 $2}
-Classes : {[]}
-        | Class Classes {$1 : $2}
-Statements : {[]}
-           | Statement Statements {$1 : $2}
-Class : ClassSignature ClassBody {ClassDef $1 $2}
-ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature $2 $4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}}
-               | class identifier lparen FormalArgs rparen extends identifier {ClassSignature $2 $4 (Just $7)}
-ClassBody : lbracket Statements Methods rbracket {ClassBody $2 $3}
-Statement : if RExpr lbracket Statements rbracket Elifs {ParserIfWithoutElse $2 $4 $6}
-          | if RExpr lbracket Statements rbracket Elifs else lbracket Statements rbracket {ParserIfWithElse $2 $4 $6 $9}
-          | while RExpr lbracket Statements rbracket {ParserWhile $2 $4}
-          | return RExpr semicolon {ParserReturn $2}
-          | return semicolon {ParserReturnUnit }
-          | LExpr equals RExpr semicolon {ParserAssign $1 $3}
-          | LExpr colon identifier equals RExpr semicolon {ParserAssign $1 $5}
-          | RExpr semicolon {ParserBareExpression $1}
-
-Elifs : {[]}
-      | Elif Elifs {$1 : $2}
-Elif : elif RExpr lbracket Statements rbracket { ($2,$4)}
-
-RExpr : number {RExprIntLiteral $1}
-      | string {RExprStringLiteral $1}
-      | LExpr {RExprFromLExpr $1}
-      | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3]}
-      | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3]}
-      | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
-      | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
-      | lparen RExpr rparen {$2}
-      | RExpr eq RExpr {RExprMethodInvocation $1 "EQUALS" [$3]}
-      | RExpr leq RExpr {RExprMethodInvocation $1 "ATMOST" [$3]}
-      | RExpr lt RExpr {RExprMethodInvocation $1 "LESS" [$3]}
-      | RExpr geq RExpr {RExprMethodInvocation $1 "ATLEAST" [$3]}
-      | RExpr gt RExpr {RExprMethodInvocation $1 "MORE" [$3]}
-      | RExpr and RExpr {RExprAnd $1 $3}
-      | RExpr or RExpr {RExprOr $1 $3}
-      | not RExpr {RExprNot $2}
-      | RExpr dot identifier lparen ActualArgs rparen {RExprMethodInvocation $1 $3 $5}
-      | identifier lparen ActualArgs rparen {RExprConstructorInvocation $1 $3}
-ActualArgs : {[]}
-           | RExpr FinishActualArgs {$1 : $2}
-FinishActualArgs : {[]} 
-                 | comma RExpr FinishActualArgs {$2 : $3}
-LExpr : identifier {LExprId $1}
-      | RExpr dot identifier {LExprDotted $1 $3}
-FormalArgs : {[]}
-           | identifier colon identifier FinishFormalArgs {($1,$3):$4}
-FinishFormalArgs : {[]}
-                 | comma identifier colon identifier FinishFormalArgs {($2,$4):$5}
-Methods : {[]}
-        | Method Methods {$1:$2}
-Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {InferredMethod $2 $4 $7}
-       | def identifier lparen FormalArgs rparen colon identifier lbracket Statements rbracket {TypedMethod $2 $4 $7 $9}
+Program : class {Program [] []}
 
 
 {
+
+
+
+{-Program : Classes Statements {Program $1 $2}-}
+
+
+
 
 
 {-
@@ -160,9 +114,9 @@ type P a = Alex a
 thenP = (>>=)
 
 returnP = return
-
+{-
 failP = fail
-
+-}
 catchP m c = fail "catch not implemented"
 
 
@@ -229,9 +183,12 @@ catchE m k = case m of Ok a -> Ok a
 
 
 
-
+{-
 parseError tokens = failP "Parse error"
+-}
 
+
+parseError tokens = alexError $ "Parse error: " ++ show tokens
 
 data Program = Program [ClassDef] [Statement]
              deriving Show
@@ -650,11 +607,11 @@ dealWith (Failed s) = print s
 
 main = do
  s <- getContents
- print $ getTokens s
- {-
+ {-print $ getTokens s-}
+ 
  case runAlex s calc of Right x -> print x
                         Left y -> print y
--}
+
 
 
 
