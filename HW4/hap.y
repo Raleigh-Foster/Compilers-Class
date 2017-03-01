@@ -11,7 +11,6 @@ import Data.List
 %tokentype {Token}
 %error {parseError}
 %monad {P} {thenP} {returnP}
-%lexer { lexer } { eof }
 
 %token
  class {Token Class (_)}
@@ -69,10 +68,73 @@ import Data.List
 
 %%
 
-Program : class {Program [] []}
+Program : Classes Statements {Program $1 $2}
+Classes : {[]}
+        | Class Classes {$1 : $2}
+Statements : {[]}
+           | Statement Statements {$1 : $2}
+Class : ClassSignature ClassBody {ClassDef $1 $2}
+ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature $2 $4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}}
+               | class identifier lparen FormalArgs rparen extends identifier {ClassSignature $2 $4 (Just $7)}
+ClassBody : lbracket Statements Methods rbracket {ClassBody $2 $3}
+Statement : if RExpr lbracket Statements rbracket Elifs {ParserIfWithoutElse $2 $4 $6 (lineNumberFromToken $1)}
+          | if RExpr lbracket Statements rbracket Elifs else lbracket Statements rbracket {ParserIfWithElse $2 $4 $6 $9 (lineNumberFromToken $1)}
+          | while RExpr lbracket Statements rbracket {ParserWhile $2 $4 (lineNumberFromToken $1)}
+          | return RExpr semicolon {ParserReturn $2 (lineNumberFromToken $1)}
+          | return semicolon {ParserReturnUnit (lineNumberFromToken $1)}
+          | LExpr equals RExpr semicolon {ParserAssign $1 $3 (lineNumberFromToken $2)}
+          | LExpr colon identifier equals RExpr semicolon {ParserAssign $1 $5 (lineNumberFromToken $2)}
+          | RExpr semicolon {ParserBareExpression $1 (lineNumberFromToken $2)}
+
+Elifs : {[]}
+      | Elif Elifs {$1 : $2}
+Elif : elif RExpr lbracket Statements rbracket { ($2,$4)}
+
+RExpr : number {RExprIntLiteral $1}
+      | string {RExprStringLiteral $1}
+      | LExpr {RExprFromLExpr $1}
+      | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3]}
+      | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3]}
+      | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3]}
+      | RExpr quotient RExpr {RExprMethodInvocation $1 "QUOTIENT" [$3]}
+      | lparen RExpr rparen {$2}
+      | RExpr eq RExpr {RExprMethodInvocation $1 "EQUALS" [$3]}
+      | RExpr leq RExpr {RExprMethodInvocation $1 "ATMOST" [$3]}
+      | RExpr lt RExpr {RExprMethodInvocation $1 "LESS" [$3]}
+      | RExpr geq RExpr {RExprMethodInvocation $1 "ATLEAST" [$3]}
+      | RExpr gt RExpr {RExprMethodInvocation $1 "MORE" [$3]}
+      | RExpr and RExpr {RExprAnd $1 $3}
+      | RExpr or RExpr {RExprOr $1 $3}
+      | not RExpr {RExprNot $2}
+      | RExpr dot identifier lparen ActualArgs rparen {RExprMethodInvocation $1 $3 $5}
+      | identifier lparen ActualArgs rparen {RExprConstructorInvocation $1 $3}
+ActualArgs : {[]}
+           | RExpr FinishActualArgs {$1 : $2}
+FinishActualArgs : {[]} 
+                 | comma RExpr FinishActualArgs {$2 : $3}
+LExpr : identifier {LExprId $1}
+      | RExpr dot identifier {LExprDotted $1 $3}
+FormalArgs : {[]}
+           | identifier colon identifier FinishFormalArgs {($1,$3):$4}
+FinishFormalArgs : {[]}
+                 | comma identifier colon identifier FinishFormalArgs {($2,$4):$5}
+Methods : {[]}
+        | Method Methods {$1:$2}
+Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {InferredMethod $2 $4 $7}
+       | def identifier lparen FormalArgs rparen colon identifier lbracket Statements rbracket {TypedMethod $2 $4 $7 $9}
+
 
 
 {
+
+
+
+
+
+lineNumberFromToken :: Token -> Int
+lineNumberFromToken (Token _ n) = n                
+
+
 
 
 
@@ -210,13 +272,13 @@ data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
                     deriving Show
 data ClassDef = ClassDef ClassSignature ClassBody
               deriving Show
-data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-               | ParserWhile RExpr [Statement]
-               | ParserReturn RExpr
-               | ParserReturnUnit
-               | ParserAssign LExpr {- type : String-} RExpr
-               | ParserBareExpression RExpr
+data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])] Int
+               | ParserWhile RExpr [Statement] Int
+               | ParserReturn RExpr Int
+               | ParserReturnUnit Int
+               | ParserAssign LExpr {- type : String-} RExpr Int
+               | ParserBareExpression RExpr Int
                deriving Show
 data LExpr = LExprId String
            | LExprDotted RExpr String
@@ -485,13 +547,13 @@ okStatementHelper :: (RExpr,[Statement]) -> [String]
 okStatementHelper (x,y) = (okRExpr x) ++ (concat $ map okStatement y)
 
 okStatement :: Statement -> [String]
-okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
-okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
-okStatement (ParserWhile rexpr listStatement) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
-okStatement (ParserReturn rexpr) = okRExpr rexpr
-okStatement (ParserReturnUnit) = []
-okStatement (ParserAssign lexpr rexpr) = (okLExpr lexpr) ++ (okRExpr rexpr)
-okStatement (ParserBareExpression rexpr) = okRExpr rexpr
+okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
+okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
+okStatement (ParserWhile rexpr listStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
+okStatement (ParserReturn rexpr lineNumber) = okRExpr rexpr
+okStatement (ParserReturnUnit lineNumber) = []
+okStatement (ParserAssign lexpr rexpr lineNumber) = (okLExpr lexpr) ++ (okRExpr rexpr)
+okStatement (ParserBareExpression rexpr lineNumber) = okRExpr rexpr
 
 
 okMethod :: Method -> [String]
@@ -585,13 +647,8 @@ getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
 
 
-{-dealWith :: P Program -> IO ()-}
-dealWith = undefined
-
-
-
-{-
-(Ok x) = do
+dealWith :: Program -> IO ()
+dealWith x = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
@@ -601,18 +658,21 @@ dealWith = undefined
  programPrint (addBuiltIns x)
  {-pure ()-}
 
-dealWith (Failed s) = print s
--}
 
 
 main = do
+ x <- getContents
+ case runAlex x (gather >>= calc) of Right x -> dealWith x
+                                     Left x -> error x
+ 
+ {- do
  s <- getContents
  {-print $ getTokens s-}
  
  case runAlex s calc of Right x -> print x
                         Left y -> print y
 
-
+-}
 
 
 
@@ -858,16 +918,16 @@ collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
 collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifiersDeclarationRExpr x) (concat $ map collectIdentifiersDeclarationStatement y)
 
 collectIdentifiersDeclarationStatement :: Statement -> [String]
-collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) =
+collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) =
  case list of [] ->  intersect (concat $ map collectIdentifiersDeclarationStatement statements) (concat $ map collectIdentifiersDeclarationStatement statements2)
               _ -> intersect (concat $ map collectIdentifiersDeclarationStatement statements) $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
 
-collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = []
-collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
-collectIdentifiersDeclarationStatement (ParserReturn rExpr) = collectIdentifiersDeclarationRExpr rExpr
-collectIdentifiersDeclarationStatement (ParserReturnUnit) = []
-collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr) = collectIdentifiersDeclarationLExpr lExpr
-collectIdentifiersDeclarationStatement (ParserBareExpression rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list lineNumber) = []
+collectIdentifiersDeclarationStatement (ParserWhile rExpr statements lineNumber) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+collectIdentifiersDeclarationStatement (ParserReturn rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserReturnUnit lineNumber) = []
+collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr lineNumber) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationStatement (ParserBareExpression rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
 
 
 {-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
@@ -902,15 +962,15 @@ collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [String]
 collectIdentifiersUsageStatementHelper (x,y) = (collectIdentifiersUsageRExpr x) ++ (concat $ map collectIdentifiersUsageStatement y)
 
 collectIdentifiersUsageStatement :: Statement -> [String]
-collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
                                                                                    ++ (concat $ map collectIdentifiersUsageStatementHelper list) ++ (concat $ map collectIdentifiersUsageStatement statements2)
-collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
                                                                           ++ (concat $ map collectIdentifiersUsageStatementHelper list)
-collectIdentifiersUsageStatement (ParserWhile rExpr statements) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
-collectIdentifiersUsageStatement (ParserReturn rExpr) = collectIdentifiersUsageRExpr rExpr
-collectIdentifiersUsageStatement (ParserReturnUnit) = []
-collectIdentifiersUsageStatement (ParserAssign lExpr rExpr) = (collectIdentifiersUsageRExpr rExpr)
-collectIdentifiersUsageStatement (ParserBareExpression rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserWhile rExpr statements lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserReturn rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserReturnUnit lineNumber) = []
+collectIdentifiersUsageStatement (ParserAssign lExpr rExpr lineNumber) = (collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageStatement (ParserBareExpression rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
 
 
 
