@@ -3,6 +3,7 @@ module Main where
 
 import Tokens
 import qualified Data.Map.Strict as HashMap
+import Data.List
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
@@ -879,7 +880,7 @@ happyReduce_7 = happyReduce 5 8 happyReduction_7
 happyReduction_7 (_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_2)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
@@ -887,12 +888,12 @@ happyReduction_7 (_ `HappyStk`
 	) `HappyStk` happyRest
 
 happyReduce_8 = happyReduce 7 8 happyReduction_8
-happyReduction_8 ((HappyTerminal (Identifier happy_var_7)) `HappyStk`
+happyReduction_8 ((HappyTerminal (Token (Identifier happy_var_7) (_))) `HappyStk`
 	_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_2)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
@@ -1019,14 +1020,14 @@ happyReduction_20 (_ `HappyStk`
 	) `HappyStk` happyRest
 
 happyReduce_21 = happySpecReduce_1  13 happyReduction_21
-happyReduction_21 (HappyTerminal (Number happy_var_1))
+happyReduction_21 (HappyTerminal (Token (Number happy_var_1) (_)))
 	 =  HappyAbsSyn13
 		 (RExprIntLiteral happy_var_1
 	)
 happyReduction_21 _  = notHappyAtAll 
 
 happyReduce_22 = happySpecReduce_1  13 happyReduction_22
-happyReduction_22 (HappyTerminal (TargetString happy_var_1))
+happyReduction_22 (HappyTerminal (Token (TargetString happy_var_1) (_)))
 	 =  HappyAbsSyn13
 		 (RExprStringLiteral happy_var_1
 	)
@@ -1044,7 +1045,7 @@ happyReduction_24 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprPlus happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "PLUS" [happy_var_3]
 	)
 happyReduction_24 _ _ _  = notHappyAtAll 
 
@@ -1053,7 +1054,7 @@ happyReduction_25 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMinus happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "MINUS" [happy_var_3]
 	)
 happyReduction_25 _ _ _  = notHappyAtAll 
 
@@ -1062,7 +1063,7 @@ happyReduction_26 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprTimes happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "PRODUCT" [happy_var_3]
 	)
 happyReduction_26 _ _ _  = notHappyAtAll 
 
@@ -1071,7 +1072,7 @@ happyReduction_27 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprDivide happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "QUOTIENT" [happy_var_3]
 	)
 happyReduction_27 _ _ _  = notHappyAtAll 
 
@@ -1089,7 +1090,7 @@ happyReduction_29 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprEquality happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "EQUALS" [happy_var_3]
 	)
 happyReduction_29 _ _ _  = notHappyAtAll 
 
@@ -1098,7 +1099,7 @@ happyReduction_30 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprLeq happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "ATMOST" [happy_var_3]
 	)
 happyReduction_30 _ _ _  = notHappyAtAll 
 
@@ -1107,7 +1108,7 @@ happyReduction_31 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprLt happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "LESS" [happy_var_3]
 	)
 happyReduction_31 _ _ _  = notHappyAtAll 
 
@@ -1116,7 +1117,7 @@ happyReduction_32 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprGeq happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "ATLEAST" [happy_var_3]
 	)
 happyReduction_32 _ _ _  = notHappyAtAll 
 
@@ -1125,7 +1126,7 @@ happyReduction_33 (HappyAbsSyn13  happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprGt happy_var_1 happy_var_3
+		 (RExprMethodInvocation happy_var_1 "MORE" [happy_var_3]
 	)
 happyReduction_33 _ _ _  = notHappyAtAll 
 
@@ -1159,7 +1160,7 @@ happyReduce_37 = happyReduce 6 13 happyReduction_37
 happyReduction_37 (_ `HappyStk`
 	(HappyAbsSyn14  happy_var_5) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_3)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_3) (_))) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn13  happy_var_1) `HappyStk`
 	happyRest)
@@ -1171,7 +1172,7 @@ happyReduce_38 = happyReduce 4 13 happyReduction_38
 happyReduction_38 (_ `HappyStk`
 	(HappyAbsSyn14  happy_var_3) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_1)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_1) (_))) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn13
 		 (RExprConstructorInvocation happy_var_1 happy_var_3
@@ -1205,14 +1206,14 @@ happyReduction_42 (HappyAbsSyn15  happy_var_3)
 happyReduction_42 _ _ _  = notHappyAtAll 
 
 happyReduce_43 = happySpecReduce_1  16 happyReduction_43
-happyReduction_43 (HappyTerminal (Identifier happy_var_1))
+happyReduction_43 (HappyTerminal (Token (Identifier happy_var_1) (_)))
 	 =  HappyAbsSyn16
 		 (LExprId happy_var_1
 	)
 happyReduction_43 _  = notHappyAtAll 
 
 happyReduce_44 = happySpecReduce_3  16 happyReduction_44
-happyReduction_44 (HappyTerminal (Identifier happy_var_3))
+happyReduction_44 (HappyTerminal (Token (Identifier happy_var_3) (_)))
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn16
@@ -1227,9 +1228,9 @@ happyReduction_45  =  HappyAbsSyn17
 
 happyReduce_46 = happyReduce 4 17 happyReduction_46
 happyReduction_46 ((HappyAbsSyn18  happy_var_4) `HappyStk`
-	(HappyTerminal (Identifier happy_var_3)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_3) (_))) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_1)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_1) (_))) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn17
 		 ((happy_var_1,happy_var_3):happy_var_4
@@ -1242,9 +1243,9 @@ happyReduction_47  =  HappyAbsSyn18
 
 happyReduce_48 = happyReduce 5 18 happyReduction_48
 happyReduction_48 ((HappyAbsSyn18  happy_var_5) `HappyStk`
-	(HappyTerminal (Identifier happy_var_4)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_4) (_))) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_2)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn18
@@ -1271,7 +1272,7 @@ happyReduction_51 (_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_2)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn20
@@ -1282,12 +1283,12 @@ happyReduce_52 = happyReduce 10 20 happyReduction_52
 happyReduction_52 (_ `HappyStk`
 	(HappyAbsSyn6  happy_var_9) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_7)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_7) (_))) `HappyStk`
 	_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Identifier happy_var_2)) `HappyStk`
+	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn20
@@ -1300,81 +1301,175 @@ happyNewToken action sts stk [] =
 happyNewToken action sts stk (tk:tks) =
 	let cont i = action i i tk (HappyState action) sts stk tks in
 	case tk of {
-	Class -> cont 21;
-	While -> cont 22;
-	Elif -> cont 23;
-	Extends -> cont 24;
-	Else -> cont 25;
-	If -> cont 26;
-	Identifier happy_dollar_dollar -> cont 27;
-	Colon -> cont 28;
-	Lparen -> cont 29;
-	Rparen -> cont 30;
-	Lbracket -> cont 31;
-	Rbracket -> cont 32;
-	Comma -> cont 33;
-	Semicolon -> cont 34;
-	Dot -> cont 35;
-	Equals -> cont 36;
-	Def -> cont 37;
-	Return -> cont 38;
-	Sum -> cont 39;
-	Difference -> cont 40;
-	Product -> cont 41;
-	Quotient -> cont 42;
-	Number happy_dollar_dollar -> cont 43;
-	TargetString happy_dollar_dollar -> cont 44;
-	Error happy_dollar_dollar -> cont 45;
-	Equality -> cont 46;
-	LEQ -> cont 47;
-	Lt -> cont 48;
-	GEQ -> cont 49;
-	Gt -> cont 50;
-	And -> cont 51;
-	Or -> cont 52;
-	Not -> cont 53;
-	EOFToken -> cont 54;
+	Token Class (_) -> cont 21;
+	Token While (_) -> cont 22;
+	Token Elif (_) -> cont 23;
+	Token Extends (_) -> cont 24;
+	Token Else (_) -> cont 25;
+	Token If (_) -> cont 26;
+	Token (Identifier happy_dollar_dollar) (_) -> cont 27;
+	Token Colon (_) -> cont 28;
+	Token Lparen (_) -> cont 29;
+	Token Rparen (_) -> cont 30;
+	Token Lbracket (_) -> cont 31;
+	Token Rbracket (_) -> cont 32;
+	Token Comma (_) -> cont 33;
+	Token Semicolon (_) -> cont 34;
+	Token Dot (_) -> cont 35;
+	Token Equals (_) -> cont 36;
+	Token Def (_) -> cont 37;
+	Token Return (_) -> cont 38;
+	Token Sum (_) -> cont 39;
+	Token Difference (_) -> cont 40;
+	Token Product (_) -> cont 41;
+	Token Quotient (_) -> cont 42;
+	Token (Number happy_dollar_dollar) (_) -> cont 43;
+	Token (TargetString happy_dollar_dollar) (_) -> cont 44;
+	Token (Error happy_dollar_dollar) (_) -> cont 45;
+	Token Equality (_) -> cont 46;
+	Token LEQ (_) -> cont 47;
+	Token Lt (_) -> cont 48;
+	Token GEQ (_) -> cont 49;
+	Token Gt (_) -> cont 50;
+	Token And (_) -> cont 51;
+	Token Or (_) -> cont 52;
+	Token Not (_) -> cont 53;
+	Token EOFToken (_) -> cont 54;
 	_ -> happyError' (tk:tks)
 	}
 
 happyError_ 55 tk tks = happyError' tks
 happyError_ _ tk tks = happyError' (tk:tks)
 
-newtype HappyIdentity a = HappyIdentity a
-happyIdentity = HappyIdentity
-happyRunIdentity (HappyIdentity a) = a
+happyThen :: () => P a -> (a -> P b) -> P b
+happyThen = (thenP)
+happyReturn :: () => a -> P a
+happyReturn = (returnP)
+happyThen1 m k tks = (thenP) m (\a -> k a tks)
+happyReturn1 :: () => a -> b -> P a
+happyReturn1 = \a tks -> (returnP) a
+happyError' :: () => [(Token)] -> P a
+happyError' = parseError
 
-instance Functor HappyIdentity where
-    fmap f (HappyIdentity a) = HappyIdentity (f a)
-
-instance Applicative HappyIdentity where
-    pure  = return
-    (<*>) = ap
-instance Monad HappyIdentity where
-    return = HappyIdentity
-    (HappyIdentity p) >>= q = q p
-
-happyThen :: () => HappyIdentity a -> (a -> HappyIdentity b) -> HappyIdentity b
-happyThen = (>>=)
-happyReturn :: () => a -> HappyIdentity a
-happyReturn = (return)
-happyThen1 m k tks = (>>=) m (\a -> k a tks)
-happyReturn1 :: () => a -> b -> HappyIdentity a
-happyReturn1 = \a tks -> (return) a
-happyError' :: () => [(Token)] -> HappyIdentity a
-happyError' = HappyIdentity . parseError
-
-calc tks = happyRunIdentity happySomeParser where
+calc tks = happySomeParser where
   happySomeParser = happyThen (happyParse action_0 tks) (\x -> case x of {HappyAbsSyn4 z -> happyReturn z; _other -> notHappyAtAll })
 
 happySeq = happyDontSeq
 
 
+{-Program : Classes Statements {Program $1 $2}-}
+
+
+
+
+
+{-
+
+data ParseResult a = Ok a | Failed String
+type P a = String -> ParseResult a
+
+thenP :: P a -> (a -> P b) -> P b
+m `thenP` k = \s -> case m s of Ok a -> k a s
+                                Failed e -> Failed e
+
+returnP :: a -> P a
+returnP a = \s -> Ok a
+
+failP :: String -> P a
+failP err = \s -> Failed err
+
+catchP :: P a -> (String -> P a) -> P a
+catchP m k = \s -> case m s of Ok a -> Ok a
+                               Failed e -> k e s
+
+
+-}
+
+
+
+
+
+
+type P a = Alex a
+
+thenP = (>>=)
+
+returnP = return
+{-
+failP = fail
+-}
+catchP m c = fail "catch not implemented"
+
+
+
+
+
+
+
+
+
+
+
+{-
+fooBar :: ((Token,Int) -> P a) -> P a
+fooBar  = (alexMonadScan >>=)
+-}
+
+
+
+lexer :: (Token -> P a) -> P a
+lexer = (alexMonadScan >>=)
+
+
+{-lexer cont = undefined `thenP` \token -> cont token
+-}
+
+{-
+
+data E a = Ok a | Failed String
+                deriving Show
+thenE :: E a -> (a -> E b) -> E b
+m `thenE` k = case m of Ok a -> k a
+	                Failed e -> Failed e
+
+returnE :: a -> E a
+returnE a = Ok a
+
+failE :: String -> E a
+failE err = Failed err
+
+catchE :: E a -> (String -> E a) -> E a
+catchE m k = case m of Ok a -> Ok a
+	               Failed e -> k e
+
+-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 {-I'm currently throwing away typing information in my AST.-}
 
 
-parseError :: [Token] -> a
-parseError _ = error "Parse error"
+{-parseError :: [Token] -> a-}
+{-parseError _ = error "Parse error"-}
+
+
+
+{-
+parseError tokens = failP "Parse error"
+-}
+
+
+parseError tokens = alexError $ "Parse error: " ++ show tokens
 
 data Program = Program [ClassDef] [Statement]
              deriving Show
@@ -1410,35 +1505,37 @@ data LExpr = LExprId String
 data RExpr = RExprStringLiteral String
            | RExprIntLiteral String
            | RExprFromLExpr LExpr
-           | RExprPlus RExpr RExpr
-           | RExprMinus RExpr RExpr
-           | RExprTimes RExpr RExpr
-           | RExprDivide RExpr RExpr
-           | RExprEquality RExpr RExpr
-           | RExprLeq RExpr RExpr
-           | RExprLt RExpr RExpr
-           | RExprGeq RExpr RExpr
-           | RExprGt RExpr RExpr
            | RExprAnd RExpr RExpr
            | RExprOr RExpr RExpr
            | RExprNot RExpr
            | RExprMethodInvocation RExpr String [RExpr]
            | RExprConstructorInvocation String [RExpr]
            deriving Show
+{-
+getTokens :: String -> [Token] {-For now, no error handling-}
+getTokens s = undefined {- case runAlex s gather of
+                   Left _ -> []
+                   Right x -> x {-(map fst x)-}
+-}
+-}
+
+
 
 getTokens :: String -> [Token] {-For now, no error handling-}
-getTokens s = case runAlex s gather of
-                   Left _ -> []
-                   Right x -> (map fst x)
+getTokens s = case runAlex s gather of Left _ -> []
+                                       Right x -> x {-(map fst x)-}
 
 programPrint :: Program -> IO ()
 programPrint p = print p
 
-getProgram :: IO Program
-getProgram = do
+getProgram :: IO (P Program)
+getProgram = undefined
+
+
+ {-do
              s <- getContents
              pure (calc $ getTokens s)
-
+-}
 
 
 
@@ -1487,6 +1584,10 @@ getAncestry :: String -> [(String, Maybe String)] -> [String]
 getAncestry name hierarchy = case get name hierarchy of Nothing -> [name] {-ERROR CASE-}
                                                         Just Nothing -> [name]
                                                         Just (Just parentName) -> name : (getAncestry parentName hierarchy)
+
+
+getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]
+getAncestry' name myMap = getAncestry name (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
 
 getUsefulAncestry :: String -> [(String, Maybe String)] -> [String]
 getUsefulAncestry className hierarchy = reverse $ getAncestry className hierarchy
@@ -1556,14 +1657,48 @@ getSubtypeHierarchy = map getSubtypeHierarchy'
 
 {-For now, I'm only going to add in Object and its methods to the built in stuff. Eventually I may need to add more-}
 
+
+
+
+{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
 generateObject :: ClassDef
-generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "",FFIMethod "toStr" [] ""]) {-Saying "" now for unit, although I might want to change.-}
+generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Object")] "Boolean"])
+
+
+
+{-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
+
+generateNothing :: ClassDef
+generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
+
+
+generateString :: ClassDef
+generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])
+
+
+generateInt :: ClassDef
+generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
+ [FFIMethod "PLUS" [("argumentName", "Int")] "Int",
+  FFIMethod "MINUS" [("argumentName", "Int")] "Int",
+  FFIMethod "PRODUCT" [("argumentName", "Int")] "Int",
+  FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int",
+  FFIMethod "ATMOST" [("argumentName", "Int")] "Int",
+  FFIMethod "LESS" [("argumentName", "Int")] "Int",
+  FFIMethod "ATLEAST" [("argumentName", "Int")] "Int",
+  FFIMethod "MORE" [("argumentName", "Int")] "Int"
+  
+  ])
+
+
+generateBoolean :: ClassDef
+generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [])
 
 
 
 
 addBuiltIns :: Program -> Program
 addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
+
 
 {- I am assuming for now that the user did not add in anything called "Object", etc.
 That is not a reasonable assumption, but this is due soon.
@@ -1620,15 +1755,6 @@ okRExpr :: RExpr -> [String]
 okRExpr (RExprStringLiteral _ ) = []
 okRExpr (RExprIntLiteral _ )= []
 okRExpr (RExprFromLExpr lexpr) = okLExpr lexpr
-okRExpr (RExprPlus rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprMinus rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprTimes rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprDivide rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprEquality rexpr1 rexpr2) =(okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprLeq rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprLt rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprGeq rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprGt rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprAnd rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprOr rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
 okRExpr (RExprNot rexpr) = okRExpr rexpr
@@ -1664,35 +1790,47 @@ okClassDef (ClassDef _ classBody) = okClassBody classBody
 okProgram :: Program -> [String]
 okProgram (Program classDefs statements) = (concat $ map okClassDef classDefs) ++ (concat $ map okStatement statements)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 {-Some repeated information. I will likely reorganize later when I know what I'm doing.....-}
 getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
+{-ARG!!! I HAVE TO ADD BUILTINS FOR NOTHING, ETC!!!-}
+
+{-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
+
+
+
+
+
+{-HAVE TO BUILD ALL OF THE FFI CALLS HERE INTO A CLASS DEF THAT I MAKE.... -}
+
+
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
-getHierarchy (Program classDefs _) = map getSelfParentDef classDefs
+getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
+   [("Nothing", (Just "Object", generateNothing )),
+     ("Int",(Just "Object", generateInt)),
+       ("String", (Just "Object", generateString )),
+         ("Boolean", (Just "Object", generateBoolean )),
+           ("Object", (Nothing, generateObject))
+             ]
+              
+
+
+{-
+ [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
+ ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
+ ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
+ ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
+ ("Object", (Nothing, ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [] )))
+ ]
+-}
 
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
+
+
+
 
 {-Now I have to distinguish between Nothing (not found) and Just Nothing (Object) -}
 
@@ -1718,14 +1856,526 @@ toPrintErroneousConstructorCalls :: [String] -> Either String String
 toPrintErroneousConstructorCalls [] = Left ""
 toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I claim!:\n\n" ++ show x)
 
+
+
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
+
+
+
+getStatements :: Program -> [Statement]
+getStatements (Program _ statements) = statements
+
+
+dealWith :: Program -> IO ()
+dealWith x = do
+ _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+ _ <- print $ allMethodsWorkForProgram x
+ _ <- putStrLn "used before init errors:"
+ _ <- print $ checkInitializationBeforeUse $ getStatements x
+ programPrint (addBuiltIns x)
+ {-pure ()-}
+
+
+
 main = do
+ x <- getContents
+ case runAlex x (gather >>= calc) of Right x -> dealWith x
+                                     Left x -> error x
+ 
+ {- do
+ s <- getContents
+ {-print $ getTokens s-}
+ 
+ case runAlex s calc of Right x -> print x
+                        Left y -> print y
+
+-}
+
+
+
+
+
+{-do
        x <- getProgram
-       {-_ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)-}
-       _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
-       _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
-       {-programPrint (addBuiltIns x)-}
-       pure ()
+       dealWith (x "")
+{-added "" to make typecheck-}
+-}
+isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
+isSubtype subtype supertype map =
+ if supertype == "Object" || subtype == supertype
+  then True
+  else
+   if subtype == "Object"
+    then False
+    else case HashMap.lookup subtype map of Nothing -> undefined {-ERROR CASE-}
+                                            Just (Just a,_) -> isSubtype a supertype map
+                                            Just _ -> undefined
+
+isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
+isSupertype supertype subtype map = isSubtype subtype supertype map
+
+isSupertype' :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> Bool
+isSupertype' myMap a b = isSupertype a b myMap
+
+
+data MethodType = MethodType String [String] String {-name, argument types, return type-}
+                deriving Show
+data ClassType = ClassType String [(String, String)] [MethodType] {- class name fields (name,type), Methods -}
+               deriving Show
+data RawClassType = RawClassType String [MethodType]
+                  deriving Show
+
+{-This ignores statements-}
+
+data TypedProgram = TypedProgram [ClassType]
+
+
+{-WHERE DO WE CARE ABOUT CLASS SIGNATURE IN TERMS OF TYPING!?!?!?!? DO WE CARE ABOUT THE FORMAL ARGUMENTS TO A CLASS??? HOW DO THESE HAVE TO TYPECHECK????-}
+
+{-I allow the user to override a method and change its argument names-}
+
+
+allTrue :: [Bool] -> Bool
+allTrue [] = True
+allTrue (True:xs) = allTrue xs
+allTrue (False:_) = False
+
+{-I don't say which argument in particular violates contravariance yet-}
+checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
+checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
+ if not ((length parentArgumentType) == (length argumentType)) then Just $ "Method " ++ methodName ++ " has different number of arguments to method in parent" else 
+ if isSubtype returnType parentReturnType myMap then (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in if allTrue b then Nothing
+ else Just $ "Method " ++ methodName ++ " argument types violate contravariance when compared to parent method")
+ else Just $ "Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType
+
+{-Currently this only returns a single error... hmm....-}
+
+
+
+listMaybe :: Maybe a -> [a]
+listMaybe (Just s) = [s]
+listMaybe Nothing = []
+
+collectMaybe :: [Maybe a] -> [a]
+collectMaybe arg = concat $ (map listMaybe arg)
+
+
+
+
+
+
+{-
+
+This is where I need to be working with maps from String to Method Type.
+
+Oh, and I also need to be making sure that there are no duplicates, but redefinitions of what appears in a parent is okay.
+
+IGNORING THIS FOR NOW.
+
+
+-}
+
+{-
+data MethodType = MethodType String [String] String {-name, argument types, return type-}
+-}
+
+
+generateMethodMap :: [MethodType] -> HashMap.Map String MethodType
+generateMethodMap [] = HashMap.empty
+generateMethodMap ((MethodType name argTypes returnType):xs) = HashMap.insert name (MethodType name argTypes returnType) (generateMethodMap xs)
+
+getMethodName :: MethodType -> String
+getMethodName (MethodType name _ _ ) = name
+
+
+checkClassMethodsCompatibleWithOneAncestor :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [MethodType] -> [String]
+checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
+ let parentMethodMap = generateMethodMap parentMethods in
+ let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> Nothing
+                                                                         Just parentMethod -> checkClassSingleMethodCompatibleWithParent myMap x parentMethod) in
+ collectMaybe $ map f childMethods
+
+
+{- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
+
+
+
+checkClassMethodsCompatibleWithAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [[MethodType]] -> [String]
+checkClassMethodsCompatibleWithAllAncestors myMap childMethods ancestorsMethods = concat $ map (checkClassMethodsCompatibleWithOneAncestor myMap childMethods) ancestorsMethods
+
+
+generateRawMethodSubtypeSingleMethod :: Method -> MethodType
+generateRawMethodSubtypeSingleMethod (TypedMethod methodName methodArguments returnType _) = MethodType methodName (map snd methodArguments) returnType
+generateRawMethodSubtypeSingleMethod (InferredMethod methodName methodArguments _ ) = MethodType methodName (map snd methodArguments) "Nothing"
+generateRawMethodSubtypeSingleMethod (FFIMethod methodName methodArguments returnType) = MethodType methodName (map snd methodArguments) returnType
+
+
+{-
+I AM NOT HANDLING FIELDS YET, ONLY METHODS.
+
+-}
+
+
+
+
+{-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
+getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
+getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
+                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
+                                                                 Nothing -> error ("Error when considering" ++ name)
+
+
+
+
+{- I THINK I DO NOT HAVE AN FFI OR DEFAULT METHOD FOR EQUALITY CURRENTLY-}
+
+{-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
+methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
+methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap in let methodTypes = map (getMethodTypeList myMap) ancestry in checkClassMethodsCompatibleWithAllAncestors myMap (getMethodTypeList myMap name) methodTypes
+
+
+methodsWorkForAllAncestorsAllClasses :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [String]
+methodsWorkForAllAncestorsAllClasses myMap names = concat $ map (methodsWorkForAllAncestors myMap) names
+
+
+
+getAncestry'' :: HashMap.Map String (Maybe String, ClassDef) -> String -> (String, [String])
+getAncestry'' a b = (b, (getAncestry' b a))
+
+
+convertS :: HashMap.Map String (Maybe String, ClassDef) -> (String, [String]) -> (String, [[MethodType]])
+convertS myMap (s, ss) = (s, map (getMethodTypeList myMap) ss)
+
+{-YAY!!!!-}
+allMethodsWorkForProgram :: Program -> Either [(String, [MethodType])] [String]
+allMethodsWorkForProgram program =
+ let myMap = buildHierarchyMap program in
+ let k = HashMap.keys myMap in
+ let ancestries = map (getAncestry'' myMap) k in
+ let methodLists = map (convertS myMap) ancestries in
+ let y = map generateCompleteMethodTypesAndName methodLists in
+ let x = methodsWorkForAllAncestorsAllClasses myMap k in
+ case x of [] -> Left y
+           _ -> Right x                  
+
+
+{-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
+
+
+generateRawMethodTypesSingleClass :: ClassDef -> (String, [MethodType])
+generateRawMethodTypesSingleClass (ClassDef (ClassSignature className classArguments classParent) (ClassBody statements methods)) = (className, map generateRawMethodSubtypeSingleMethod methods)                                 
+{-This doesn't care about constructors or the contents of methods. IT ALSO DOES NOT VALIDATE METHODS. IT ALSO DOES NOT PUT IN INHERITED STUFF-}
+generateRawMethodTypes :: Program -> [(String, [MethodType])]
+generateRawMethodTypes (Program [] _) = []
+generateRawMethodTypes (Program (classDef:classDefs) statements) = (generateRawMethodTypesSingleClass classDef) : (generateRawMethodTypes (Program classDefs statements))
+
+
+
+{-This generates the actual method types for a single class, given the base methods in the class and the parents.
+  It assumes that everything typechecks.
+
+  Assuming this, all that needs to happen is to iteratively traverse the ancestors to the root, adding methods as they do not exist.
+
+-}
+
+{-THIS ASSUMES THAT THE LIST OF ANCESTORS INCLUDES THE CURRENT CLASS!!!-}
+
+
+
+
+{-REALLY INEFFICIENT!!-}
+fuse :: [MethodType] -> [MethodType] -> [MethodType]
+fuse x [] = x
+fuse x (y:ys) = if exists (getMethodName y) (map getMethodName x) then fuse x ys else fuse (y:x) ys
+
+generateCompleteMethodTypes :: [[MethodType]] -> [MethodType]
+generateCompleteMethodTypes [] = []
+generateCompleteMethodTypes (currentClassMethodList:rest) = let x = generateCompleteMethodTypes rest in fuse currentClassMethodList x
+
+generateCompleteMethodTypesAndName :: (String, [[MethodType]]) -> (String, [MethodType])
+generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)                        
+
+
+
+
+
+
+{-
+
+data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
+                              | ParserWhile RExpr [Statement]
+                                             | ParserReturn RExpr
+                                                            | ParserReturnUnit
+                                                                           | ParserAssign LExpr {- type : String-} RExpr
+                                                                                          | ParserBareExpression RExpr
+                                                                                                         deriving Show
+
+
+
+
+
+-}
+
+
+
+
+
+
+
+
+{-considering some impossible cases below -}
+
+
+
+
+
+
+collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifiersDeclarationRExpr x) (concat $ map collectIdentifiersDeclarationStatement y)
+
+collectIdentifiersDeclarationStatement :: Statement -> [String]
+collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) =
+ case list of [] ->  intersect (concat $ map collectIdentifiersDeclarationStatement statements) (concat $ map collectIdentifiersDeclarationStatement statements2)
+              _ -> intersect (concat $ map collectIdentifiersDeclarationStatement statements) $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
+
+collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = []
+collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+collectIdentifiersDeclarationStatement (ParserReturn rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserReturnUnit) = []
+collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationStatement (ParserBareExpression rExpr) = collectIdentifiersDeclarationRExpr rExpr
+
+
+{-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
+{-RExpr Equality, etc.... should be a method call? What about LEQ? YES I CAN REMOVE THE EQUALITY TAG-}
+
+
+{- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
+
+
+collectIdentifiersDeclarationRExpr :: RExpr -> [String]
+collectIdentifiersDeclarationRExpr (RExprStringLiteral _ ) = []
+collectIdentifiersDeclarationRExpr (RExprIntLiteral _ ) = []
+collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
+collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
+collectIdentifiersDeclarationRExpr (RExprNot rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
+collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersDeclarationRExpr arguments
+
+collectIdentifiersDeclarationLExpr :: LExpr -> [String]
+collectIdentifiersDeclarationLExpr (LExprId s) = [s]
+collectIdentifiersDeclarationLExpr (LExprDotted rExpr s) = s:(collectIdentifiersDeclarationRExpr rExpr)
+
+
+
+
+
+
+
+
+collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersUsageStatementHelper (x,y) = (collectIdentifiersUsageRExpr x) ++ (concat $ map collectIdentifiersUsageStatement y)
+
+collectIdentifiersUsageStatement :: Statement -> [String]
+collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+                                                                                   ++ (concat $ map collectIdentifiersUsageStatementHelper list) ++ (concat $ map collectIdentifiersUsageStatement statements2)
+collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+                                                                          ++ (concat $ map collectIdentifiersUsageStatementHelper list)
+collectIdentifiersUsageStatement (ParserWhile rExpr statements) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserReturn rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserReturnUnit) = []
+collectIdentifiersUsageStatement (ParserAssign lExpr rExpr) = (collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageStatement (ParserBareExpression rExpr) = collectIdentifiersUsageRExpr rExpr
+
+
+
+{- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
+
+
+collectIdentifiersUsageRExpr :: RExpr -> [String]
+collectIdentifiersUsageRExpr (RExprStringLiteral _ ) = []
+collectIdentifiersUsageRExpr (RExprIntLiteral _ ) = []
+collectIdentifiersUsageRExpr (RExprFromLExpr lExpr) = collectIdentifiersUsageLExpr lExpr
+collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
+collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
+collectIdentifiersUsageRExpr (RExprNot rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
+collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersUsageRExpr arguments
+
+collectIdentifiersUsageLExpr :: LExpr -> [String]
+collectIdentifiersUsageLExpr (LExprId s) = [s]
+collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageRExpr rExpr)
+
+
+
+
+
+
+
+
+{-ignores recursive case with while for now-}
+
+
+checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [String]
+checkInitializationBeforeUseSingleStatement statements statement =
+ let doRecursiveCase = case statement of (ParserWhile _ statements2) -> checkInitializationBeforeUse (statements2 ++ statements)
+                                         _ -> []
+ in                                        
+ let defined = concat $ map collectIdentifiersDeclarationStatement statements in
+ let used = collectIdentifiersUsageStatement statement in
+ let foo = (filter (\x -> not (exists x defined)) used) ++ doRecursiveCase
+ in foo
+
+
+
+checkInitializationBeforeUse' :: [Statement] -> [String]
+checkInitializationBeforeUse' [] = []
+checkInitializationBeforeUse' (statement:statements) =
+ (checkInitializationBeforeUseSingleStatement statements statement) ++ 
+ (checkInitializationBeforeUse' statements)
+
+
+
+checkInitializationBeforeUse :: [Statement] -> [String]
+checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
+
+
+{-
+
+
+ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
+                              | ParserWhile RExpr [Statement]
+                                             | ParserReturn RExpr
+                                                            | ParserReturnUnit
+                                                                           | ParserAssign LExpr {- type : String-} RExpr
+                                                                                          | ParserBareExpression RExpr
+
+-}
+
+{-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
+typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
+typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = undefined
+
+
+
+
+
+
+
+
+
+
+{-
+
+Data structures that I need:
+
+
+map from string to list of strings, types, to keep track of what methods are available to each class.
+
+Once I have that, I can check the code for each class.
+
+
+Because of subtyping, I will need to make sure that subclass methods have compatible subtypes. (NOT JUST THE SAME SUBTYPE).
+
+
+-}
+
+
+{-Given the methods and their type signatures, and the class hierarchy, generate the full signature of each class. If there is a type error, return the error -}
+{-generateFullSignature :: ClassDef ->  -> HashMap.Map String (Maybe String, ClassDef) -> 
+-}
+
+{-Given full signatures for each class, and a call to a method, -}
+{-checkCompatibleSubtype :: HashMap 
+-}
+
+
+
+
+
+{-
+
+
+Because we are making all fields public, there should be a datatype which is the actual type (included inherited stuff) of each class.
+
+This would include fields and their types, and methods.
+
+
+Note that children cannot override the type of fields declared in superclasses. (because it would have to both be a subtype and a supertype)
+
+
+-}
+
+
+
+
+
+{-
+
+I am going to assume that there is no shadowing of anything anywhere.
+
+
+-}
+
+
+
+ {-
+
+Potential use of a uninitialized variable on any program execution path
+Potential type error.  The type of the test in an 'if', 'elif', or 'while' must be a subtype of Boolean.  Most other type errors will typically show up either as an actual argument type that is not a subtype of the corresponding actual argument, an actual argument list that is too long or short, or a method not found in a class.  The last is particularly likely when the type of the receiver object is not correct, e.g., when the static type of variable x is "above" the class that has the
+desired method. 
+
+Potential call of undefined method
+
+Illegal redefinition of a name that is in scope (e.g., creating a variable x where a variable x is already in scope)
+
+Method returns wrong type  (includes ending without returning)
+
+Incompatible overridden method  (should have same number of arguments, each formal argument a supertype of overridden method, return type a subtype of returned type of overridden method)
+
+-}
+
+
+
+
+
+{-
+
+data RExpr = RExprStringLiteral String
+           | RExprIntLiteral String
+                      | RExprFromLExpr LExpr
+                                 | RExprAnd RExpr RExpr
+                                            | RExprOr RExpr RExpr
+                                                       | RExprNot RExpr
+                                                                  | RExprMethodInvocation RExpr String [RExpr]
+                                                                             | RExprConstructorInvocation String [RExpr]
+                                                                                        deriving Show
+
+
+data LExpr = LExprId String
+           | LExprDotted RExpr String
+-}
+
+
+
+makeSureBooleanL :: LExpr -> Bool
+makeSureBooleanL (LExprId s) = undefined
+makeSureBooleanL (LExprDotted rExpr fieldName) = undefined
+
+makeSureBoolean :: RExpr -> Bool
+makeSureBoolean (RExprStringLiteral _) = False
+makeSureBoolean (RExprIntLiteral _) = False
+makeSureBoolean (RExprFromLExpr lExpr ) = makeSureBooleanL lExpr
+makeSureBoolean (RExprAnd rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprOr rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
+makeSureBoolean (RExprNot rExpr) = makeSureBoolean rExpr
+makeSureBoolean (RExprMethodInvocation rExpr methodName arguments) = undefined {-lots of type checking to do here.-}
+makeSureBoolean (RExprConstructorInvocation constructorName arguments) = undefined
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
