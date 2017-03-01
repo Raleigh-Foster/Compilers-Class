@@ -801,7 +801,6 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
 
 
-{-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
                                                                  Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
@@ -810,7 +809,6 @@ getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, c
 
 
 
-{- I THINK I DO NOT HAVE AN FFI OR DEFAULT METHOD FOR EQUALITY CURRENTLY-}
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
 methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
@@ -883,34 +881,7 @@ generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)
 
 
 
-{-
-
-data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-                              | ParserWhile RExpr [Statement]
-                                             | ParserReturn RExpr
-                                                            | ParserReturnUnit
-                                                                           | ParserAssign LExpr {- type : String-} RExpr
-                                                                                          | ParserBareExpression RExpr
-                                                                                                         deriving Show
-
-
-
-
-
--}
-
-
-
-
-
-
-
-
 {-considering some impossible cases below -}
-
-
-
 
 
 
@@ -1025,46 +996,12 @@ checkInitializationBeforeUse :: [Statement] -> [String]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
 
 
-{-
-
-
-ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-                              | ParserWhile RExpr [Statement]
-                                             | ParserReturn RExpr
-                                                            | ParserReturnUnit
-                                                                           | ParserAssign LExpr {- type : String-} RExpr
-                                                                                          | ParserBareExpression RExpr
-
--}
-
 {-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
 typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
 typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = undefined
 
 
 
-
-
-
-
-
-
-
-{-
-
-Data structures that I need:
-
-
-map from string to list of strings, types, to keep track of what methods are available to each class.
-
-Once I have that, I can check the code for each class.
-
-
-Because of subtyping, I will need to make sure that subclass methods have compatible subtypes. (NOT JUST THE SAME SUBTYPE).
-
-
--}
 
 
 {-Given the methods and their type signatures, and the class hierarchy, generate the full signature of each class. If there is a type error, return the error -}
@@ -1078,69 +1015,6 @@ Because of subtyping, I will need to make sure that subclass methods have compat
 
 
 
-
-{-
-
-
-Because we are making all fields public, there should be a datatype which is the actual type (included inherited stuff) of each class.
-
-This would include fields and their types, and methods.
-
-
-Note that children cannot override the type of fields declared in superclasses. (because it would have to both be a subtype and a supertype)
-
-
--}
-
-
-
-
-
-{-
-
-I am going to assume that there is no shadowing of anything anywhere.
-
-
--}
-
-
-
- {-
-
-Potential use of a uninitialized variable on any program execution path
-Potential type error.  The type of the test in an 'if', 'elif', or 'while' must be a subtype of Boolean.  Most other type errors will typically show up either as an actual argument type that is not a subtype of the corresponding actual argument, an actual argument list that is too long or short, or a method not found in a class.  The last is particularly likely when the type of the receiver object is not correct, e.g., when the static type of variable x is "above" the class that has the
-desired method. 
-
-Potential call of undefined method
-
-Illegal redefinition of a name that is in scope (e.g., creating a variable x where a variable x is already in scope)
-
-Method returns wrong type  (includes ending without returning)
-
-Incompatible overridden method  (should have same number of arguments, each formal argument a supertype of overridden method, return type a subtype of returned type of overridden method)
-
--}
-
-
-
-
-
-{-
-
-data RExpr = RExprStringLiteral String
-           | RExprIntLiteral String
-                      | RExprFromLExpr LExpr
-                                 | RExprAnd RExpr RExpr
-                                            | RExprOr RExpr RExpr
-                                                       | RExprNot RExpr
-                                                                  | RExprMethodInvocation RExpr String [RExpr]
-                                                                             | RExprConstructorInvocation String [RExpr]
-                                                                                        deriving Show
-
-
-data LExpr = LExprId String
-           | LExprDotted RExpr String
--}
 
 
 
