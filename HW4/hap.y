@@ -1040,25 +1040,24 @@ typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = 
 
 
 
+generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
+generateSubtypes hierarchy classMethodMap statements currentIdentifierMap = undefined
 
 
-{-
+makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
+makeSureBooleanL classMethodMap identifierMap (LExprId s lineNumber) = undefined
+makeSureBooleanL classMethodMap identifierMap (LExprDotted rExpr fieldName lineNumber) = undefined
 
-makeSureBooleanL :: HashMap.Map String String -> LExpr -> Bool
-makeSureBooleanL myMap (LExprId s lineNumber) = undefined
-makeSureBooleanL myMap(LExprDotted rExpr fieldName lineNumber) = undefined
+makeSureBoolean :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> RExpr -> Bool
+makeSureBoolean classMethodMap identifierMap (RExprStringLiteral _ lineNumber) = False
+makeSureBoolean classMethodMap identifierMap (RExprIntLiteral _ lineNumber) = False
+makeSureBoolean classMethodMap identifierMap (RExprFromLExpr lExpr lineNumber) = makeSureBooleanL classMethodMap identifierMap lExpr
+makeSureBoolean classMethodMap identifierMap (RExprAnd rExpr1 rExpr2 lineNumber) = (makeSureBoolean classMethodMap identifierMap rExpr1) && (makeSureBoolean classMethodMap identifierMap rExpr2)
+makeSureBoolean classMethodMap identifierMap (RExprOr rExpr1 rExpr2 lineNumber) = (makeSureBoolean classMethodMap identifierMap rExpr1) && (makeSureBoolean classMethodMap identifierMap rExpr2)
+makeSureBoolean classMethodMap identifierMap (RExprNot rExpr lineNumber) = makeSureBoolean classMethodMap identifierMap rExpr
+makeSureBoolean classMethodMap identifierMap (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
+makeSureBoolean classMethodMap identifierMap (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
 
-makeSureBoolean :: HashMap.Map String String -> RExpr -> Bool
-makeSureBoolean (RExprStringLiteral _ lineNumber) = False
-makeSureBoolean (RExprIntLiteral _ lineNumber) = False
-makeSureBoolean (RExprFromLExpr lExpr lineNumber) = makeSureBooleanL lExpr
-makeSureBoolean (RExprAnd rExpr1 rExpr2 lineNumber) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprOr rExpr1 rExpr2 lineNumber) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprNot rExpr lineNumber) = makeSureBoolean rExpr
-makeSureBoolean (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
-makeSureBoolean (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
-
--}
 
 
 }
