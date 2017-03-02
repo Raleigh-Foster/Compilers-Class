@@ -656,14 +656,31 @@ getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
 
 
+
+
+
+
+printOutInitFail :: (String,Int) -> IO ()
+printOutInitFail (s,x) = (putStrLn $ "identifier " ++ s ++  " on line " ++ (show x))
+
+printOutInitFails' :: [(String,Int)] -> IO ()
+printOutInitFails' [] = pure ()
+printOutInitFails' (x:xs) = (printOutInitFail x) >> (printOutInitFails' xs)
+
+printOutInitFails :: [(String, Int)] -> IO ()
+printOutInitFails [] = pure ()                
+printOutInitFails (x:xs) = (putStrLn "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
+
+
+
+
 dealWith :: Program -> IO ()
 dealWith x = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
  _ <- print $ allMethodsWorkForProgram x
- _ <- putStrLn "used before init errors:"
- _ <- print $ checkInitializationBeforeUse $ getStatements x
+ _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
  programPrint (addBuiltIns x)
  {-pure ()-}
 
@@ -1025,13 +1042,13 @@ typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = 
 
 
 
+{-
 
+makeSureBooleanL :: HashMap.Map String String -> LExpr -> Bool
+makeSureBooleanL myMap (LExprId s lineNumber) = undefined
+makeSureBooleanL myMap(LExprDotted rExpr fieldName lineNumber) = undefined
 
-makeSureBooleanL :: LExpr -> Bool
-makeSureBooleanL (LExprId s lineNumber) = undefined
-makeSureBooleanL (LExprDotted rExpr fieldName lineNumber) = undefined
-
-makeSureBoolean :: RExpr -> Bool
+makeSureBoolean :: HashMap.Map String String -> RExpr -> Bool
 makeSureBoolean (RExprStringLiteral _ lineNumber) = False
 makeSureBoolean (RExprIntLiteral _ lineNumber) = False
 makeSureBoolean (RExprFromLExpr lExpr lineNumber) = makeSureBooleanL lExpr
@@ -1040,6 +1057,8 @@ makeSureBoolean (RExprOr rExpr1 rExpr2 lineNumber) = (makeSureBoolean rExpr1) &&
 makeSureBoolean (RExprNot rExpr lineNumber) = makeSureBoolean rExpr
 makeSureBoolean (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
 makeSureBoolean (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
+
+-}
 
 
 }
