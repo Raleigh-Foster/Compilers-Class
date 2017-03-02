@@ -174,6 +174,8 @@ catchP m k = \s -> case m s of Ok a -> Ok a
 
 type P a = Alex a
 
+
+
 thenP = (>>=)
 
 returnP = return
@@ -251,7 +253,13 @@ parseError tokens = failP "Parse error"
 -}
 
 
-parseError tokens = alexError $ "Parse error: " ++ show tokens
+parseError tokens = do
+ i <- getLineNumber
+ alexError $ show i
+
+
+
+{-(alexError $ "Parse error: " ++ show tokens)-}
 
 data Program = Program [ClassDef] [Statement]
              deriving Show

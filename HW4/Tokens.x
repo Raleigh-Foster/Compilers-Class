@@ -101,6 +101,14 @@ tokens :-
 
 {
 
+
+
+getLineNumber :: Alex Int
+getLineNumber = Alex $ \s -> Right (s, myGetLineNumber $ alex_pos s)
+
+
+myGetLineNumber (AlexPn _ s _) = s
+
 lineNumber ((AlexPn _ s _),_,_,_) = s
 
 
