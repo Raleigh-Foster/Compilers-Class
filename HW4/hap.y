@@ -877,7 +877,7 @@ allMethodsWorkForProgram' program =
            _ -> Right x                  
 
 
-
+{- I DO NOT HAVE TRUE AND FALSE AS BOOLEAN LITERALS!!!!!!!!!! -}
 
 
 allMethodsWorkForProgram :: Program -> IO ()
@@ -886,7 +886,11 @@ allMethodsWorkForProgram program =
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in 
-    pure ()
+   let identifierMap = generateSubtypes hierarchy classMethodMap [] HashMap.empty in
+   let k = checkTypesOkay hierarchy classMethodMap identifierMap (getProgramStatements program) in
+    case k of
+     [] -> pure ()
+     h -> print h
   Right x -> mapM (hPutStrLn stderr) x >> pure ()
 
 
@@ -1180,13 +1184,46 @@ checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
   LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external object", lineNumber)]
 
 
+
+
+
+getLineNumberRExpr :: RExpr -> Int
+getLineNumberRExpr (RExprStringLiteral _ n) = n
+getLineNumberRExpr (RExprIntLiteral _ n) = n
+getLineNumberRExpr (RExprFromLExpr _ n) = n
+getLineNumberRExpr (RExprAnd _ _ n) = n
+getLineNumberRExpr (RExprOr _ _ n) = n
+getLineNumberRExpr (RExprNot _ n) = n
+getLineNumberRExpr (RExprMethodInvocation _ _ _ n) = n
+getLineNumbeRExpr (RExprConstructorInvocation _ _ n) = n
+
+checkIfBool :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> RExpr -> [(String, Int)]
+checkIfBool hierarchy classMethodMap identifierMap rExpr =
+ if getTypeRExpr hierarchy classMethodMap identifierMap rExpr == Just "Boolean" then []
+ else [("conditional must be boolean", getLineNumberRExpr rExpr)]
+
+helpCheckTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> (RExpr, [Statement]) -> [(String, Int)]
+helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap (rExpr,statements) =
+ (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+ (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+ (checkIfBool hierarchy classMethodMap identifierMap rExpr)
+
 checkTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> Statement -> [(String,Int)]
 checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap statement =
  case statement of
-  ParserIfWithElse rExpr statements list statements2 lineNumber -> undefined
-  ParserIfWithoutElse rExpr statements list lineNumber -> undefined
+  ParserIfWithElse rExpr statements list statements2 lineNumber ->
+   (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+   (concat $ map (helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap) list) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements2)
+  ParserIfWithoutElse rExpr statements list lineNumber ->
+   (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+   (concat $ map (helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap) list)
+
   ParserWhile rExpr statements lineNumber -> undefined
   ParserReturn rExpr lineNumber -> [("Return statement only valid inside method", lineNumber)]
+  ParserReturnUnit lineNumber -> [] {-?#$?@#?@#???!!?!?!?!?!?-}
   ParserAssign lExpr rExpr lineNumber ->
    let r = getTypeRExpr hierarchy classMethodMap identifierMap rExpr in
    let l = getTypeLExpr hierarchy classMethodMap identifierMap lExpr in
@@ -1284,9 +1321,13 @@ generateClassMethodMap :: [(String, [MethodType])] -> HashMap.Map (String,String
 generateClassMethodMap [] = HashMap.empty
 generateClassMethodMap ((s,m):xs) = HashMap.union (generateClassMethods s m) (generateClassMethodMap xs) 
 
+getProgramStatements :: Program -> [Statement] {-Just get the statements after the class definitions...-}
+getProgramStatements (Program _ statements) = statements
 
 
 }
+
+
 
 
 

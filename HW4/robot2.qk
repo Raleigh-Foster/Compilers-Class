@@ -7,7 +7,7 @@
                this.age = 42;
                    this.strength = 100;
 
-                       def destroy_city(fierceness: Int ) {
+                       def destroy_city(fierceness: Object ) {
                                 /* TBD: how do we actually destroy things? */
                                     }
    }
@@ -18,6 +18,8 @@
                this.age = "forty-eight";     // ERROR, not an Int
                    this.iq = 2 * iq;            // Sure, why not
                        // ERROR, failed to define strength
+   
+           def destroy_city(fierceness : Int ) : Object {}
    }
 
 
@@ -32,4 +34,7 @@ x = y;
 v = 3;
 z = z;
 f = g;
+
+
+v = v.bar(2,3);
 

@@ -28,6 +28,8 @@ class Foo() extends Blarg {
 
 }
 
-
+if("hello"){
+ return 2;    
+}
 
 
