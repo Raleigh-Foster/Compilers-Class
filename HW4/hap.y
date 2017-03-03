@@ -400,6 +400,9 @@ getCommonAncestor x y hierarchy = getCommonAncestor' (getUsefulAncestry x hierar
 
 
 
+getCommonAncestorFromMap :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> String
+getCommonAncestorFromMap myMap s1 s2 = getCommonAncestor s1 s2 (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
+
 {-This code for common ancestors might be correct, but I am not testing it yet. It's really a type checking thing.-}
 
 
@@ -753,13 +756,16 @@ allTrue [] = True
 allTrue (True:xs) = allTrue xs
 allTrue (False:_) = False
 
+
+
 {-I don't say which argument in particular violates contravariance yet-}
-checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
+checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> [String] {-Nothing means works. Just s means s is the error message-}
 checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
- if not ((length parentArgumentType) == (length argumentType)) then Just $ "Method " ++ methodName ++ " has different number of arguments to method in parent" else 
- if isSubtype returnType parentReturnType myMap then (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in if allTrue b then Nothing
- else Just $ "Method " ++ methodName ++ " argument types violate contravariance when compared to parent method")
- else Just $ "Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType
+ (if not ((length parentArgumentType) == (length argumentType)) then ["Method " ++ methodName ++ " has different number of arguments to method in parent"] else []) ++
+ (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in
+   if allTrue b then []
+   else ["Method " ++ methodName ++ " argument types violate contravariance when compared to parent method"]) ++
+ (if isSubtype returnType parentReturnType myMap then [] else ["Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType])
 
 {-Currently this only returns a single error... hmm....-}
 
@@ -804,9 +810,9 @@ getMethodName (MethodType name _ _ ) = name
 checkClassMethodsCompatibleWithOneAncestor :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [MethodType] -> [String]
 checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
  let parentMethodMap = generateMethodMap parentMethods in
- let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> Nothing
+ let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> []
                                                                          Just parentMethod -> checkClassSingleMethodCompatibleWithParent myMap x parentMethod) in
- collectMaybe $ map f childMethods
+ concat $ map f childMethods
 
 
 {- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
@@ -1071,14 +1077,27 @@ okStatement :: Statement -> [String]
 
 
 
+getTypeRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType ->  HashMap.Map String String -> RExpr -> Maybe String
+getTypeRExpr = undefined
+
+
 updateSubtypesSingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> Statement -> HashMap.Map String String -> (HashMap.Map String String,Bool)
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign lexpr rexpr lineNumber) currentIdentifierMap = undefined
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement1 ++ (concat $ map snd listRExprListStatement) ++ listStatement2) currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement ++ (concat $ map snd listRExprListStatement)) currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap listStatement currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap =
+ let currentType = HashMap.lookup identifier currentIdentifierMap in
+  case currentType of
+   Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Just s -> (HashMap.insert identifier s undefined, True)
+    Nothing -> (currentIdentifierMap,False)
+   Just s -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy currentType s in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+    Nothing -> (currentIdentifierMap,False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
 generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> [Statement] -> HashMap.Map String String -> (HashMap.Map String String, Bool)
 generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
