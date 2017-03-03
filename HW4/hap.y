@@ -681,6 +681,7 @@ printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers 
 
 
 
+
 dealWith :: Program -> IO ()
 dealWith x = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
@@ -695,8 +696,8 @@ dealWith x = do
 
 main = do
  x <- getContents
- case runAlex {-x (gather >>= calc)-} x calc of Right x -> dealWith x
-                                                Left x -> error x
+ case runAlex x calc of Right x -> dealWith x
+                        Left x -> error x
  
  {- do
  s <- getContents
@@ -877,10 +878,15 @@ allMethodsWorkForProgram' program =
 
 
 
+
+
 allMethodsWorkForProgram :: Program -> IO ()
 allMethodsWorkForProgram program =
  case allMethodsWorkForProgram' program of
-  Left x -> pure ()
+  Left x ->
+   let classMethodMap = generateClassMethodMap x in
+   let hierarchy = buildHierarchyMap program in 
+    pure ()
   Right x -> mapM (hPutStrLn stderr) x >> pure ()
 
 
@@ -1263,6 +1269,20 @@ makeSureBoolean classMethodMap identifierMap (RExprOr rExpr1 rExpr2 lineNumber) 
 makeSureBoolean classMethodMap identifierMap (RExprNot rExpr lineNumber) = makeSureBoolean classMethodMap identifierMap rExpr
 makeSureBoolean classMethodMap identifierMap (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
 makeSureBoolean classMethodMap identifierMap (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
+
+
+
+
+generateClassMethodsSingle :: String -> MethodType -> HashMap.Map (String, String) MethodType
+generateClassMethodsSingle s (MethodType methodName arguments returnType) = HashMap.insert (s,methodName) (MethodType methodName arguments returnType) (HashMap.empty)                           
+
+generateClassMethods :: String -> [MethodType] -> HashMap.Map (String, String) MethodType
+generateClassMethods s [] = HashMap.empty
+generateClassMethods s (x:xs) = HashMap.union (generateClassMethodsSingle s x) (generateClassMethods s xs)
+
+generateClassMethodMap :: [(String, [MethodType])] -> HashMap.Map (String,String) MethodType
+generateClassMethodMap [] = HashMap.empty
+generateClassMethodMap ((s,m):xs) = HashMap.union (generateClassMethods s m) (generateClassMethodMap xs) 
 
 
 
