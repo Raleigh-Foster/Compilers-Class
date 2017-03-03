@@ -350,6 +350,14 @@ alex_accept = listArray (0::Int,162) [AlexAccNone,AlexAccNone,AlexAccNone,AlexAc
 {-# LINE 102 "Tokens.x" #-}
 
 
+
+
+getLineNumber :: Alex Int
+getLineNumber = Alex $ \s -> Right (s, myGetLineNumber $ alex_pos s)
+
+
+myGetLineNumber (AlexPn _ s _) = s
+
 lineNumber ((AlexPn _ s _),_,_,_) = s
 
 
@@ -369,7 +377,10 @@ project (_,_,_,x) = x
 -- Each action has type :: String -> Token
 
 -- The token type:
-data Token =
+
+data Token = Token TokenInner Int
+        deriving Show
+data TokenInner =
   Class
   | While
   | Elif
@@ -412,7 +423,7 @@ data Token =
   | EOFToken
   deriving (Eq,Show)
 
-alexEOF = return (EOFToken,undefined)
+alexEOF = return (Token EOFToken (-1))
 
 
 
@@ -420,45 +431,45 @@ alexEOF = return (EOFToken,undefined)
 helpPrint :: Int -> String -> String -> String
 helpPrint n t val = (show n) ++ "  " ++ t ++ " \"" ++ val ++ "\""
 
-myPrint :: (Token, Int) -> Either String String
-myPrint (Class, n) = Left $ helpPrint n "CLASS" "class"
-myPrint (While, n) = Left $ helpPrint n "WHILE" "while"
-myPrint (Elif, n) = Left $ helpPrint n "ELIF" "elif"
-myPrint (Extends, n) = Left $ helpPrint n "EXTENDS" "extends"
-myPrint (Else, n) = Left $ helpPrint n "ELSE" "else"
-myPrint (If, n) = Left $ helpPrint n "IF" "if"
-myPrint (Identifier val, n) = Left $ helpPrint n "IDENT" val
-myPrint (Colon, n) = Left $ helpPrint n ":" ":"
-myPrint (Lparen, n) = Left $ helpPrint n "(" "("
-myPrint (Rparen, n) = Left $ helpPrint n ")" ")"
-myPrint (Lbracket, n) = Left $ helpPrint n "{" "{"
-myPrint (Rbracket, n) = Left $ helpPrint n "}" "}"
-myPrint (Comma, n) = Left $ helpPrint n "," ","
-myPrint (Semicolon, n) = Left $ helpPrint n ";" ";"
-myPrint (Dot, n) = Left $ helpPrint n "." "."
-myPrint (Equals, n) = Left $ helpPrint n "=" "="
-myPrint (Def, n) = Left $ helpPrint n "DEF" "def"
-myPrint (Return, n) = Left $ helpPrint n "RETURN" "return"
-myPrint (Sum, n) = Left $ helpPrint n "+" "+"
-myPrint (Difference, n) = Left $ helpPrint n "-" "-"
-myPrint (Product, n) = Left $ helpPrint n "*" "*"
-myPrint (Quotient, n) = Left $ helpPrint n "/" "/"
-myPrint (Number val, n) = Left $ helpPrint n "INT_LIT" val
-myPrint (TargetString val, n) = Left $ helpPrint n "STRING_LIT" val {- I should not add extra quotes here, but I do so that this will be easier to grade. -}
-myPrint (Error val, n) = Right $ helpPrint n "ERROR" val
+myPrint :: Token -> Either String String
+myPrint (Token Class n) = Left $ helpPrint n "CLASS" "class"
+myPrint (Token While n) = Left $ helpPrint n "WHILE" "while"
+myPrint (Token Elif n) = Left $ helpPrint n "ELIF" "elif"
+myPrint (Token Extends n) = Left $ helpPrint n "EXTENDS" "extends"
+myPrint (Token Else n) = Left $ helpPrint n "ELSE" "else"
+myPrint (Token If n) = Left $ helpPrint n "IF" "if"
+myPrint (Token (Identifier val) n) = Left $ helpPrint n "IDENT" val
+myPrint (Token Colon n) = Left $ helpPrint n ":" ":"
+myPrint (Token Lparen n) = Left $ helpPrint n "(" "("
+myPrint (Token Rparen n) = Left $ helpPrint n ")" ")"
+myPrint (Token Lbracket n) = Left $ helpPrint n "{" "{"
+myPrint (Token Rbracket n) = Left $ helpPrint n "}" "}"
+myPrint (Token Comma n) = Left $ helpPrint n "," ","
+myPrint (Token Semicolon n) = Left $ helpPrint n ";" ";"
+myPrint (Token Dot n) = Left $ helpPrint n "." "."
+myPrint (Token Equals n) = Left $ helpPrint n "=" "="
+myPrint (Token Def n) = Left $ helpPrint n "DEF" "def"
+myPrint (Token Return n) = Left $ helpPrint n "RETURN" "return"
+myPrint (Token Sum n) = Left $ helpPrint n "+" "+"
+myPrint (Token Difference n) = Left $ helpPrint n "-" "-"
+myPrint (Token Product n) = Left $ helpPrint n "*" "*"
+myPrint (Token Quotient n) = Left $ helpPrint n "/" "/"
+myPrint (Token (Number val) n) = Left $ helpPrint n "INT_LIT" val
+myPrint (Token (TargetString val) n) = Left $ helpPrint n "STRING_LIT" val {- I should not add extra quotes here, but I do so that this will be easier to grade. -}
+myPrint (Token (Error val) n) = Right $ helpPrint n "ERROR" val
 
-myPrint (Equality, n) = Left $ helpPrint n "EQUALS" "=="
-myPrint (LEQ, n) = Left $ helpPrint n "<=" "<=" 
-myPrint (Lt, n) = Left $ helpPrint n "<" "<"
-myPrint (GEQ, n) = Left $ helpPrint n ">=" ">="
-myPrint (Gt, n) = Left $ helpPrint n ">" ">"
-myPrint (And, n) = Left $ helpPrint n "AND" "and"
-myPrint (Or, n) = Left $ helpPrint n "OR" "or"
-myPrint (Not, n) = Left $ helpPrint n "NOT" "not"
+myPrint (Token Equality n) = Left $ helpPrint n "EQUALS" "=="
+myPrint (Token LEQ n) = Left $ helpPrint n "<=" "<=" 
+myPrint (Token Lt n) = Left $ helpPrint n "<" "<"
+myPrint (Token GEQ n) = Left $ helpPrint n ">=" ">="
+myPrint (Token Gt n) = Left $ helpPrint n ">" ">"
+myPrint (Token And n) = Left $ helpPrint n "AND" "and"
+myPrint (Token Or n) = Left $ helpPrint n "OR" "or"
+myPrint (Token Not n) = Left $ helpPrint n "NOT" "not"
 
 
 
-myPrint (EOFToken, _) = Left "" {-do I have to worry about an extra newline?-}
+myPrint (Token EOFToken _) = Left "" {-do I have to worry about an extra newline?-}
 
 
 fooPrint :: Either String String -> IO ()
@@ -472,7 +483,7 @@ fooPrint (Right s) = hPutStrLn stderr s
 
 gather =  alexMonadScan >>= \x -> 
   case x of 
-   (EOFToken,n) -> return []
+   (Token EOFToken _) -> return []
    _ -> gather >>= (return . (x :))
 
 -- end Overgod code
@@ -488,46 +499,46 @@ comment2,string1,string2 :: Int
 comment2 = 1
 string1 = 2
 string2 = 3
-alex_action_1 =  \s i -> return (Class, lineNumber s) 
-alex_action_2 =  \s i -> return (If, lineNumber s) 
-alex_action_3 =  \s i -> return (Colon, lineNumber s) 
-alex_action_4 =  \s i -> return (Lparen, lineNumber s) 
-alex_action_5 =  \s i -> return (Rparen, lineNumber s) 
-alex_action_6 =  \s i -> return (Lbracket, lineNumber s) 
-alex_action_7 =  \s i -> return (Rbracket, lineNumber s) 
-alex_action_8 =  \s i -> return (Comma, lineNumber s) 
-alex_action_9 =  \s i -> return (Semicolon, lineNumber s) 
-alex_action_10 =  \s i -> return (Dot, lineNumber s) 
-alex_action_11 =  \s i -> return (Equals, lineNumber s) 
-alex_action_12 =  \s i -> return (Def, lineNumber s) 
-alex_action_13 =  \s i -> return (Return, lineNumber s) 
-alex_action_14 =  \s i -> return (While, lineNumber s) 
-alex_action_15 =  \s i -> return (Elif, lineNumber s) 
-alex_action_16 =  \s i -> return (Extends, lineNumber s) 
-alex_action_17 =  \s i -> return (Else, lineNumber s) 
-alex_action_18 =  \s i -> return (Sum, lineNumber s) 
-alex_action_19 =  \s i -> return (Difference, lineNumber s) 
-alex_action_20 =  \s i -> return (Product, lineNumber s) 
-alex_action_21 =  \s i -> return (Quotient, lineNumber s) 
-alex_action_22 = \s i -> return (Equality, lineNumber s) 
-alex_action_23 = \s i -> return (LEQ, lineNumber s)
-alex_action_24 = \s i -> return (Lt, lineNumber s)
-alex_action_25 = \s i -> return (GEQ, lineNumber s)
-alex_action_26 = \s i -> return (Gt, lineNumber s)
-alex_action_27 = \s i -> return (And, lineNumber s)
-alex_action_28 = \s i -> return (Or, lineNumber s)
-alex_action_29 = \s i -> return (Not, lineNumber s)
-alex_action_30 = \s i -> return (EOFToken, lineNumber s)
+alex_action_1 =  \s i -> return (Token Class (lineNumber s)) 
+alex_action_2 =  \s i -> return (Token If (lineNumber s)) 
+alex_action_3 =  \s i -> return (Token Colon (lineNumber s)) 
+alex_action_4 =  \s i -> return (Token Lparen (lineNumber s)) 
+alex_action_5 =  \s i -> return (Token Rparen (lineNumber s)) 
+alex_action_6 =  \s i -> return (Token Lbracket (lineNumber s)) 
+alex_action_7 =  \s i -> return (Token Rbracket (lineNumber s)) 
+alex_action_8 =  \s i -> return (Token Comma (lineNumber s)) 
+alex_action_9 =  \s i -> return (Token Semicolon (lineNumber s)) 
+alex_action_10 =  \s i -> return (Token Dot  (lineNumber s)) 
+alex_action_11 =  \s i -> return (Token Equals (lineNumber s)) 
+alex_action_12 =  \s i -> return (Token Def (lineNumber s)) 
+alex_action_13 =  \s i -> return (Token Return (lineNumber s)) 
+alex_action_14 =  \s i -> return (Token While (lineNumber s)) 
+alex_action_15 =  \s i -> return (Token Elif (lineNumber s)) 
+alex_action_16 =  \s i -> return (Token Extends (lineNumber s)) 
+alex_action_17 =  \s i -> return (Token Else (lineNumber s)) 
+alex_action_18 =  \s i -> return (Token Sum (lineNumber s)) 
+alex_action_19 =  \s i -> return (Token Difference (lineNumber s)) 
+alex_action_20 =  \s i -> return (Token Product (lineNumber s)) 
+alex_action_21 =  \s i -> return (Token Quotient (lineNumber s)) 
+alex_action_22 = \s i -> return (Token Equality (lineNumber s)) 
+alex_action_23 = \s i -> return (Token LEQ (lineNumber s))
+alex_action_24 = \s i -> return (Token Lt (lineNumber s))
+alex_action_25 = \s i -> return (Token GEQ (lineNumber s))
+alex_action_26 = \s i -> return (Token Gt (lineNumber s))
+alex_action_27 = \s i -> return (Token And (lineNumber s))
+alex_action_28 = \s i -> return (Token Or (lineNumber s))
+alex_action_29 = \s i -> return (Token Not (lineNumber s))
+alex_action_30 = \s i -> return (Token EOFToken (lineNumber s))
 alex_action_31 = begin 0
 alex_action_32 = begin comment2
 alex_action_33 = begin 0
 alex_action_35 = begin string2
-alex_action_36 =  \s i -> ( (alexSetStartCode 0) >> return ((TargetString $ take (i-3) $ project    s), lineNumber s))
+alex_action_36 =  \s i -> ( (alexSetStartCode 0) >> return (Token (TargetString $ take (i-3) $ project    s) (lineNumber s)))
 alex_action_37 = begin string1
-alex_action_38 =  \s i -> ( (alexSetStartCode 0) >> return ((TargetString $ (take (i-1) $ project s)), lineNumber s))
-alex_action_39 =  \s i -> return ((Number $ take i $ project s), lineNumber s)
-alex_action_40 =  \s i -> return ((Identifier $ take i $ project s), lineNumber s)
-alex_action_41 =  \s i -> (alexSetStartCode 0) >> return ((Error $ take 1 $ project s), lineNumber s)
+alex_action_38 =  \s i -> ( (alexSetStartCode 0) >> return (Token (TargetString $ (take (i-1) $ project s)) (lineNumber s)))
+alex_action_39 =  \s i -> return (Token (Number $ take i $ project s) (lineNumber s))
+alex_action_40 =  \s i -> return (Token (Identifier $ take i $ project s) (lineNumber s))
+alex_action_41 =  \s i -> (alexSetStartCode 0) >> return (Token (Error $ take 1 $ project s) (lineNumber s))
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
