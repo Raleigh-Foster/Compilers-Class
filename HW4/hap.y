@@ -1077,8 +1077,145 @@ okStatement :: Statement -> [String]
 
 
 
+
+
+getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing
+
+
+
+
+{-This is the case of field projection. I am ignoring this for now....-}
+
+{-
+ case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+  Nothing -> Nothing
+{-  Just rType -> HashMap.lookup (rType,s) classMethodMap-}
+-}
+
+
+
+
+getMethodReturn :: Maybe MethodType -> Maybe String
+getMethodReturn (Just (MethodType _ _ s)) = Just s                
+getMethodReturn Nothing = Nothing
+
+
+
+
+
+{-This checks to make sure that:
+
+Ands are made out of two booleans
+Ors are made out of two booleans
+Nots are made out of one boolean
+
+If/Else/Elif conditionals are booleans
+
+While conditionals are booleans
+
+Method Invocations have the correct number of arguments
+
+Method Inocations have correct types for all arguments
+
+
+Method Invocations refer to methods that exist
+
+
+Method Invocations have correct return type
+
+
+return is not performed (outside of method)
+
+
+Again, this is not for code inside of classes....
+
+
+-}
+
+
+
+
+checkTypesOkayRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> RExpr -> [(String, Int)]
+checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr =
+ case rExpr of
+   RExprStringLiteral s lineNumber -> [] {-I'm not sure if there's an issue here. I couldn't be making this the wrong type could I?-}
+   RExprIntLiteral i lineNumber -> []
+   RExprFromLExpr lExpr lineNumber -> checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr
+   RExprAnd rExpr1 rExpr2 lineNumber -> 
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr1) ++
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr2) ++ 
+    (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr1 /= Just "Boolean" then [("First argument of AND must be a boolean", lineNumber)] else []) ++
+    (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr2 /= Just "Boolean" then [("Second argument of AND must be a boolean", lineNumber)] else [])
+   RExprOr rExpr1 rExpr2 lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr1) ++
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr2) ++
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr1 /= Just "Boolean" then [("First argument of OR must be a boolean", lineNumber)] else []) ++
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr2 /= Just "Boolean" then [("Second argument of OR must be a boolean", lineNumber)] else [])
+   RExprNot rExpr lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++           
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr /= Just "Boolean" then [("Argument of NOT must be a boolean", lineNumber)] else []) 
+   RExprMethodInvocation rExpr methodName arguments lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+     ([]
+     
+     {-
+     
+     NOT DONE YET!!!!!!
+     -}
+     )
+   RExprConstructorInvocation constructorName arguments lineNumber -> undefined
+
+checkTypesOkayLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> [(String, Int)]
+checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
+ case lExpr of
+  LExprId s lineNumber -> []
+  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external object", lineNumber)]
+
+
+checkTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> Statement -> [(String,Int)]
+checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap statement =
+ case statement of
+  ParserIfWithElse rExpr statements list statements2 lineNumber -> undefined
+  ParserIfWithoutElse rExpr statements list lineNumber -> undefined
+  ParserWhile rExpr statements lineNumber -> undefined
+  ParserReturn rExpr lineNumber -> [("Return statement only valid inside method", lineNumber)]
+  ParserAssign lExpr rExpr lineNumber ->
+   let r = getTypeRExpr hierarchy classMethodMap identifierMap rExpr in
+   let l = getTypeLExpr hierarchy classMethodMap identifierMap lExpr in
+    (if (r==l) then [] else [("Incompatible l-type and r-type", lineNumber)]) ++
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+    (checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr)
+  ParserBareExpression rExpr lineNumber -> []
+
+
+
+
+
+checkTypesOkay :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> [Statement] -> [(String,Int)]
+checkTypesOkay hierarchy classMethodMap identifierMap statements = concat $ map (checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap) statements
+
+
+{-WANT SEPARATE CHECK TO MAKE SURE ANDS ORS AND NOT REFER TO BOOLEANS...-}
+
+{-Want a separate check to make sure all methods have the right number of arguments and all arguments are of okay type.-}
+
 getTypeRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType ->  HashMap.Map String String -> RExpr -> Maybe String
-getTypeRExpr = undefined
+getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr =
+ case rExpr of
+  (RExprStringLiteral s lineNumber) -> Just "String"
+  (RExprIntLiteral s lineNumber) -> Just "Int"
+  (RExprFromLExpr lExpr lineNumber) -> undefined
+  (RExprAnd rExpr1 rExpr2 lineNumber) -> Just "Boolean"
+  (RExprOr rExpr1 rExpr2 lineNumber) -> Just "Boolean"
+  (RExprNot rExpr lineNumber) -> Just "Boolean"
+  (RExprMethodInvocation rExpr methodName arguments lineNumber) ->
+   case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Nothing -> Nothing
+    Just rType -> getMethodReturn $ HashMap.lookup (rType, methodName) classMethodMap {-assuming only one method per class and method name-}
+  (RExprConstructorInvocation constructorName arguments lineNumber) -> Just constructorName
+
 
 
 updateSubtypesSingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> Statement -> HashMap.Map String String -> (HashMap.Map String String,Bool)
@@ -1093,8 +1230,8 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
     Just s -> (HashMap.insert identifier s undefined, True)
     Nothing -> (currentIdentifierMap,False)
-   Just s -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
-    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy currentType s in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+   Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
     Nothing -> (currentIdentifierMap,False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
