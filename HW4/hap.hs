@@ -4,6 +4,7 @@ module Main where
 import Tokens
 import qualified Data.Map.Strict as HashMap
 import Data.List
+import System.IO
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
@@ -880,24 +881,24 @@ happyReduce_7 = happyReduce 5 8 happyReduction_7
 happyReduction_7 (_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
-		 (ClassSignature happy_var_2 happy_var_4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}
+		 (ClassSignature (stringFromIdentifierToken happy_var_2) happy_var_4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}
 	) `HappyStk` happyRest
 
 happyReduce_8 = happyReduce 7 8 happyReduction_8
-happyReduction_8 ((HappyTerminal (Token (Identifier happy_var_7) (_))) `HappyStk`
+happyReduction_8 ((HappyTerminal happy_var_7) `HappyStk`
 	_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
-		 (ClassSignature happy_var_2 happy_var_4 (Just happy_var_7)
+		 (ClassSignature (stringFromIdentifierToken happy_var_2) happy_var_4 (Just (stringFromIdentifierToken happy_var_7))
 	) `HappyStk` happyRest
 
 happyReduce_9 = happyReduce 4 9 happyReduction_9
@@ -916,10 +917,10 @@ happyReduction_10 ((HappyAbsSyn11  happy_var_6) `HappyStk`
 	(HappyAbsSyn6  happy_var_4) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn13  happy_var_2) `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn10
-		 (ParserIfWithoutElse happy_var_2 happy_var_4 happy_var_6
+		 (ParserIfWithoutElse happy_var_2 happy_var_4 happy_var_6 (lineNumberFromToken happy_var_1)
 	) `HappyStk` happyRest
 
 happyReduce_11 = happyReduce 10 10 happyReduction_11
@@ -932,10 +933,10 @@ happyReduction_11 (_ `HappyStk`
 	(HappyAbsSyn6  happy_var_4) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn13  happy_var_2) `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn10
-		 (ParserIfWithElse happy_var_2 happy_var_4 happy_var_6 happy_var_9
+		 (ParserIfWithElse happy_var_2 happy_var_4 happy_var_6 happy_var_9 (lineNumberFromToken happy_var_1)
 	) `HappyStk` happyRest
 
 happyReduce_12 = happyReduce 5 10 happyReduction_12
@@ -943,36 +944,37 @@ happyReduction_12 (_ `HappyStk`
 	(HappyAbsSyn6  happy_var_4) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn13  happy_var_2) `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn10
-		 (ParserWhile happy_var_2 happy_var_4
+		 (ParserWhile happy_var_2 happy_var_4 (lineNumberFromToken happy_var_1)
 	) `HappyStk` happyRest
 
 happyReduce_13 = happySpecReduce_3  10 happyReduction_13
 happyReduction_13 _
 	(HappyAbsSyn13  happy_var_2)
-	_
+	(HappyTerminal happy_var_1)
 	 =  HappyAbsSyn10
-		 (ParserReturn happy_var_2
+		 (ParserReturn happy_var_2 (lineNumberFromToken happy_var_1)
 	)
 happyReduction_13 _ _ _  = notHappyAtAll 
 
 happyReduce_14 = happySpecReduce_2  10 happyReduction_14
 happyReduction_14 _
-	_
+	(HappyTerminal happy_var_1)
 	 =  HappyAbsSyn10
-		 (ParserReturnUnit
+		 (ParserReturnUnit (lineNumberFromToken happy_var_1)
 	)
+happyReduction_14 _ _  = notHappyAtAll 
 
 happyReduce_15 = happyReduce 4 10 happyReduction_15
 happyReduction_15 (_ `HappyStk`
 	(HappyAbsSyn13  happy_var_3) `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	(HappyAbsSyn16  happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn10
-		 (ParserAssign happy_var_1 happy_var_3
+		 (ParserAssign happy_var_1 happy_var_3 (lineNumberFromToken happy_var_2)
 	) `HappyStk` happyRest
 
 happyReduce_16 = happyReduce 6 10 happyReduction_16
@@ -980,18 +982,18 @@ happyReduction_16 (_ `HappyStk`
 	(HappyAbsSyn13  happy_var_5) `HappyStk`
 	_ `HappyStk`
 	_ `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	(HappyAbsSyn16  happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn10
-		 (ParserAssign happy_var_1 happy_var_5
+		 (ParserAssign happy_var_1 happy_var_5 (lineNumberFromToken happy_var_2)
 	) `HappyStk` happyRest
 
 happyReduce_17 = happySpecReduce_2  10 happyReduction_17
-happyReduction_17 _
+happyReduction_17 (HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn10
-		 (ParserBareExpression happy_var_1
+		 (ParserBareExpression happy_var_1 (lineNumberFromToken happy_var_2)
 	)
 happyReduction_17 _ _  = notHappyAtAll 
 
@@ -1022,57 +1024,57 @@ happyReduction_20 (_ `HappyStk`
 happyReduce_21 = happySpecReduce_1  13 happyReduction_21
 happyReduction_21 (HappyTerminal (Token (Number happy_var_1) (_)))
 	 =  HappyAbsSyn13
-		 (RExprIntLiteral happy_var_1
+		 (RExprIntLiteral happy_var_1 (lineNumberFromToken undefined)
 	)
 happyReduction_21 _  = notHappyAtAll 
 
 happyReduce_22 = happySpecReduce_1  13 happyReduction_22
 happyReduction_22 (HappyTerminal (Token (TargetString happy_var_1) (_)))
 	 =  HappyAbsSyn13
-		 (RExprStringLiteral happy_var_1
+		 (RExprStringLiteral happy_var_1 (lineNumberFromToken undefined)
 	)
 happyReduction_22 _  = notHappyAtAll 
 
 happyReduce_23 = happySpecReduce_1  13 happyReduction_23
 happyReduction_23 (HappyAbsSyn16  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprFromLExpr happy_var_1
+		 (RExprFromLExpr happy_var_1 undefined
 	)
 happyReduction_23 _  = notHappyAtAll 
 
 happyReduce_24 = happySpecReduce_3  13 happyReduction_24
 happyReduction_24 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "PLUS" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "PLUS" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_24 _ _ _  = notHappyAtAll 
 
 happyReduce_25 = happySpecReduce_3  13 happyReduction_25
 happyReduction_25 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "MINUS" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "MINUS" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_25 _ _ _  = notHappyAtAll 
 
 happyReduce_26 = happySpecReduce_3  13 happyReduction_26
 happyReduction_26 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "PRODUCT" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "PRODUCT" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_26 _ _ _  = notHappyAtAll 
 
 happyReduce_27 = happySpecReduce_3  13 happyReduction_27
 happyReduction_27 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "QUOTIENT" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "QUOTIENT" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_27 _ _ _  = notHappyAtAll 
 
@@ -1087,95 +1089,95 @@ happyReduction_28 _ _ _  = notHappyAtAll
 
 happyReduce_29 = happySpecReduce_3  13 happyReduction_29
 happyReduction_29 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "EQUALS" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "EQUALS" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_29 _ _ _  = notHappyAtAll 
 
 happyReduce_30 = happySpecReduce_3  13 happyReduction_30
 happyReduction_30 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "ATMOST" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "ATMOST" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_30 _ _ _  = notHappyAtAll 
 
 happyReduce_31 = happySpecReduce_3  13 happyReduction_31
 happyReduction_31 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "LESS" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "LESS" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_31 _ _ _  = notHappyAtAll 
 
 happyReduce_32 = happySpecReduce_3  13 happyReduction_32
 happyReduction_32 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "ATLEAST" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "ATLEAST" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_32 _ _ _  = notHappyAtAll 
 
 happyReduce_33 = happySpecReduce_3  13 happyReduction_33
 happyReduction_33 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 "MORE" [happy_var_3]
+		 (RExprMethodInvocation happy_var_1 "MORE" [happy_var_3] (lineNumberFromToken happy_var_2)
 	)
 happyReduction_33 _ _ _  = notHappyAtAll 
 
 happyReduce_34 = happySpecReduce_3  13 happyReduction_34
 happyReduction_34 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprAnd happy_var_1 happy_var_3
+		 (RExprAnd happy_var_1 happy_var_3 (lineNumberFromToken happy_var_2)
 	)
 happyReduction_34 _ _ _  = notHappyAtAll 
 
 happyReduce_35 = happySpecReduce_3  13 happyReduction_35
 happyReduction_35 (HappyAbsSyn13  happy_var_3)
-	_
+	(HappyTerminal happy_var_2)
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprOr happy_var_1 happy_var_3
+		 (RExprOr happy_var_1 happy_var_3 (lineNumberFromToken happy_var_2)
 	)
 happyReduction_35 _ _ _  = notHappyAtAll 
 
 happyReduce_36 = happySpecReduce_2  13 happyReduction_36
 happyReduction_36 (HappyAbsSyn13  happy_var_2)
-	_
+	(HappyTerminal happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprNot happy_var_2
+		 (RExprNot happy_var_2 (lineNumberFromToken happy_var_1)
 	)
 happyReduction_36 _ _  = notHappyAtAll 
 
 happyReduce_37 = happyReduce 6 13 happyReduction_37
 happyReduction_37 (_ `HappyStk`
 	(HappyAbsSyn14  happy_var_5) `HappyStk`
-	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_3) (_))) `HappyStk`
+	(HappyTerminal happy_var_4) `HappyStk`
+	(HappyTerminal happy_var_3) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn13  happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn13
-		 (RExprMethodInvocation happy_var_1 happy_var_3 happy_var_5
+		 (RExprMethodInvocation happy_var_1 (stringFromIdentifierToken happy_var_3) happy_var_5 (lineNumberFromToken happy_var_4)
 	) `HappyStk` happyRest
 
 happyReduce_38 = happyReduce 4 13 happyReduction_38
 happyReduction_38 (_ `HappyStk`
 	(HappyAbsSyn14  happy_var_3) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_1) (_))) `HappyStk`
+	(HappyTerminal happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn13
-		 (RExprConstructorInvocation happy_var_1 happy_var_3
+		 (RExprConstructorInvocation (stringFromIdentifierToken happy_var_1) happy_var_3 (lineNumberFromToken happy_var_1)
 	) `HappyStk` happyRest
 
 happyReduce_39 = happySpecReduce_0  14 happyReduction_39
@@ -1206,18 +1208,18 @@ happyReduction_42 (HappyAbsSyn15  happy_var_3)
 happyReduction_42 _ _ _  = notHappyAtAll 
 
 happyReduce_43 = happySpecReduce_1  16 happyReduction_43
-happyReduction_43 (HappyTerminal (Token (Identifier happy_var_1) (_)))
+happyReduction_43 (HappyTerminal happy_var_1)
 	 =  HappyAbsSyn16
-		 (LExprId happy_var_1
+		 (LExprId (stringFromIdentifierToken happy_var_1) (lineNumberFromToken happy_var_1)
 	)
 happyReduction_43 _  = notHappyAtAll 
 
 happyReduce_44 = happySpecReduce_3  16 happyReduction_44
-happyReduction_44 (HappyTerminal (Token (Identifier happy_var_3) (_)))
+happyReduction_44 (HappyTerminal happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn16
-		 (LExprDotted happy_var_1 happy_var_3
+		 (LExprDotted happy_var_1 (stringFromIdentifierToken happy_var_3) (lineNumberFromToken undefined)
 	)
 happyReduction_44 _ _ _  = notHappyAtAll 
 
@@ -1228,12 +1230,12 @@ happyReduction_45  =  HappyAbsSyn17
 
 happyReduce_46 = happyReduce 4 17 happyReduction_46
 happyReduction_46 ((HappyAbsSyn18  happy_var_4) `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_3) (_))) `HappyStk`
+	(HappyTerminal happy_var_3) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_1) (_))) `HappyStk`
+	(HappyTerminal happy_var_1) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn17
-		 ((happy_var_1,happy_var_3):happy_var_4
+		 (((stringFromIdentifierToken happy_var_1),(stringFromIdentifierToken happy_var_3)):happy_var_4
 	) `HappyStk` happyRest
 
 happyReduce_47 = happySpecReduce_0  18 happyReduction_47
@@ -1243,13 +1245,13 @@ happyReduction_47  =  HappyAbsSyn18
 
 happyReduce_48 = happyReduce 5 18 happyReduction_48
 happyReduction_48 ((HappyAbsSyn18  happy_var_5) `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_4) (_))) `HappyStk`
+	(HappyTerminal happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn18
-		 ((happy_var_2,happy_var_4):happy_var_5
+		 (((stringFromIdentifierToken happy_var_2),(stringFromIdentifierToken happy_var_4)):happy_var_5
 	) `HappyStk` happyRest
 
 happyReduce_49 = happySpecReduce_0  19 happyReduction_49
@@ -1272,42 +1274,41 @@ happyReduction_51 (_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn20
-		 (InferredMethod happy_var_2 happy_var_4 happy_var_7
+		 (InferredMethod (stringFromIdentifierToken happy_var_2) happy_var_4 happy_var_7
 	) `HappyStk` happyRest
 
 happyReduce_52 = happyReduce 10 20 happyReduction_52
 happyReduction_52 (_ `HappyStk`
 	(HappyAbsSyn6  happy_var_9) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_7) (_))) `HappyStk`
+	(HappyTerminal happy_var_7) `HappyStk`
 	_ `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn17  happy_var_4) `HappyStk`
 	_ `HappyStk`
-	(HappyTerminal (Token (Identifier happy_var_2) (_))) `HappyStk`
+	(HappyTerminal happy_var_2) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn20
-		 (TypedMethod happy_var_2 happy_var_4 happy_var_7 happy_var_9
+		 (TypedMethod (stringFromIdentifierToken happy_var_2) happy_var_4 (stringFromIdentifierToken happy_var_7) happy_var_9
 	) `HappyStk` happyRest
 
-happyNewToken action sts stk [] =
-	action 55 55 notHappyAtAll (HappyState action) sts stk []
-
-happyNewToken action sts stk (tk:tks) =
-	let cont i = action i i tk (HappyState action) sts stk tks in
+happyNewToken action sts stk
+	= lexer(\tk -> 
+	let cont i = action i i tk (HappyState action) sts stk in
 	case tk of {
+	(Token EOFToken (_)) -> action 55 55 tk (HappyState action) sts stk;
 	Token Class (_) -> cont 21;
 	Token While (_) -> cont 22;
 	Token Elif (_) -> cont 23;
 	Token Extends (_) -> cont 24;
 	Token Else (_) -> cont 25;
 	Token If (_) -> cont 26;
-	Token (Identifier happy_dollar_dollar) (_) -> cont 27;
+	Token (Identifier _) (_) -> cont 27;
 	Token Colon (_) -> cont 28;
 	Token Lparen (_) -> cont 29;
 	Token Rparen (_) -> cont 30;
@@ -1335,26 +1336,37 @@ happyNewToken action sts stk (tk:tks) =
 	Token Or (_) -> cont 52;
 	Token Not (_) -> cont 53;
 	Token EOFToken (_) -> cont 54;
-	_ -> happyError' (tk:tks)
-	}
+	_ -> happyError' tk
+	})
 
-happyError_ 55 tk tks = happyError' tks
-happyError_ _ tk tks = happyError' (tk:tks)
+happyError_ 55 tk = happyError' tk
+happyError_ _ tk = happyError' tk
 
 happyThen :: () => P a -> (a -> P b) -> P b
 happyThen = (thenP)
 happyReturn :: () => a -> P a
 happyReturn = (returnP)
-happyThen1 m k tks = (thenP) m (\a -> k a tks)
-happyReturn1 :: () => a -> b -> P a
-happyReturn1 = \a tks -> (returnP) a
-happyError' :: () => [(Token)] -> P a
-happyError' = parseError
+happyThen1 = happyThen
+happyReturn1 :: () => a -> P a
+happyReturn1 = happyReturn
+happyError' :: () => (Token) -> P a
+happyError' tk = parseError tk
 
-calc tks = happySomeParser where
-  happySomeParser = happyThen (happyParse action_0 tks) (\x -> case x of {HappyAbsSyn4 z -> happyReturn z; _other -> notHappyAtAll })
+calc = happySomeParser where
+  happySomeParser = happyThen (happyParse action_0) (\x -> case x of {HappyAbsSyn4 z -> happyReturn z; _other -> notHappyAtAll })
 
 happySeq = happyDontSeq
+
+
+stringFromIdentifierToken :: Token -> String
+stringFromIdentifierToken (Token (Identifier s) _) = s
+
+
+lineNumberFromToken :: Token -> Int
+lineNumberFromToken (Token _ n) = n                
+
+
+
 
 
 {-Program : Classes Statements {Program $1 $2}-}
@@ -1391,6 +1403,8 @@ catchP m k = \s -> case m s of Ok a -> Ok a
 
 
 type P a = Alex a
+
+
 
 thenP = (>>=)
 
@@ -1469,7 +1483,13 @@ parseError tokens = failP "Parse error"
 -}
 
 
-parseError tokens = alexError $ "Parse error: " ++ show tokens
+parseError tokens = do
+ i <- getLineNumber
+ alexError $ show i
+
+
+
+{-(alexError $ "Parse error: " ++ show tokens)-}
 
 data Program = Program [ClassDef] [Statement]
              deriving Show
@@ -1491,25 +1511,25 @@ data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
                     deriving Show
 data ClassDef = ClassDef ClassSignature ClassBody
               deriving Show
-data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-               | ParserWhile RExpr [Statement]
-               | ParserReturn RExpr
-               | ParserReturnUnit
-               | ParserAssign LExpr {- type : String-} RExpr
-               | ParserBareExpression RExpr
+data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])] Int
+               | ParserWhile RExpr [Statement] Int
+               | ParserReturn RExpr Int
+               | ParserReturnUnit Int
+               | ParserAssign LExpr {- type : String-} RExpr Int
+               | ParserBareExpression RExpr Int
                deriving Show
-data LExpr = LExprId String
-           | LExprDotted RExpr String
+data LExpr = LExprId String Int
+           | LExprDotted RExpr String Int
            deriving Show
-data RExpr = RExprStringLiteral String
-           | RExprIntLiteral String
-           | RExprFromLExpr LExpr
-           | RExprAnd RExpr RExpr
-           | RExprOr RExpr RExpr
-           | RExprNot RExpr
-           | RExprMethodInvocation RExpr String [RExpr]
-           | RExprConstructorInvocation String [RExpr]
+data RExpr = RExprStringLiteral String Int
+           | RExprIntLiteral String Int
+           | RExprFromLExpr LExpr Int
+           | RExprAnd RExpr RExpr Int
+           | RExprOr RExpr RExpr Int
+           | RExprNot RExpr Int
+           | RExprMethodInvocation RExpr String [RExpr] Int
+           | RExprConstructorInvocation String [RExpr] Int
            deriving Show
 {-
 getTokens :: String -> [Token] {-For now, no error handling-}
@@ -1605,6 +1625,9 @@ getCommonAncestor :: String -> String -> [(String, Maybe String)] -> String
 getCommonAncestor x y hierarchy = getCommonAncestor' (getUsefulAncestry x hierarchy) (getUsefulAncestry y hierarchy)
 
 
+
+getCommonAncestorFromMap :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> String
+getCommonAncestorFromMap myMap s1 s2 = getCommonAncestor s1 s2 (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
 
 {-This code for common ancestors might be correct, but I am not testing it yet. It's really a type checking thing.-}
 
@@ -1748,31 +1771,31 @@ data ClassDef = ClassDef ClassSignature ClassBody
 
 
 okLExpr :: LExpr -> [String]
-okLExpr (LExprId _) = []
-okLExpr (LExprDotted rexpr string) = okRExpr rexpr
+okLExpr (LExprId _ lineNumber) = []
+okLExpr (LExprDotted rexpr string lineNumber) = okRExpr rexpr
 
 okRExpr :: RExpr -> [String]
-okRExpr (RExprStringLiteral _ ) = []
-okRExpr (RExprIntLiteral _ )= []
-okRExpr (RExprFromLExpr lexpr) = okLExpr lexpr
-okRExpr (RExprAnd rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprOr rexpr1 rexpr2) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
-okRExpr (RExprNot rexpr) = okRExpr rexpr
-okRExpr (RExprMethodInvocation rexpr string listRExpr) = okRExpr rexpr ++ (concat $ map okRExpr listRExpr)
-okRExpr (RExprConstructorInvocation string listRExpr) = string : (concat $ map okRExpr listRExpr)
+okRExpr (RExprStringLiteral _ lineNumber) = []
+okRExpr (RExprIntLiteral _ lineNumber)= []
+okRExpr (RExprFromLExpr lexpr lineNumber) = okLExpr lexpr
+okRExpr (RExprAnd rexpr1 rexpr2 lineNumber) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
+okRExpr (RExprOr rexpr1 rexpr2 lineNumber) = (okRExpr rexpr1) ++ (okRExpr rexpr2)
+okRExpr (RExprNot rexpr lineNumber) = okRExpr rexpr
+okRExpr (RExprMethodInvocation rexpr string listRExpr lineNumber) = okRExpr rexpr ++ (concat $ map okRExpr listRExpr)
+okRExpr (RExprConstructorInvocation string listRExpr lineNumber) = string : (concat $ map okRExpr listRExpr)
 
 
 okStatementHelper :: (RExpr,[Statement]) -> [String]
 okStatementHelper (x,y) = (okRExpr x) ++ (concat $ map okStatement y)
 
 okStatement :: Statement -> [String]
-okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
-okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
-okStatement (ParserWhile rexpr listStatement) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
-okStatement (ParserReturn rexpr) = okRExpr rexpr
-okStatement (ParserReturnUnit) = []
-okStatement (ParserAssign lexpr rexpr) = (okLExpr lexpr) ++ (okRExpr rexpr)
-okStatement (ParserBareExpression rexpr) = okRExpr rexpr
+okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
+okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
+okStatement (ParserWhile rexpr listStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
+okStatement (ParserReturn rexpr lineNumber) = okRExpr rexpr
+okStatement (ParserReturnUnit lineNumber) = []
+okStatement (ParserAssign lexpr rexpr lineNumber) = (okLExpr lexpr) ++ (okRExpr rexpr)
+okStatement (ParserBareExpression rexpr lineNumber) = okRExpr rexpr
 
 
 okMethod :: Method -> [String]
@@ -1866,14 +1889,32 @@ getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
 
 
+
+
+
+
+printOutInitFail :: (String,Int) -> IO ()
+printOutInitFail (s,x) = (hPutStrLn stderr $ "identifier " ++ s ++  " on line " ++ (show x))
+
+printOutInitFails' :: [(String,Int)] -> IO ()
+printOutInitFails' [] = pure ()
+printOutInitFails' (x:xs) = (printOutInitFail x) >> (printOutInitFails' xs)
+
+printOutInitFails :: [(String, Int)] -> IO ()
+printOutInitFails [] = pure ()                
+printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
+
+
+
+
+
 dealWith :: Program -> IO ()
 dealWith x = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
- _ <- print $ allMethodsWorkForProgram x
- _ <- putStrLn "used before init errors:"
- _ <- print $ checkInitializationBeforeUse $ getStatements x
+ _ <- allMethodsWorkForProgram x
+ _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
  programPrint (addBuiltIns x)
  {-pure ()-}
 
@@ -1881,8 +1922,8 @@ dealWith x = do
 
 main = do
  x <- getContents
- case runAlex x (gather >>= calc) of Right x -> dealWith x
-                                     Left x -> error x
+ case runAlex x calc of Right x -> dealWith x
+                        Left x -> error x
  
  {- do
  s <- getContents
@@ -1942,13 +1983,16 @@ allTrue [] = True
 allTrue (True:xs) = allTrue xs
 allTrue (False:_) = False
 
+
+
 {-I don't say which argument in particular violates contravariance yet-}
-checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> Maybe String {-Nothing means works. Just s means s is the error message-}
+checkClassSingleMethodCompatibleWithParent :: HashMap.Map String (Maybe String, ClassDef) -> MethodType {-child method -} -> MethodType {- parent method -} -> [String] {-Nothing means works. Just s means s is the error message-}
 checkClassSingleMethodCompatibleWithParent myMap (MethodType methodName argumentType returnType) (MethodType parentMethodName parentArgumentType parentReturnType) =
- if not ((length parentArgumentType) == (length argumentType)) then Just $ "Method " ++ methodName ++ " has different number of arguments to method in parent" else 
- if isSubtype returnType parentReturnType myMap then (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in if allTrue b then Nothing
- else Just $ "Method " ++ methodName ++ " argument types violate contravariance when compared to parent method")
- else Just $ "Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType
+ (if not ((length parentArgumentType) == (length argumentType)) then ["Method " ++ methodName ++ " has different number of arguments to method in parent"] else []) ++
+ (let b = zipWith (isSupertype' myMap) argumentType parentArgumentType in
+   if allTrue b then []
+   else ["Method " ++ methodName ++ " argument types violate contravariance when compared to parent method"]) ++
+ (if isSubtype returnType parentReturnType myMap then [] else ["Method " ++ methodName ++ " return type of " ++ returnType ++ " violates covariance when compared to return type of parent method return type of " ++ parentReturnType])
 
 {-Currently this only returns a single error... hmm....-}
 
@@ -1993,9 +2037,9 @@ getMethodName (MethodType name _ _ ) = name
 checkClassMethodsCompatibleWithOneAncestor :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [MethodType] -> [String]
 checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
  let parentMethodMap = generateMethodMap parentMethods in
- let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> Nothing
+ let f = (\x -> case HashMap.lookup (getMethodName x) parentMethodMap of Nothing -> []
                                                                          Just parentMethod -> checkClassSingleMethodCompatibleWithParent myMap x parentMethod) in
- collectMaybe $ map f childMethods
+ concat $ map f childMethods
 
 
 {- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
@@ -2020,7 +2064,6 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
 
 
-{-THIS FUNCTION HAS AN INCOMPLETE PATTERN MATCH-}
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
                                                                  Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
@@ -2029,7 +2072,6 @@ getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, c
 
 
 
-{- I THINK I DO NOT HAVE AN FFI OR DEFAULT METHOD FOR EQUALITY CURRENTLY-}
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
 methodsWorkForAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> String -> [String]
@@ -2049,8 +2091,8 @@ convertS :: HashMap.Map String (Maybe String, ClassDef) -> (String, [String]) ->
 convertS myMap (s, ss) = (s, map (getMethodTypeList myMap) ss)
 
 {-YAY!!!!-}
-allMethodsWorkForProgram :: Program -> Either [(String, [MethodType])] [String]
-allMethodsWorkForProgram program =
+allMethodsWorkForProgram' :: Program -> Either [(String, [MethodType])] [String]
+allMethodsWorkForProgram' program =
  let myMap = buildHierarchyMap program in
  let k = HashMap.keys myMap in
  let ancestries = map (getAncestry'' myMap) k in
@@ -2059,6 +2101,23 @@ allMethodsWorkForProgram program =
  let x = methodsWorkForAllAncestorsAllClasses myMap k in
  case x of [] -> Left y
            _ -> Right x                  
+
+
+{- I DO NOT HAVE TRUE AND FALSE AS BOOLEAN LITERALS!!!!!!!!!! -}
+
+
+allMethodsWorkForProgram :: Program -> IO ()
+allMethodsWorkForProgram program =
+ case allMethodsWorkForProgram' program of
+  Left x ->
+   let classMethodMap = generateClassMethodMap x in
+   let hierarchy = buildHierarchyMap program in 
+   let identifierMap = generateSubtypes hierarchy classMethodMap [] HashMap.empty in
+   let k = checkTypesOkay hierarchy classMethodMap identifierMap (getProgramStatements program) in
+    case k of
+     [] -> pure ()
+     h -> print h
+  Right x -> mapM (hPutStrLn stderr) x >> pure ()
 
 
 {-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
@@ -2102,51 +2161,24 @@ generateCompleteMethodTypesAndName (s, m) = (s, generateCompleteMethodTypes m)
 
 
 
-{-
-
-data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-                              | ParserWhile RExpr [Statement]
-                                             | ParserReturn RExpr
-                                                            | ParserReturnUnit
-                                                                           | ParserAssign LExpr {- type : String-} RExpr
-                                                                                          | ParserBareExpression RExpr
-                                                                                                         deriving Show
-
-
-
-
-
--}
-
-
-
-
-
-
-
-
 {-considering some impossible cases below -}
 
 
 
-
-
-
-collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [String]
+collectIdentifiersDeclarationStatementHelper :: (RExpr,[Statement]) -> [(String, Int)]
 collectIdentifiersDeclarationStatementHelper (x,y) = intersect (collectIdentifiersDeclarationRExpr x) (concat $ map collectIdentifiersDeclarationStatement y)
 
-collectIdentifiersDeclarationStatement :: Statement -> [String]
-collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2) =
+collectIdentifiersDeclarationStatement :: Statement -> [(String, Int)]
+collectIdentifiersDeclarationStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) =
  case list of [] ->  intersect (concat $ map collectIdentifiersDeclarationStatement statements) (concat $ map collectIdentifiersDeclarationStatement statements2)
               _ -> intersect (concat $ map collectIdentifiersDeclarationStatement statements) $ intersect (concat $ map collectIdentifiersDeclarationStatementHelper list) (concat $ map collectIdentifiersDeclarationStatement statements2)
 
-collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list) = []
-collectIdentifiersDeclarationStatement (ParserWhile rExpr statements) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
-collectIdentifiersDeclarationStatement (ParserReturn rExpr) = collectIdentifiersDeclarationRExpr rExpr
-collectIdentifiersDeclarationStatement (ParserReturnUnit) = []
-collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr) = collectIdentifiersDeclarationLExpr lExpr
-collectIdentifiersDeclarationStatement (ParserBareExpression rExpr) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserIfWithoutElse rExpr statements list lineNumber) = []
+collectIdentifiersDeclarationStatement (ParserWhile rExpr statements lineNumber) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationStatement statements)
+collectIdentifiersDeclarationStatement (ParserReturn rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationStatement (ParserReturnUnit lineNumber) = []
+collectIdentifiersDeclarationStatement (ParserAssign lExpr rExpr lineNumber) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationStatement (ParserBareExpression rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
 
 
 {-These literals probably should be turned into instances of Int, etc.... hmm.... THIS MIGHT BE A PROBLEM..-}
@@ -2156,59 +2188,59 @@ collectIdentifiersDeclarationStatement (ParserBareExpression rExpr) = collectIde
 {- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
 
 
-collectIdentifiersDeclarationRExpr :: RExpr -> [String]
-collectIdentifiersDeclarationRExpr (RExprStringLiteral _ ) = []
-collectIdentifiersDeclarationRExpr (RExprIntLiteral _ ) = []
-collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr) = collectIdentifiersDeclarationLExpr lExpr
-collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
-collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
-collectIdentifiersDeclarationRExpr (RExprNot rExpr) = collectIdentifiersDeclarationRExpr rExpr
-collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
-collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersDeclarationRExpr arguments
+collectIdentifiersDeclarationRExpr :: RExpr -> [(String, Int)]
+collectIdentifiersDeclarationRExpr (RExprStringLiteral _ lineNumber) = []
+collectIdentifiersDeclarationRExpr (RExprIntLiteral _ lineNumber) = []
+collectIdentifiersDeclarationRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersDeclarationLExpr lExpr
+collectIdentifiersDeclarationRExpr (RExprAnd rExpr1 rExpr2 lineNumber) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2)
+collectIdentifiersDeclarationRExpr (RExprOr rExpr1 rExpr2 lineNumber) = (collectIdentifiersDeclarationRExpr rExpr1) ++ (collectIdentifiersDeclarationRExpr rExpr2) 
+collectIdentifiersDeclarationRExpr (RExprNot rExpr lineNumber) = collectIdentifiersDeclarationRExpr rExpr
+collectIdentifiersDeclarationRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersDeclarationRExpr rExpr) ++ (concat $ map collectIdentifiersDeclarationRExpr arguments)
+collectIdentifiersDeclarationRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersDeclarationRExpr arguments
 
-collectIdentifiersDeclarationLExpr :: LExpr -> [String]
-collectIdentifiersDeclarationLExpr (LExprId s) = [s]
-collectIdentifiersDeclarationLExpr (LExprDotted rExpr s) = s:(collectIdentifiersDeclarationRExpr rExpr)
-
-
+collectIdentifiersDeclarationLExpr :: LExpr -> [(String, Int)]
+collectIdentifiersDeclarationLExpr (LExprId s lineNumber) = [(s, lineNumber)]
+collectIdentifiersDeclarationLExpr (LExprDotted rExpr s lineNumber) = (s, lineNumber):(collectIdentifiersDeclarationRExpr rExpr)
 
 
 
 
 
 
-collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [String]
+
+
+collectIdentifiersUsageStatementHelper :: (RExpr,[Statement]) -> [(String,Int)]
 collectIdentifiersUsageStatementHelper (x,y) = (collectIdentifiersUsageRExpr x) ++ (concat $ map collectIdentifiersUsageStatement y)
 
-collectIdentifiersUsageStatement :: Statement -> [String]
-collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement :: Statement -> [(String,Int)]
+collectIdentifiersUsageStatement (ParserIfWithElse rExpr statements list statements2 lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
                                                                                    ++ (concat $ map collectIdentifiersUsageStatementHelper list) ++ (concat $ map collectIdentifiersUsageStatement statements2)
-collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserIfWithoutElse rExpr statements list lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
                                                                           ++ (concat $ map collectIdentifiersUsageStatementHelper list)
-collectIdentifiersUsageStatement (ParserWhile rExpr statements) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
-collectIdentifiersUsageStatement (ParserReturn rExpr) = collectIdentifiersUsageRExpr rExpr
-collectIdentifiersUsageStatement (ParserReturnUnit) = []
-collectIdentifiersUsageStatement (ParserAssign lExpr rExpr) = (collectIdentifiersUsageRExpr rExpr)
-collectIdentifiersUsageStatement (ParserBareExpression rExpr) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserWhile rExpr statements lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageStatement statements)
+collectIdentifiersUsageStatement (ParserReturn rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageStatement (ParserReturnUnit lineNumber) = []
+collectIdentifiersUsageStatement (ParserAssign lExpr rExpr lineNumber) = (collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageStatement (ParserBareExpression rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
 
 
 
 {- When I parse the class signatures I should keep track of the arguments to the class so that I can check the constructors somewhere around here.-}
 
 
-collectIdentifiersUsageRExpr :: RExpr -> [String]
-collectIdentifiersUsageRExpr (RExprStringLiteral _ ) = []
-collectIdentifiersUsageRExpr (RExprIntLiteral _ ) = []
-collectIdentifiersUsageRExpr (RExprFromLExpr lExpr) = collectIdentifiersUsageLExpr lExpr
-collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
-collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
-collectIdentifiersUsageRExpr (RExprNot rExpr) = collectIdentifiersUsageRExpr rExpr
-collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
-collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments) = concat $ map collectIdentifiersUsageRExpr arguments
+collectIdentifiersUsageRExpr :: RExpr -> [(String,Int)]
+collectIdentifiersUsageRExpr (RExprStringLiteral _ lineNumber) = []
+collectIdentifiersUsageRExpr (RExprIntLiteral _ lineNumber) = []
+collectIdentifiersUsageRExpr (RExprFromLExpr lExpr lineNumber) = collectIdentifiersUsageLExpr lExpr
+collectIdentifiersUsageRExpr (RExprAnd rExpr1 rExpr2 lineNumber) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2)
+collectIdentifiersUsageRExpr (RExprOr rExpr1 rExpr2 lineNumber) = (collectIdentifiersUsageRExpr rExpr1) ++ (collectIdentifiersUsageRExpr rExpr2) 
+collectIdentifiersUsageRExpr (RExprNot rExpr lineNumber) = collectIdentifiersUsageRExpr rExpr
+collectIdentifiersUsageRExpr (RExprMethodInvocation rExpr methodName arguments lineNumber) = (collectIdentifiersUsageRExpr rExpr) ++ (concat $ map collectIdentifiersUsageRExpr arguments)
+collectIdentifiersUsageRExpr (RExprConstructorInvocation constructorName arguments lineNumber) = concat $ map collectIdentifiersUsageRExpr arguments
 
-collectIdentifiersUsageLExpr :: LExpr -> [String]
-collectIdentifiersUsageLExpr (LExprId s) = [s]
-collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageRExpr rExpr)
+collectIdentifiersUsageLExpr :: LExpr -> [(String,Int)]
+collectIdentifiersUsageLExpr (LExprId s lineNumber) = [(s,lineNumber)]
+collectIdentifiersUsageLExpr (LExprDotted rExpr s lineNumber) = (s, lineNumber):(collectIdentifiersUsageRExpr rExpr)
 
 
 
@@ -2220,9 +2252,9 @@ collectIdentifiersUsageLExpr (LExprDotted rExpr s) = s:(collectIdentifiersUsageR
 {-ignores recursive case with while for now-}
 
 
-checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [String]
+checkInitializationBeforeUseSingleStatement :: [Statement] -> Statement -> [(String,Int)]
 checkInitializationBeforeUseSingleStatement statements statement =
- let doRecursiveCase = case statement of (ParserWhile _ statements2) -> checkInitializationBeforeUse (statements2 ++ statements)
+ let doRecursiveCase = case statement of (ParserWhile _ statements2 lineNumber) -> checkInitializationBeforeUse (statements2 ++ statements)
                                          _ -> []
  in                                        
  let defined = concat $ map collectIdentifiersDeclarationStatement statements in
@@ -2232,7 +2264,7 @@ checkInitializationBeforeUseSingleStatement statements statement =
 
 
 
-checkInitializationBeforeUse' :: [Statement] -> [String]
+checkInitializationBeforeUse' :: [Statement] -> [(String, Int)]
 checkInitializationBeforeUse' [] = []
 checkInitializationBeforeUse' (statement:statements) =
  (checkInitializationBeforeUseSingleStatement statements statement) ++ 
@@ -2240,22 +2272,9 @@ checkInitializationBeforeUse' (statement:statements) =
 
 
 
-checkInitializationBeforeUse :: [Statement] -> [String]
+checkInitializationBeforeUse :: [Statement] -> [(String,Int)]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
 
-
-{-
-
-
-ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement]
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])]
-                              | ParserWhile RExpr [Statement]
-                                             | ParserReturn RExpr
-                                                            | ParserReturnUnit
-                                                                           | ParserAssign LExpr {- type : String-} RExpr
-                                                                                          | ParserBareExpression RExpr
-
--}
 
 {-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
 typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
@@ -2263,27 +2282,6 @@ typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = 
 
 
 
-
-
-
-
-
-
-
-{-
-
-Data structures that I need:
-
-
-map from string to list of strings, types, to keep track of what methods are available to each class.
-
-Once I have that, I can check the code for each class.
-
-
-Because of subtyping, I will need to make sure that subclass methods have compatible subtypes. (NOT JUST THE SAME SUBTYPE).
-
-
--}
 
 
 {-Given the methods and their type signatures, and the class hierarchy, generate the full signature of each class. If there is a type error, return the error -}
@@ -2297,16 +2295,17 @@ Because of subtyping, I will need to make sure that subclass methods have compat
 
 
 
-
 {-
 
 
-Because we are making all fields public, there should be a datatype which is the actual type (included inherited stuff) of each class.
-
-This would include fields and their types, and methods.
-
-
-Note that children cannot override the type of fields declared in superclasses. (because it would have to both be a subtype and a supertype)
+okStatement :: Statement -> [String]
+            okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
+            okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
+            okStatement (ParserWhile rexpr listStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
+            okStatement (ParserReturn rexpr lineNumber) = okRExpr rexpr
+            okStatement (ParserReturnUnit lineNumber) = []
+            okStatement (ParserAssign lexpr rexpr lineNumber) = (okLExpr lexpr) ++ (okRExpr rexpr)
+            okStatement (ParserBareExpression rexpr lineNumber) = okRExpr rexpr
 
 
 -}
@@ -2314,68 +2313,242 @@ Note that children cannot override the type of fields declared in superclasses. 
 
 
 
+
+
+getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing
+
+
+
+
+{-This is the case of field projection. I am ignoring this for now....-}
 
 {-
+ case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+  Nothing -> Nothing
+{-  Just rType -> HashMap.lookup (rType,s) classMethodMap-}
+-}
 
-I am going to assume that there is no shadowing of anything anywhere.
+
+
+
+getMethodReturn :: Maybe MethodType -> Maybe String
+getMethodReturn (Just (MethodType _ _ s)) = Just s                
+getMethodReturn Nothing = Nothing
+
+
+
+
+
+{-This checks to make sure that:
+
+Ands are made out of two booleans
+Ors are made out of two booleans
+Nots are made out of one boolean
+
+If/Else/Elif conditionals are booleans
+
+While conditionals are booleans
+
+Method Invocations have the correct number of arguments
+
+Method Inocations have correct types for all arguments
+
+
+Method Invocations refer to methods that exist
+
+
+Method Invocations have correct return type
+
+
+return is not performed (outside of method)
+
+
+Again, this is not for code inside of classes....
 
 
 -}
 
 
 
- {-
 
-Potential use of a uninitialized variable on any program execution path
-Potential type error.  The type of the test in an 'if', 'elif', or 'while' must be a subtype of Boolean.  Most other type errors will typically show up either as an actual argument type that is not a subtype of the corresponding actual argument, an actual argument list that is too long or short, or a method not found in a class.  The last is particularly likely when the type of the receiver object is not correct, e.g., when the static type of variable x is "above" the class that has the
-desired method. 
+checkTypesOkayRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> RExpr -> [(String, Int)]
+checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr =
+ case rExpr of
+   RExprStringLiteral s lineNumber -> [] {-I'm not sure if there's an issue here. I couldn't be making this the wrong type could I?-}
+   RExprIntLiteral i lineNumber -> []
+   RExprFromLExpr lExpr lineNumber -> checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr
+   RExprAnd rExpr1 rExpr2 lineNumber -> 
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr1) ++
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr2) ++ 
+    (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr1 /= Just "Boolean" then [("First argument of AND must be a boolean", lineNumber)] else []) ++
+    (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr2 /= Just "Boolean" then [("Second argument of AND must be a boolean", lineNumber)] else [])
+   RExprOr rExpr1 rExpr2 lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr1) ++
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr2) ++
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr1 /= Just "Boolean" then [("First argument of OR must be a boolean", lineNumber)] else []) ++
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr2 /= Just "Boolean" then [("Second argument of OR must be a boolean", lineNumber)] else [])
+   RExprNot rExpr lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++           
+     (if getTypeRExpr hierarchy classMethodMap identifierMap rExpr /= Just "Boolean" then [("Argument of NOT must be a boolean", lineNumber)] else []) 
+   RExprMethodInvocation rExpr methodName arguments lineNumber ->
+     (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+     ([]
+     
+     {-
+     
+     NOT DONE YET!!!!!!
+     -}
+     )
+   RExprConstructorInvocation constructorName arguments lineNumber -> undefined
 
-Potential call of undefined method
-
-Illegal redefinition of a name that is in scope (e.g., creating a variable x where a variable x is already in scope)
-
-Method returns wrong type  (includes ending without returning)
-
-Incompatible overridden method  (should have same number of arguments, each formal argument a supertype of overridden method, return type a subtype of returned type of overridden method)
-
--}
+checkTypesOkayLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> [(String, Int)]
+checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
+ case lExpr of
+  LExprId s lineNumber -> []
+  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external object", lineNumber)]
 
 
 
 
 
-{-
+getLineNumberRExpr :: RExpr -> Int
+getLineNumberRExpr (RExprStringLiteral _ n) = n
+getLineNumberRExpr (RExprIntLiteral _ n) = n
+getLineNumberRExpr (RExprFromLExpr _ n) = n
+getLineNumberRExpr (RExprAnd _ _ n) = n
+getLineNumberRExpr (RExprOr _ _ n) = n
+getLineNumberRExpr (RExprNot _ n) = n
+getLineNumberRExpr (RExprMethodInvocation _ _ _ n) = n
+getLineNumbeRExpr (RExprConstructorInvocation _ _ n) = n
 
-data RExpr = RExprStringLiteral String
-           | RExprIntLiteral String
-                      | RExprFromLExpr LExpr
-                                 | RExprAnd RExpr RExpr
-                                            | RExprOr RExpr RExpr
-                                                       | RExprNot RExpr
-                                                                  | RExprMethodInvocation RExpr String [RExpr]
-                                                                             | RExprConstructorInvocation String [RExpr]
-                                                                                        deriving Show
+checkIfBool :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> RExpr -> [(String, Int)]
+checkIfBool hierarchy classMethodMap identifierMap rExpr =
+ if getTypeRExpr hierarchy classMethodMap identifierMap rExpr == Just "Boolean" then []
+ else [("conditional must be boolean", getLineNumberRExpr rExpr)]
+
+helpCheckTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> (RExpr, [Statement]) -> [(String, Int)]
+helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap (rExpr,statements) =
+ (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+ (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+ (checkIfBool hierarchy classMethodMap identifierMap rExpr)
+
+checkTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> Statement -> [(String,Int)]
+checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap statement =
+ case statement of
+  ParserIfWithElse rExpr statements list statements2 lineNumber ->
+   (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+   (concat $ map (helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap) list) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements2)
+  ParserIfWithoutElse rExpr statements list lineNumber ->
+   (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+   (checkTypesOkay hierarchy classMethodMap identifierMap statements) ++
+   (concat $ map (helpCheckTypesOkaySingleStatement hierarchy classMethodMap identifierMap) list)
+
+  ParserWhile rExpr statements lineNumber -> undefined
+  ParserReturn rExpr lineNumber -> [("Return statement only valid inside method", lineNumber)]
+  ParserReturnUnit lineNumber -> [] {-?#$?@#?@#???!!?!?!?!?!?-}
+  ParserAssign lExpr rExpr lineNumber ->
+   let r = getTypeRExpr hierarchy classMethodMap identifierMap rExpr in
+   let l = getTypeLExpr hierarchy classMethodMap identifierMap lExpr in
+    (if (r==l) then [] else [("Incompatible l-type and r-type", lineNumber)]) ++
+    (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++
+    (checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr)
+  ParserBareExpression rExpr lineNumber -> []
 
 
-data LExpr = LExprId String
-           | LExprDotted RExpr String
--}
 
 
 
-makeSureBooleanL :: LExpr -> Bool
-makeSureBooleanL (LExprId s) = undefined
-makeSureBooleanL (LExprDotted rExpr fieldName) = undefined
+checkTypesOkay :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> [Statement] -> [(String,Int)]
+checkTypesOkay hierarchy classMethodMap identifierMap statements = concat $ map (checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap) statements
 
-makeSureBoolean :: RExpr -> Bool
-makeSureBoolean (RExprStringLiteral _) = False
-makeSureBoolean (RExprIntLiteral _) = False
-makeSureBoolean (RExprFromLExpr lExpr ) = makeSureBooleanL lExpr
-makeSureBoolean (RExprAnd rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprOr rExpr1 rExpr2) = (makeSureBoolean rExpr1) && (makeSureBoolean rExpr2)
-makeSureBoolean (RExprNot rExpr) = makeSureBoolean rExpr
-makeSureBoolean (RExprMethodInvocation rExpr methodName arguments) = undefined {-lots of type checking to do here.-}
-makeSureBoolean (RExprConstructorInvocation constructorName arguments) = undefined
+
+{-WANT SEPARATE CHECK TO MAKE SURE ANDS ORS AND NOT REFER TO BOOLEANS...-}
+
+{-Want a separate check to make sure all methods have the right number of arguments and all arguments are of okay type.-}
+
+getTypeRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType ->  HashMap.Map String String -> RExpr -> Maybe String
+getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr =
+ case rExpr of
+  (RExprStringLiteral s lineNumber) -> Just "String"
+  (RExprIntLiteral s lineNumber) -> Just "Int"
+  (RExprFromLExpr lExpr lineNumber) -> undefined
+  (RExprAnd rExpr1 rExpr2 lineNumber) -> Just "Boolean"
+  (RExprOr rExpr1 rExpr2 lineNumber) -> Just "Boolean"
+  (RExprNot rExpr lineNumber) -> Just "Boolean"
+  (RExprMethodInvocation rExpr methodName arguments lineNumber) ->
+   case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Nothing -> Nothing
+    Just rType -> getMethodReturn $ HashMap.lookup (rType, methodName) classMethodMap {-assuming only one method per class and method name-}
+  (RExprConstructorInvocation constructorName arguments lineNumber) -> Just constructorName
+
+
+
+updateSubtypesSingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> Statement -> HashMap.Map String String -> (HashMap.Map String String,Bool)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement1 ++ (concat $ map snd listRExprListStatement) ++ listStatement2) currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement ++ (concat $ map snd listRExprListStatement)) currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap listStatement currentIdentifierMap
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap =
+ let currentType = HashMap.lookup identifier currentIdentifierMap in
+  case currentType of
+   Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Just s -> (HashMap.insert identifier s undefined, True)
+    Nothing -> (currentIdentifierMap,False)
+   Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+    Nothing -> (currentIdentifierMap,False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+
+generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> [Statement] -> HashMap.Map String String -> (HashMap.Map String String, Bool)
+generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
+generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
+ let (newMap, wasUpdated) = updateSubtypesSingleStatement hierarchy classMethodMap x currentIdentifierMap in
+ let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated && wasUpdated')
+
+generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
+generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
+ let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
+  case wasUpdated of
+   True -> generateSubtypes hierarchy classMethodMap statements newMap
+   False -> newMap
+
+
+makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
+makeSureBooleanL classMethodMap identifierMap (LExprId s lineNumber) = undefined
+makeSureBooleanL classMethodMap identifierMap (LExprDotted rExpr fieldName lineNumber) = undefined
+
+makeSureBoolean :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> RExpr -> Bool
+makeSureBoolean classMethodMap identifierMap (RExprStringLiteral _ lineNumber) = False
+makeSureBoolean classMethodMap identifierMap (RExprIntLiteral _ lineNumber) = False
+makeSureBoolean classMethodMap identifierMap (RExprFromLExpr lExpr lineNumber) = makeSureBooleanL classMethodMap identifierMap lExpr
+makeSureBoolean classMethodMap identifierMap (RExprAnd rExpr1 rExpr2 lineNumber) = (makeSureBoolean classMethodMap identifierMap rExpr1) && (makeSureBoolean classMethodMap identifierMap rExpr2)
+makeSureBoolean classMethodMap identifierMap (RExprOr rExpr1 rExpr2 lineNumber) = (makeSureBoolean classMethodMap identifierMap rExpr1) && (makeSureBoolean classMethodMap identifierMap rExpr2)
+makeSureBoolean classMethodMap identifierMap (RExprNot rExpr lineNumber) = makeSureBoolean classMethodMap identifierMap rExpr
+makeSureBoolean classMethodMap identifierMap (RExprMethodInvocation rExpr methodName arguments lineNumber) = undefined {-lots of type checking to do here.-}
+makeSureBoolean classMethodMap identifierMap (RExprConstructorInvocation constructorName arguments lineNumber) = undefined
+
+
+
+
+generateClassMethodsSingle :: String -> MethodType -> HashMap.Map (String, String) MethodType
+generateClassMethodsSingle s (MethodType methodName arguments returnType) = HashMap.insert (s,methodName) (MethodType methodName arguments returnType) (HashMap.empty)                           
+
+generateClassMethods :: String -> [MethodType] -> HashMap.Map (String, String) MethodType
+generateClassMethods s [] = HashMap.empty
+generateClassMethods s (x:xs) = HashMap.union (generateClassMethodsSingle s x) (generateClassMethods s xs)
+
+generateClassMethodMap :: [(String, [MethodType])] -> HashMap.Map (String,String) MethodType
+generateClassMethodMap [] = HashMap.empty
+generateClassMethodMap ((s,m):xs) = HashMap.union (generateClassMethods s m) (generateClassMethodMap xs) 
+
+getProgramStatements :: Program -> [Statement] {-Just get the statements after the class definitions...-}
+getProgramStatements (Program _ statements) = statements
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
