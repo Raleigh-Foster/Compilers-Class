@@ -874,8 +874,8 @@ allMethodsWorkForProgram' program =
 allMethodsWorkForProgram :: Program -> IO ()
 allMethodsWorkForProgram program =
  case allMethodsWorkForProgram' program of
-  Left x -> print x
-  Right x -> mapM putStrLn x >> pure ()
+  Left x -> pure ()
+  Right x -> mapM (hPutStrLn stderr) x >> pure ()
 
 
 {-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
