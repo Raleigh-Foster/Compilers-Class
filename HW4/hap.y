@@ -4,6 +4,8 @@ module Main where
 import Tokens
 import qualified Data.Map.Strict as HashMap
 import Data.List
+import System.IO
+
 }
 
 
@@ -11,6 +13,8 @@ import Data.List
 %tokentype {Token}
 %error {parseError}
 %monad {P} {thenP} {returnP}
+%lexer {lexer} {(Token EOFToken (_))}
+
 
 %token
  class {Token Class (_)}
@@ -661,7 +665,7 @@ getStatements (Program _ statements) = statements
 
 
 printOutInitFail :: (String,Int) -> IO ()
-printOutInitFail (s,x) = (putStrLn $ "identifier " ++ s ++  " on line " ++ (show x))
+printOutInitFail (s,x) = (hPutStrLn stderr $ "identifier " ++ s ++  " on line " ++ (show x))
 
 printOutInitFails' :: [(String,Int)] -> IO ()
 printOutInitFails' [] = pure ()
@@ -669,7 +673,7 @@ printOutInitFails' (x:xs) = (printOutInitFail x) >> (printOutInitFails' xs)
 
 printOutInitFails :: [(String, Int)] -> IO ()
 printOutInitFails [] = pure ()                
-printOutInitFails (x:xs) = (putStrLn "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
+printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
 
 
 
@@ -679,7 +683,7 @@ dealWith x = do
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
- _ <- print $ allMethodsWorkForProgram x
+ _ <- allMethodsWorkForProgram x
  _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
  programPrint (addBuiltIns x)
  {-pure ()-}
@@ -688,8 +692,8 @@ dealWith x = do
 
 main = do
  x <- getContents
- case runAlex x (gather >>= calc) of Right x -> dealWith x
-                                     Left x -> error x
+ case runAlex {-x (gather >>= calc)-} x calc of Right x -> dealWith x
+                                                Left x -> error x
  
  {- do
  s <- getContents
@@ -854,8 +858,8 @@ convertS :: HashMap.Map String (Maybe String, ClassDef) -> (String, [String]) ->
 convertS myMap (s, ss) = (s, map (getMethodTypeList myMap) ss)
 
 {-YAY!!!!-}
-allMethodsWorkForProgram :: Program -> Either [(String, [MethodType])] [String]
-allMethodsWorkForProgram program =
+allMethodsWorkForProgram' :: Program -> Either [(String, [MethodType])] [String]
+allMethodsWorkForProgram' program =
  let myMap = buildHierarchyMap program in
  let k = HashMap.keys myMap in
  let ancestries = map (getAncestry'' myMap) k in
@@ -864,6 +868,14 @@ allMethodsWorkForProgram program =
  let x = methodsWorkForAllAncestorsAllClasses myMap k in
  case x of [] -> Left y
            _ -> Right x                  
+
+
+
+allMethodsWorkForProgram :: Program -> IO ()
+allMethodsWorkForProgram program =
+ case allMethodsWorkForProgram' program of
+  Left x -> print x
+  Right x -> mapM putStrLn x >> pure ()
 
 
 {-getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]-}
@@ -1040,8 +1052,46 @@ typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = 
 
 
 
+
+{-
+
+
+okStatement :: Statement -> [String]
+            okStatement (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement1) ++ (concat $ map okStatementHelper listRExprListStatement) ++ (concat $ map okStatement listStatement2)
+            okStatement (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement) ++ (concat $ map okStatementHelper listRExprListStatement)
+            okStatement (ParserWhile rexpr listStatement lineNumber) = (okRExpr rexpr) ++ (concat $ map okStatement listStatement)
+            okStatement (ParserReturn rexpr lineNumber) = okRExpr rexpr
+            okStatement (ParserReturnUnit lineNumber) = []
+            okStatement (ParserAssign lexpr rexpr lineNumber) = (okLExpr lexpr) ++ (okRExpr rexpr)
+            okStatement (ParserBareExpression rexpr lineNumber) = okRExpr rexpr
+
+
+-}
+
+
+
+
+updateSubtypesSingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> Statement -> HashMap.Map String String -> (HashMap.Map String String,Bool)
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign lexpr rexpr lineNumber) currentIdentifierMap = undefined
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = undefined
+
+generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> [Statement] -> HashMap.Map String String -> (HashMap.Map String String, Bool)
+generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
+generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
+ let (newMap, wasUpdated) = updateSubtypesSingleStatement hierarchy classMethodMap x currentIdentifierMap in
+ let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated && wasUpdated')
+
 generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
-generateSubtypes hierarchy classMethodMap statements currentIdentifierMap = undefined
+generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
+ let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
+  case wasUpdated of
+   True -> generateSubtypes hierarchy classMethodMap statements newMap
+   False -> newMap
 
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
