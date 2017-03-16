@@ -1,0 +1,7 @@
+unused terminals: 2
+Cycles/nonexistent classes (no line numbers yet :():
+
+[ParentClassNotPresent "Blarg"]
+These constructors do not exist! I claim!:
+
+["Bar"]
