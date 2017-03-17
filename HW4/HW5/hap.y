@@ -1378,6 +1378,16 @@ Wait, I should have the C type as well.... let's just say that's what it has.
 
 
 
+generateRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> RExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
+generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr =
+ case rExpr of
+  (RExprStringLiteral _ _) -> undefined
+  (RExprIntLiteral _ _) -> undefined
+  (RExprAnd rExpr1 rExpr2 _) -> undefined
+  (RExprOr rExpr1 rExpr2 _) -> undefined
+  (RExprNot rExpr1 _) -> undefined
+  (RExprMethodInvocation _ _ _ _) -> undefined
+  (RExprConstructorInvocation _ _ _) -> undefined
 
 
 generateLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> LExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
@@ -1392,17 +1402,57 @@ generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
       Just t -> (HashMap.insert quackVarName (getNextIdentifier $ argCounter + 1,"obj_"++t) identifierTypeMap,identifierMap, argCounter + 1, getNextIdentifier $ argCounter + 1)
   LExprDotted _ _ _ -> undefined
 
+
+
+
+
+
+generateElifs :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [(RExpr, [Statement])] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String) {-HAS TO PUT elif {} WRAPPER-}
+generateElifs = undefined
+
+
 generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String)
 generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter statement =
  case statement of {- not sure this should be here for bare expression... but at least I can test some stuff? -}
-  ParserBareExpression rExpr lineNumber ->
+  ParserBareExpression rExpr lineNumber -> generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr
+  
+  
+{-
    case rExpr of
     RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
     _ -> undefined
-  
-  ParserAssign lExpr rExpr lineNumber -> undefined
-  _ -> undefined
+  -}
+  ParserAssign lExpr rExpr lineNumber ->
+   let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
+  ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n")
+  ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
+  ParserWhile rExpr statements _ -> undefined
+  ParserIfWithoutElse rExpr statements elifs _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
+    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ (getNextIdentifier (argCounter' - 1)) ++ ")\n{" ++ code'' ++ "}" ++ code''')
+  ParserIfWithElse rExpr statements elifs elseStatements _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
+   let (identifierTypeMap'''', identifierMap'''', argCounter'''', code'''') = generateStatements hierarchy classMethodMap identifierTypeMap''' identifierMap''' argCounter''' elseStatements in
+        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ (getNextIdentifier (argCounter' - 1)) ++ ")\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n")
 
+
+
+{-
+
+data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])] Int
+                              | ParserWhile RExpr [Statement] Int
+                                             | ParserReturn RExpr Int
+                                                            | ParserReturnUnit Int
+                                                                           | ParserAssign LExpr {- type : String-} RExpr Int
+                                                                                          | ParserBareExpression RExpr Int
+
+
+-}
 
 
 
