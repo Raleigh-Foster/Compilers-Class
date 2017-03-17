@@ -1397,7 +1397,7 @@ generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
 generateStatements' = undefined
 
 generateProgramC :: Program -> IO ()
-generateProgramC program = putStrLn $ generateStatements' undefined undefined undefined undefined undefined
+generateProgramC program = putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty 1 []
 
 
 {-
