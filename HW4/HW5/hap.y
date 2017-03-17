@@ -1407,8 +1407,12 @@ generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
 
 
 
+generateElif :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (RExpr, [Statement]) -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
+generateElif = undefined
+
 generateElifs :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [(RExpr, [Statement])] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String) {-HAS TO PUT elif {} WRAPPER-}
-generateElifs = undefined
+generateElifs _ _ _ _ _ [] = undefined
+generateElifs _ _ _ _ _ (x:xs) = undefined
 
 
 generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String)
@@ -1423,7 +1427,19 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
     _ -> undefined
   -}
   ParserAssign lExpr rExpr lineNumber ->
-   let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
+   let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
+   undefined
+
+
+  {-
+  case lExpr of
+    LExprDotted _ _ _ -> error "not allowing assignment to fields (not even this, because I didn't implement this yet)"
+    LExprId varName _ -> 
+    -}
+
+
+
   ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n")
   ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
   ParserWhile rExpr statements _ -> undefined
