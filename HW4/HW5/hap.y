@@ -1325,6 +1325,150 @@ getProgramStatements :: Program -> [Statement] {-Just get the statements after t
 getProgramStatements (Program _ statements) = statements
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+getNextIdentifier :: Integer -> String
+getNextIdentifier x = show $ x + 1                  
+
+{-
+
+ checkTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> Statement -> [(String,Int)]
+  checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap statement =
+
+-}
+
+{-
+ hierarchy, classMethodMap, identifierMap. Here identifierMap maps to (name,type), where name is the name of the term in the generated C file
+-}
+
+
+generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> Integer -> Statement -> (HashMap.Map String (String,String), Integer, String)
+generateStatement hierarchy classMethodMap identifierMap argCounter statement =
+ case statement of {- not sure this should be here for bare expression... but at least I can test some stuff? -}
+  ParserBareExpression rExpr lineNumber ->
+   case rExpr of
+    RExprIntLiteral value lineNumber -> (undefined ,argCounter + 1,"obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier argCounter) ++ " = int_literal(" ++ (show value) ++ ");")
+    _ -> undefined
+  
+  ParserAssign lExpr rExpr lineNumber -> undefined
+  _ -> undefined
+
+
+
+
+generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> Integer -> [Statement] -> (HashMap.Map String (String, String), Integer, String)
+generateStatements hierarchy classMethodMap identifierMap argCounter statements =
+ case statements of
+  [] -> undefined
+  (x:xs) -> generateStatement hierarchy classMethodMap identifierMap argCounter x
+
+
+
+ggg :: (a,b,c) -> c
+ggg (a,b,c) = c
+
+
+
+generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> Integer -> [Statement] -> String
+generateStatements' = undefined
+
+generateProgramC :: Program -> IO ()
+generateProgramC program = putStrLn $ generateStatements' undefined undefined undefined undefined undefined
+
+
+{-
+
+
+
+
+
+allMethodsWorkForProgram :: Program -> IO ()
+                          allMethodsWorkForProgram program =
+                            case allMethodsWorkForProgram' program of
+                               Left x ->
+                                   let classMethodMap = generateClassMethodMap x in
+                                       let hierarchy = buildHierarchyMap program in
+                                           let identifierMap = generateSubtypes hierarchy classMethodMap [] HashMap.empty in
+                                               let k = checkTypesOkay hierarchy classMethodMap identifierMap (getProgramStatements program) in
+                                                    case k of
+                                                          [] -> pure ()
+                                                                h -> print h
+                                                                   Right x -> mapM (hPutStrLn stderr) x >> pure ()
+
+
+
+
+
+
+
+
+
+
+
+
+RExprStringLiteral String Int
+           | RExprIntLiteral String Int
+                      | RExprFromLExpr LExpr Int
+                                 | RExprAnd RExpr RExpr Int
+                                            | RExprOr RExpr RExpr Int
+                                                       | RExprNot RExpr Int
+                                                                  | RExprMethodInvocation RExpr String [RExpr] Int
+                                                                             | RExprConstructorInvocation String [RExpr] Int
+
+
+
+
+
+
+
+ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
+               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])] Int
+                              | ParserWhile RExpr [Statement] Int
+                                             | ParserReturn RExpr Int
+                                                            | ParserReturnUnit Int
+                                                                           | ParserAssign LExpr {- type : String-} RExpr Int
+                                                                                          | ParserBareExpression RExpr Int
+
+
+-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 
