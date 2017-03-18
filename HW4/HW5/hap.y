@@ -1284,15 +1284,15 @@ generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map 
 generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
 generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
  let (newMap, wasUpdated) = updateSubtypesSingleStatement hierarchy classMethodMap x currentIdentifierMap in
- let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated && wasUpdated')
+ let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated || wasUpdated')
 
 generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
-generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
+generateSubtypes hierarchy classMethodMap statements currentIdentifierMap = error (show statements) {-
  let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
   case wasUpdated of
    True -> generateSubtypes hierarchy classMethodMap statements newMap
    False -> newMap
-
+-}
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
 makeSureBooleanL classMethodMap identifierMap (LExprId s lineNumber) = undefined
@@ -1378,11 +1378,23 @@ Wait, I should have the C type as well.... let's just say that's what it has.
 
 
 
+
+
+{-
+    case rExpr of
+         RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier   argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
+              _ -> undefined
+                 -}
+
+
+
+
+
 generateRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> RExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr =
  case rExpr of
   (RExprStringLiteral _ _) -> undefined
-  (RExprIntLiteral _ _) -> undefined
+  (RExprIntLiteral value lineNumber) -> (identifierTypeMap, identifierMap, argCounter + 1, "obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
   (RExprAnd rExpr1 rExpr2 _) -> undefined
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
@@ -1398,7 +1410,7 @@ generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
     Just (a,b) -> (identifierTypeMap, identifierMap, argCounter, a)
     Nothing ->
      case HashMap.lookup quackVarName identifierMap of
-      Nothing -> error "static type not found"
+      Nothing -> error $ "static type not found " ++ quackVarName
       Just t -> (HashMap.insert quackVarName (getNextIdentifier $ argCounter + 1,"obj_"++t) identifierTypeMap,identifierMap, argCounter + 1, getNextIdentifier $ argCounter + 1)
   LExprDotted _ _ _ -> undefined
 
@@ -1429,7 +1441,7 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
   ParserAssign lExpr rExpr lineNumber ->
    let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
-   undefined
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++ code'' ++ "actually do the assignment")
 
 
   {-
@@ -1480,24 +1492,28 @@ generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argC
 
 
 
-ggg :: (a,b,c) -> c
-ggg (a,b,c) = c
 
 
 
 generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> String
-generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements = let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z
+generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements = error (show identifierMap)
+ {-let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z-}
 
 generateProgramC :: Program -> IO ()
-generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
+generateProgramC program = error (show program) {- {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
+ let (Program classes statements) = program in
  case allMethodsWorkForProgram' program of {-switched left and right from convention-}
  Left x ->
   let classMethodMap = generateClassMethodMap x in
   let hierarchy = buildHierarchyMap program in
-  let identifierMap = generateSubtypes hierarchy classMethodMap [] HashMap.empty in
+  let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
   let (Program classDefs statements) = program in
    putStrLn $ {-(show hierarchy) ++ (show classMethodMap) ++ (show identifierMap) ++ (show statements)-} generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
  Right x -> error "type error"
+
+-}
+
+
 
 {-
 
