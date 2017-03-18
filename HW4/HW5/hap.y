@@ -1289,20 +1289,16 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexp
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap listStatement currentIdentifierMap
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap = error (show currentIdentifierMap)
-
-HERE I AM !!!! SOMEHOW I AM GETTING UNDEFINED OUT OF THIS IT LOOKS LIKE
-
-{-
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap =
  let currentType = HashMap.lookup identifier currentIdentifierMap in
   case currentType of
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
-    Just s -> (HashMap.insert identifier s undefined, True)
+    Just s -> (HashMap.insert identifier s currentIdentifierMap, True)
     Nothing -> (currentIdentifierMap,False)
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
     Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
     Nothing -> (currentIdentifierMap,False)
--}
+
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
