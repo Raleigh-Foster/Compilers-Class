@@ -94,9 +94,9 @@ Elifs : {[]}
       | Elif Elifs {$1 : $2}
 Elif : elif RExpr lbracket Statements rbracket { ($2,$4)}
 
-RExpr : number {RExprIntLiteral $1 (-1000) {-(lineNumberFromToken undefined)-}}
-      | string {RExprStringLiteral $1 (-1000) {-(lineNumberFromToken undefined)-}}
-      | LExpr {RExprFromLExpr $1 undefined}
+RExpr : number {RExprIntLiteral $1 (-1000) }
+      | string {RExprStringLiteral $1 (-1000) }
+      | LExpr {RExprFromLExpr $1 (-1000)}
       | RExpr sum RExpr {RExprMethodInvocation $1 "PLUS" [$3] (lineNumberFromToken $2)}
       | RExpr difference RExpr {RExprMethodInvocation $1 "MINUS" [$3] (lineNumberFromToken $2)}
       | RExpr product RExpr {RExprMethodInvocation $1 "PRODUCT" [$3] (lineNumberFromToken $2)}
@@ -117,7 +117,7 @@ ActualArgs : {[]}
 FinishActualArgs : {[]} 
                  | comma RExpr FinishActualArgs {$2 : $3}
 LExpr : identifier {LExprId (stringFromIdentifierToken $1) (lineNumberFromToken $1)}
-      | RExpr dot identifier {LExprDotted $1 (stringFromIdentifierToken $3) (lineNumberFromToken undefined)}
+      | RExpr dot identifier {LExprDotted $1 (stringFromIdentifierToken $3) (-1000)}
 FormalArgs : {[]}
            | identifier colon identifier FinishFormalArgs {((stringFromIdentifierToken $1),(stringFromIdentifierToken $3)):$4}
 FinishFormalArgs : {[]}
