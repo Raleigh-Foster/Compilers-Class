@@ -1518,8 +1518,8 @@ generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argC
 
 
 generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> String
-generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements = error (show identifierMap)
- {-let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z-}
+generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
+ let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z
 
 generateProgramC :: Program -> IO ()
 generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
@@ -1528,11 +1528,10 @@ generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMa
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
-   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in (error $ show identifierMap)
-  {-
-  let (Program classDefs statements) = program in
-   putStrLn $ {-(show hierarchy) ++ (show classMethodMap) ++ (show identifierMap) ++ (show statements)-} generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
-  -}
+   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
+   let (Program classDefs statements) = program in
+   putStrLn $ generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
+
   Right x -> error "type error"
 
 
