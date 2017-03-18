@@ -684,15 +684,36 @@ printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers 
 
 dealWith :: Program -> IO ()
 dealWith x = do
+ 
+ 
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ 
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
+ 
+ 
+ 
+ {-
+
+
+I NEED THIS FOR MY NICE TYPECHECKING ERROR MESSAGES, BUT IT IS CAUSING AN ISSUE WITH MY PROGRAM GENERATION (IT JUST STOPS THE COMPUTATION :()
+
  _ <- allMethodsWorkForProgram x
+ -}
+ 
+ 
+ 
+ 
  _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
+ 
+ 
+ 
+ 
+ 
+ 
  {-_ <- programPrint (addBuiltIns x)-}
  generateProgramC (addBuiltIns x) {-doing this even if typechecking fails.-}
  {-pure ()-}
-
 
 
 main = do
@@ -1268,7 +1289,11 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexp
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap listStatement currentIdentifierMap
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap =
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap = error (show currentIdentifierMap)
+
+HERE I AM !!!! SOMEHOW I AM GETTING UNDEFINED OUT OF THIS IT LOOKS LIKE
+
+{-
  let currentType = HashMap.lookup identifier currentIdentifierMap in
   case currentType of
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
@@ -1277,6 +1302,7 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
     Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
     Nothing -> (currentIdentifierMap,False)
+-}
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
@@ -1287,12 +1313,12 @@ generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
  let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated || wasUpdated')
 
 generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
-generateSubtypes hierarchy classMethodMap statements currentIdentifierMap = error (show statements) {-
+generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
  let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
   case wasUpdated of
    True -> generateSubtypes hierarchy classMethodMap statements newMap
    False -> newMap
--}
+
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
 makeSureBooleanL classMethodMap identifierMap (LExprId s lineNumber) = undefined
@@ -1500,18 +1526,20 @@ generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap arg
  {-let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z-}
 
 generateProgramC :: Program -> IO ()
-generateProgramC program = error (show program) {- {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
+generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
  let (Program classes statements) = program in
  case allMethodsWorkForProgram' program of {-switched left and right from convention-}
- Left x ->
-  let classMethodMap = generateClassMethodMap x in
-  let hierarchy = buildHierarchyMap program in
-  let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
+  Left x ->
+   let classMethodMap = generateClassMethodMap x in
+   let hierarchy = buildHierarchyMap program in
+   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in (error $ show identifierMap)
+  {-
   let (Program classDefs statements) = program in
    putStrLn $ {-(show hierarchy) ++ (show classMethodMap) ++ (show identifierMap) ++ (show statements)-} generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
- Right x -> error "type error"
+  -}
+  Right x -> error "type error"
 
--}
+
 
 
 
@@ -1576,7 +1604,44 @@ ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
 
 
 
+{-
 
+
+   let identifierMap = generateSubtypes hierarchy classMethodMap [] HashMap.empty in
+
+
+
+that needs to be changed.
+
+
+[] for no statements... 
+
+
+
+
+
+
+updateSubtypesSingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> Statement -> HashMap.Map String String -> (HashMap.Map String String,Bool)
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithElse rexpr listStatement1 listRExprListStatement listStatement2 lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement1 ++ (concat $ map snd listRExprListStatement) ++ listStatement2) currentIdentifierMap
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserIfWithoutElse rexpr listStatement listRExprListStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap (listStatement ++ (concat $ map snd listRExprListStatement)) currentIdentifierMap
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserWhile rexpr listStatement lineNumber) currentIdentifierMap = generateSubtypes' hierarchy classMethodMap listStatement currentIdentifierMap
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturn rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserReturnUnit lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+                              updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId identifier lineNumber) rExpr lineNumber22) currentIdentifierMap =
+                               let currentType = HashMap.lookup identifier currentIdentifierMap in
+                                 case currentType of
+                                    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+                                        Just s -> (HashMap.insert identifier s undefined, True)
+                                            Nothing -> (currentIdentifierMap,False)
+                                               Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
+                                                   Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+                                                       Nothing -> (currentIdentifierMap,False)
+                                                       updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
+                                                       updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
+
+
+
+-}
 
 
 
