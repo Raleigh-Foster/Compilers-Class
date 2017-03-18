@@ -1375,7 +1375,7 @@ getProgramStatements (Program _ statements) = statements
 
 
 getNextIdentifier :: Integer -> String
-getNextIdentifier x = show $ x + 1                  
+getNextIdentifier x = "varName" ++ ( show $ x + 1   )               
 
 {-
 
@@ -1392,6 +1392,9 @@ switched to using separate argument for this. identifierTypeMap . Oh identifier 
 Wait, I should have the C type as well.... let's just say that's what it has.
 
 
+
+This whole scheme doesn't really work.. :(
+
  hierarchy, classMethodMap, identifierMap. Here identifierMap maps to (name,type), where name is the name of the term in the generated C file
 -}
 
@@ -1404,7 +1407,7 @@ Wait, I should have the C type as well.... let's just say that's what it has.
 
 {-
     case rExpr of
-         RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier   argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
+         RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int " ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier   argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
               _ -> undefined
                  -}
 
@@ -1416,7 +1419,7 @@ generateRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (Str
 generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr =
  case rExpr of
   (RExprStringLiteral _ _) -> undefined
-  (RExprIntLiteral value lineNumber) -> (identifierTypeMap, identifierMap, argCounter + 1, "obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
+  (RExprIntLiteral value lineNumber) -> (HashMap.insert (getNextIdentifier argCounter) ((getNextIdentifier argCounter),"obj_Int") identifierTypeMap, identifierMap, argCounter + 1, "obj_Int " ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
   (RExprAnd rExpr1 rExpr2 _) -> undefined
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
@@ -1433,7 +1436,7 @@ generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
     Nothing ->
      case HashMap.lookup quackVarName identifierMap of
       Nothing -> error $ "static type not found " ++ quackVarName
-      Just t -> (HashMap.insert quackVarName (getNextIdentifier $ argCounter + 1,"obj_"++t) identifierTypeMap,identifierMap, argCounter + 1, getNextIdentifier $ argCounter + 1)
+      Just t -> (HashMap.insert quackVarName (getNextIdentifier $ argCounter,"obj_"++t) identifierTypeMap,identifierMap, argCounter + 1, getNextIdentifier $ argCounter)
   LExprDotted _ _ _ -> undefined
 
 
@@ -1449,12 +1452,24 @@ generateElifs _ _ _ _ _ [] = undefined
 generateElifs _ _ _ _ _ (x:xs) = undefined
 
 
+
+
+getTypeBack :: Maybe (String, String) -> String
+getTypeBack (Just (name,c_type)) = c_type
+getTypeBack Nothing = error "but there is nothing...."
+
+
+
 generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String)
 generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter statement =
  case statement of {- not sure this should be here for bare expression... but at least I can test some stuff? -}
   ParserBareExpression rExpr lineNumber -> generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr
   
   
+
+
+
+
 {-
    case rExpr of
     RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int varName" ++ (getNextIdentifier argCounter) ++ ";\n" ++ "varName" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
@@ -1463,7 +1478,9 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
   ParserAssign lExpr rExpr lineNumber ->
    let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
-   (identifierTypeMap'', identifierMap'', argCounter'', code' ++ code'' ++ "actually do the assignment")
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (HashMap.lookup (getNextIdentifier (argCounter'-1)) identifierTypeMap')) ++ ") "
+    ++ (getNextIdentifier (argCounter' - 1)) ++ ";"
+   )
 
 
   {-
