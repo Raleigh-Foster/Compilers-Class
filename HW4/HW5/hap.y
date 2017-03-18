@@ -319,34 +319,11 @@ getTokens :: String -> [Token] {-For now, no error handling-}
 getTokens s = case runAlex s gather of Left _ -> []
                                        Right x -> x {-(map fst x)-}
 
-programPrint :: Program -> IO ()
-programPrint p = print p
-
-getProgram :: IO (P Program)
-getProgram = undefined
-
-
- {-do
-             s <- getContents
-             pure (calc $ getTokens s)
--}
-
-
-
-
-
-
-
 
 data HierarchyError = NoHierarchyError
                     | ParentClassNotPresent String {-This is the string for the parent. ignores child for now.-}
                     | CycleDetected String {-Just gives one of the classes in the cycle for now.-}
                     deriving Show
-
-
-
-
-
 exists :: Eq a => a -> [a] -> Bool
 exists a [] = False
 exists a (x:xs) = if a == x then True else exists a xs
@@ -683,7 +660,7 @@ printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers 
 
 
 dealWith :: Program -> IO ()
-dealWith x = do
+dealWith x = error (show x) {-do
  
  
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
@@ -702,25 +679,55 @@ I NEED THIS FOR MY NICE TYPECHECKING ERROR MESSAGES, BUT IT IS CAUSING AN ISSUE 
  -}
  
  
- 
+ {-
+
+This is also not worknig for some reason. getStatements x giving some undefined stuff.... 
  
  _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
  
  
- 
+ -}
  
  
  
  {-_ <- programPrint (addBuiltIns x)-}
  generateProgramC (addBuiltIns x) {-doing this even if typechecking fails.-}
  {-pure ()-}
-
+-}
 
 main = do
  x <- getContents
- case runAlex x calc of Right x -> dealWith x
+
+
+ case runAlex x calc of Right x -> error $ show x {-dealWith x-}
                         Left x -> error x
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  {- do
  s <- getContents
  {-print $ getTokens s-}
@@ -1065,7 +1072,6 @@ checkInitializationBeforeUse' [] = []
 checkInitializationBeforeUse' (statement:statements) =
  (checkInitializationBeforeUseSingleStatement statements statement) ++ 
  (checkInitializationBeforeUse' statements)
-
 
 
 checkInitializationBeforeUse :: [Statement] -> [(String,Int)]
@@ -1540,6 +1546,9 @@ generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap arg
 
 generateProgramC :: Program -> IO ()
 generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
+ 
+ error (show program)
+ {-
  let (Program classes statements) = program in
  case allMethodsWorkForProgram' program of {-switched left and right from convention-}
   Left x ->
@@ -1551,7 +1560,7 @@ generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMa
 
   Right x -> error "type error"
 
-
+-}
 
 
 
