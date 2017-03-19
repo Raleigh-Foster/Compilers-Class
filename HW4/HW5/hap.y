@@ -126,159 +126,26 @@ Methods : {[]}
         | Method Methods {$1:$2}
 Method : def identifier lparen FormalArgs rparen lbracket Statements rbracket {InferredMethod (stringFromIdentifierToken $2) $4 $7}
        | def identifier lparen FormalArgs rparen colon identifier lbracket Statements rbracket {TypedMethod (stringFromIdentifierToken $2) $4 (stringFromIdentifierToken $7) $9}
-
-
-
 {
-
-
 stringFromIdentifierToken :: Token -> String
 stringFromIdentifierToken (Token (Identifier s) _) = s
-
-
 lineNumberFromToken :: Token -> Int
 lineNumberFromToken (Token _ n) = n                
-
-
-
-
-
-{-Program : Classes Statements {Program $1 $2}-}
-
-
-
-
-
-{-
-
-data ParseResult a = Ok a | Failed String
-type P a = String -> ParseResult a
-
-thenP :: P a -> (a -> P b) -> P b
-m `thenP` k = \s -> case m s of Ok a -> k a s
-                                Failed e -> Failed e
-
-returnP :: a -> P a
-returnP a = \s -> Ok a
-
-failP :: String -> P a
-failP err = \s -> Failed err
-
-catchP :: P a -> (String -> P a) -> P a
-catchP m k = \s -> case m s of Ok a -> Ok a
-                               Failed e -> k e s
-
-
--}
-
-
-
-
-
-
 type P a = Alex a
-
-
-
 thenP = (>>=)
-
 returnP = return
-{-
-failP = fail
--}
 catchP m c = fail "catch not implemented"
-
-
-
-
-
-
-
-
-
-
-
-{-
-fooBar :: ((Token,Int) -> P a) -> P a
-fooBar  = (alexMonadScan >>=)
--}
-
-
-
 lexer :: (Token -> P a) -> P a
 lexer = (alexMonadScan >>=)
-
-
-{-lexer cont = undefined `thenP` \token -> cont token
--}
-
-{-
-
-data E a = Ok a | Failed String
-                deriving Show
-thenE :: E a -> (a -> E b) -> E b
-m `thenE` k = case m of Ok a -> k a
-	                Failed e -> Failed e
-
-returnE :: a -> E a
-returnE a = Ok a
-
-failE :: String -> E a
-failE err = Failed err
-
-catchE :: E a -> (String -> E a) -> E a
-catchE m k = case m of Ok a -> Ok a
-	               Failed e -> k e
-
--}
-
-
-
-
-
-
-
-
-
-
-
-
-
-{-I'm currently throwing away typing information in my AST.-}
-
-
-{-parseError :: [Token] -> a-}
-{-parseError _ = error "Parse error"-}
-
-
-
-{-
-parseError tokens = failP "Parse error"
--}
-
-
 parseError tokens = do
  i <- getLineNumber
  alexError $ show i
-
-
-
-{-(alexError $ "Parse error: " ++ show tokens)-}
-
 data Program = Program [ClassDef] [Statement]
              deriving Show
 data Method = TypedMethod String [(String,String)] String [Statement]
             | InferredMethod String [(String,String)] [Statement]
             | FFIMethod String [(String, String)] String
             deriving Show
-{- Formal arguments have to supply a type? -}
-
-
-{-
-data FormalArgs = FormalArgs [(String, String)]
-                deriving Show
--}
-
 data ClassBody = ClassBody [Statement] [Method]
                deriving Show 
 data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
@@ -305,21 +172,9 @@ data RExpr = RExprStringLiteral String Int
            | RExprMethodInvocation RExpr String [RExpr] Int
            | RExprConstructorInvocation String [RExpr] Int
            deriving Show
-{-
-getTokens :: String -> [Token] {-For now, no error handling-}
-getTokens s = undefined {- case runAlex s gather of
-                   Left _ -> []
-                   Right x -> x {-(map fst x)-}
--}
--}
-
-
-
 getTokens :: String -> [Token] {-For now, no error handling-}
 getTokens s = case runAlex s gather of Left _ -> []
                                        Right x -> x {-(map fst x)-}
-
-
 data HierarchyError = NoHierarchyError
                     | ParentClassNotPresent String {-This is the string for the parent. ignores child for now.-}
                     | CycleDetected String {-Just gives one of the classes in the cycle for now.-}
@@ -327,65 +182,34 @@ data HierarchyError = NoHierarchyError
 exists :: Eq a => a -> [a] -> Bool
 exists a [] = False
 exists a (x:xs) = if a == x then True else exists a xs
-
 subset :: [String] -> [String] -> [String] {- not subset... -}
 subset (x:xs) all = if exists x all then subset xs all else x:(subset xs all)
 subset [] all = []
-
-
 classNameExists :: String -> [(String, Maybe String)] -> Bool
 classNameExists n l = exists n (map fst l)
-
 checkParentExists :: (String, Maybe String) -> [(String, Maybe String)] -> Bool
 checkParentExists (_,Just parentName) l = classNameExists parentName l
 checkParentExists (_,Nothing) _ = True
-
-
-
 get :: String -> [(String, Maybe String)] -> Maybe (Maybe String)
 get n [] = Nothing
 get n (x:xs) = if n == fst x then Just $ snd x else get n xs
-
-
-
-
-
-
 getAncestry :: String -> [(String, Maybe String)] -> [String]
 getAncestry name hierarchy = case get name hierarchy of Nothing -> [name] {-ERROR CASE-}
                                                         Just Nothing -> [name]
                                                         Just (Just parentName) -> name : (getAncestry parentName hierarchy)
-
-
 getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]
 getAncestry' name myMap = getAncestry name (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
-
 getUsefulAncestry :: String -> [(String, Maybe String)] -> [String]
 getUsefulAncestry className hierarchy = reverse $ getAncestry className hierarchy
-
-
-
 {-THIS IS AN INCOMPLETE PATTERN MATCH!!!-}
 getCommonAncestor' :: [String] -> [String] -> String
 getCommonAncestor' (x:(x2:xs)) (y:(y2:ys)) = if x2 == y2 then getCommonAncestor' (x2:xs) (y2:ys) else x
 getCommonAncestor' (x:xs) (y:ys) = x
-
-
-
 getCommonAncestor :: String -> String -> [(String, Maybe String)] -> String
 getCommonAncestor x y hierarchy = getCommonAncestor' (getUsefulAncestry x hierarchy) (getUsefulAncestry y hierarchy)
-
-
-
 getCommonAncestorFromMap :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> String
 getCommonAncestorFromMap myMap s1 s2 = getCommonAncestor s1 s2 (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
-
 {-This code for common ancestors might be correct, but I am not testing it yet. It's really a type checking thing.-}
-
-
-
-
-
 
 
 {-My cycle detection runs in time cubic in the number of class definitions. This is terrible, and I may change it later.-}
@@ -398,53 +222,27 @@ checkForCyclesOneClass' (name, Just parentName) hierarchy seenNames deep =
  if exists name seenNames then CycleDetected name
  else case get parentName hierarchy of Nothing -> if deep then NoHierarchyError else ParentClassNotPresent parentName 
                                        Just grandParentName -> checkForCyclesOneClass' (parentName, grandParentName) hierarchy (name:seenNames) True
-
-
 checkForCyclesOneClass :: [(String, Maybe String)] -> (String, Maybe String) -> HierarchyError
 checkForCyclesOneClass x y = checkForCyclesOneClass' y x [] False
-
-
-
 filterErrors :: [HierarchyError] -> [HierarchyError]
 filterErrors (NoHierarchyError:xs) = filterErrors xs
 filterErrors (x:xs) = x:(filterErrors xs)
 filterErrors [] = []
-
 checkForCycles :: [(String, Maybe String)] -> [HierarchyError]
 checkForCycles l = filterErrors $ map (checkForCyclesOneClass l) l
-
-
-
-
-
-
-
-
 getSubtypeHierarchy' :: (String, (Maybe String, ClassDef)) -> (String, Maybe String)
 getSubtypeHierarchy' (className, (parentName, _)) = (className, parentName)
-
 getSubtypeHierarchy :: [(String, (Maybe String, ClassDef))] -> [(String, Maybe String)]
 getSubtypeHierarchy = map getSubtypeHierarchy'
-
-
-
-
-{-For now, I'm only going to add in Object and its methods to the built in stuff. Eventually I may need to add more-}
-
-
-
 
 {-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
 generateObject :: ClassDef
 generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Object")] "Boolean"])
 
-
-
 {-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
 
 generateNothing :: ClassDef
 generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
-
 
 generateString :: ClassDef
 generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])
@@ -477,12 +275,6 @@ addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObje
 {- I am assuming for now that the user did not add in anything called "Object", etc.
 That is not a reasonable assumption, but this is due soon.
 -}
-
-
-
-
-
-
 
 {-
 
