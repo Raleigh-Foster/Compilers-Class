@@ -422,9 +422,9 @@ isSubtype subtype supertype map =
   else
    if subtype == "Object"
     then False
-    else case HashMap.lookup subtype map of Nothing -> undefined {-ERROR CASE-}
+    else case HashMap.lookup subtype map of Nothing -> error "is subtype error1" {-ERROR CASE-}
                                             Just (Just a,_) -> isSubtype a supertype map
-                                            Just _ -> undefined
+                                            Just _ -> error "is subtype error 2"
 
 isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSupertype supertype subtype map = isSubtype subtype supertype map
@@ -726,11 +726,6 @@ checkInitializationBeforeUse :: [Statement] -> [(String,Int)]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
 
 
-{-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
-typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
-typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = undefined
-
-
 
 
 
@@ -851,7 +846,7 @@ checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr =
      NOT DONE YET!!!!!!
      -}
      )
-   RExprConstructorInvocation constructorName arguments lineNumber -> undefined
+   RExprConstructorInvocation constructorName arguments lineNumber -> error "constructor type checking not implemented yet"
 
 checkTypesOkayLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> [(String, Int)]
 checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
@@ -925,7 +920,7 @@ getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr =
  case rExpr of
   (RExprStringLiteral s lineNumber) -> Just "String"
   (RExprIntLiteral s lineNumber) -> Just "Int"
-  (RExprFromLExpr lExpr lineNumber) -> undefined
+  (RExprFromLExpr lExpr lineNumber) -> getTypeLExpr hierarchy classMethodMap currentIdentifierMap lExpr
   (RExprAnd rExpr1 rExpr2 lineNumber) -> Just "Boolean"
   (RExprOr rExpr1 rExpr2 lineNumber) -> Just "Boolean"
   (RExprNot rExpr lineNumber) -> Just "Boolean"
