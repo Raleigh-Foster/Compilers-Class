@@ -1122,10 +1122,9 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
   ParserAssign lExpr rExpr lineNumber ->
    let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
-   error $ show identifierMap   {-((identifierTypeMap', identifierMap', argCounter', code'))-}
-   {-(identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (HashMap.lookup (getNextIdentifier (argCounter'-1)) identifierTypeMap')) ++ ") "
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (HashMap.lookup (getNextIdentifier (argCounter'-1)) identifierTypeMap')) ++ ") "
     ++ (getNextIdentifier (argCounter' - 1)) ++ ";"
-   )-}
+   )
   ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n")
   ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
   ParserWhile rExpr statements _ -> undefined
@@ -1143,26 +1142,11 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
 
 
 
-{-
-
-data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Statement] Int
-               | ParserIfWithoutElse RExpr [Statement] [(RExpr, [Statement])] Int
-                              | ParserWhile RExpr [Statement] Int
-                                             | ParserReturn RExpr Int
-                                                            | ParserReturnUnit Int
-                                                                           | ParserAssign LExpr {- type : String-} RExpr Int
-                                                                                          | ParserBareExpression RExpr Int
-
-
--}
-
-
-
 generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
  case statements of
   [] -> error "empty program.... not implemented..."
-  (x:xs) -> error ("???" ++ (show identifierMap)) {-generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x-}
+  (x:xs) -> generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x
 
 
 
@@ -1174,18 +1158,15 @@ generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap arg
  let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z
 
 generateProgramC :: Program -> IO ()
-generateProgramC program = {-putStrLn $ generateStatements' HashMap.empty HashMap.empty HashMap.empty HashMap.empty 1 []-}
- 
+generateProgramC program =
  let (Program classes statements) = program in
  case allMethodsWorkForProgram' program of {-switched left and right from convention-}
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
-   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in error (show identifierMap)
-   {-
+   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    putStrLn $ generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
--}
   Right x -> error "type error"
 
 
