@@ -271,48 +271,6 @@ generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassB
 addBuiltIns :: Program -> Program
 addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
 
-
-{- I am assuming for now that the user did not add in anything called "Object", etc.
-That is not a reasonable assumption, but this is due soon.
--}
-
-{-
-
-
-{-Where am I putting these return types in? Are these actually required? Did I mess up my parser??-}
-
-data Program = Program [ClassDef] [Statement]
-             deriving Show
-data Method = TypedMethod String [(String,String)] String [Statement]
-            | InferredMethod String [(String,String)] [Statement]
-            | FFIMethod String [(String, String)] String
-            deriving Show
-{- Formal arguments have to supply a type? -}
-
-
-{-
-data FormalArgs = FormalArgs [(String, String)]
-                deriving Show
--}
-
-data ClassBody = ClassBody [Statement] [Method]
-               deriving Show
-data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
-                    deriving Show
-data ClassDef = ClassDef ClassSignature ClassBody
-              deriving Show
-
-
--}
-
-
-
-{- DO I HAVE TO CHECK CONSTRUCTORS TO MAKE SURE THAT EVERYTHING IS THERE??? -}
-
-
-
-
-
 okLExpr :: LExpr -> [String]
 okLExpr (LExprId _ lineNumber) = []
 okLExpr (LExprDotted rexpr string lineNumber) = okRExpr rexpr
@@ -361,13 +319,7 @@ getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
-{-ARG!!! I HAVE TO ADD BUILTINS FOR NOTHING, ETC!!!-}
-
 {-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
-
-
-
-
 
 {-HAVE TO BUILD ALL OF THE FFI CALLS HERE INTO A CLASS DEF THAT I MAKE.... -}
 
@@ -381,17 +333,6 @@ getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
            ("Object", (Nothing, generateObject))
              ]
               
-
-
-{-
- [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
- ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
- ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
- ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
- ("Object", (Nothing, ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [] )))
- ]
--}
-
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
 
@@ -405,15 +346,6 @@ Objects like Integer will have methods, which I will need to know about?-}
 
 {-Is this the point where I do the desugaring if +, etc???? -}
 
-{-
-fooPrint :: Either String String -> IO ()
-fooPrint (Left s) = putStrLn s
-fooPrint (Right s) = hPutStrLn stderr s
--}
-
-{-Also have to add in the built in classes, Object, etc.-}
-
-
 toPrintCheckForCycles :: [HierarchyError] -> Either String String
 toPrintCheckForCycles [] = Left ""
 toPrintCheckForCycles x = Right ("Cycles/nonexistent classes (no line numbers yet :():\n\n" ++ show x)
@@ -426,15 +358,8 @@ toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I 
 
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
 
-
-
 getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
-
-
-
-
-
 
 printOutInitFail :: (String,Int) -> IO ()
 printOutInitFail (s,x) = (hPutStrLn stderr $ "identifier " ++ s ++  " on line " ++ (show x))
@@ -446,10 +371,6 @@ printOutInitFails' (x:xs) = (printOutInitFail x) >> (printOutInitFails' xs)
 printOutInitFails :: [(String, Int)] -> IO ()
 printOutInitFails [] = pure ()                
 printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
-
-
-
-
 
 dealWith :: Program -> IO ()
 dealWith x = do
@@ -494,50 +415,6 @@ main = do
  case runAlex x calc of Right x -> dealWith x
                         Left x -> error x
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- {- do
- s <- getContents
- {-print $ getTokens s-}
- 
- case runAlex s calc of Right x -> print x
-                        Left y -> print y
-
--}
-
-
-
-
-
-{-do
-       x <- getProgram
-       dealWith (x "")
-{-added "" to make typecheck-}
--}
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSubtype subtype supertype map =
  if supertype == "Object" || subtype == supertype
@@ -600,11 +477,6 @@ listMaybe Nothing = []
 collectMaybe :: [Maybe a] -> [a]
 collectMaybe arg = concat $ (map listMaybe arg)
 
-
-
-
-
-
 {-
 
 This is where I need to be working with maps from String to Method Type.
@@ -615,11 +487,6 @@ IGNORING THIS FOR NOW.
 
 
 -}
-
-{-
-data MethodType = MethodType String [String] String {-name, argument types, return type-}
--}
-
 
 generateMethodMap :: [MethodType] -> HashMap.Map String MethodType
 generateMethodMap [] = HashMap.empty
@@ -639,8 +506,6 @@ checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
 
 {- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
 
-
-
 checkClassMethodsCompatibleWithAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [[MethodType]] -> [String]
 checkClassMethodsCompatibleWithAllAncestors myMap childMethods ancestorsMethods = concat $ map (checkClassMethodsCompatibleWithOneAncestor myMap childMethods) ancestorsMethods
 
@@ -656,16 +521,10 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
 -}
 
-
-
-
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
                                                                  Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
                                                                  Nothing -> error ("Error when considering" ++ name)
-
-
-
 
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
@@ -675,8 +534,6 @@ methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap i
 
 methodsWorkForAllAncestorsAllClasses :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [String]
 methodsWorkForAllAncestorsAllClasses myMap names = concat $ map (methodsWorkForAllAncestors myMap) names
-
-
 
 getAncestry'' :: HashMap.Map String (Maybe String, ClassDef) -> String -> (String, [String])
 getAncestry'' a b = (b, (getAncestry' b a))
@@ -699,7 +556,6 @@ allMethodsWorkForProgram' program =
 
 
 {- I DO NOT HAVE TRUE AND FALSE AS BOOLEAN LITERALS!!!!!!!!!! -}
-
 
 allMethodsWorkForProgram :: Program -> IO ()
 allMethodsWorkForProgram program =
