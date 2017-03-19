@@ -1063,6 +1063,16 @@ This whole scheme doesn't really work.. :(
 
 
 
+shaveObj_ :: String -> String
+shaveObj_ s = drop 4 s
+
+
+getMethodType :: String -> String -> HashMap.Map (String, String) MethodType -> MethodType
+getMethodType classType methodName classMethodMap =
+ case HashMap.lookup (classType, methodName) classMethodMap of
+  Just methodType -> methodType
+  Nothing -> error "class method not found!"
+
 
 generateRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> RExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr =
@@ -1074,8 +1084,13 @@ generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
   (RExprNot rExpr1 _) -> undefined
   (RExprMethodInvocation rExpr methodName arguments _) ->
    let (a,b,c,d) = (generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr) in
-   let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
+   let v = (getNextIdentifier c) in
+   let methodType = getMethodType (shaveObj_ $ getTypeBack (getNextIdentifier (c-1)) a) methodName classMethodMap in
+   let (MethodType mn argt rett) = methodType in
+   error mn
+   {-let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
+  -}
   (RExprConstructorInvocation _ _ _) -> undefined
   (RExprFromLExpr lExpr _) -> let (a,b,c,d) = generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter lExpr in (a,b,c,"")
 
