@@ -1072,9 +1072,12 @@ generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
   (RExprAnd rExpr1 rExpr2 _) -> undefined
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
-  (RExprMethodInvocation _ _ _ _) -> undefined
+  (RExprMethodInvocation rExpr methodName arguments _) ->
+   let (a,b,c,d) = (generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr) in
+   let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
+   (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   (RExprConstructorInvocation _ _ _) -> undefined
-
+  (RExprFromLExpr lExpr _) -> let (a,b,c,d) = generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter lExpr in (a,b,c,"")
 
 generateLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> LExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter lExpr =
@@ -1085,8 +1088,12 @@ generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
     Nothing ->
      case HashMap.lookup quackVarName identifierMap of
       Nothing -> error $ "static type not found " ++ quackVarName
-      Just t -> (HashMap.insert quackVarName (getNextIdentifier $ argCounter,"obj_"++t) identifierTypeMap,identifierMap, argCounter + 1, getNextIdentifier $ argCounter)
-  LExprDotted _ _ _ -> undefined
+      {-This way x = ... will insert both x and the cvar used for x into the key.-}
+      Just t -> (HashMap.insert (getNextIdentifier $ argCounter)  (getNextIdentifier $ argCounter,"obj_"++t) (HashMap.insert quackVarName (getNextIdentifier $ argCounter,"obj_"++t) identifierTypeMap),
+                identifierMap,
+                argCounter + 1,
+                "obj_" ++ t ++ " " ++ (getNextIdentifier $ argCounter) ++ ";\n" ++ (getNextIdentifier $ argCounter))
+  LExprDotted _ _ _ -> error "lExprDotted generation not implemented..."
 
 
 
@@ -1103,10 +1110,11 @@ generateElifs _ _ _ _ _ (x:xs) = undefined
 
 
 
-getTypeBack :: Maybe (String, String) -> String
-getTypeBack (Just (name,c_type)) = c_type
-getTypeBack Nothing = error "but there is nothing...."
-
+getTypeBack :: String -> HashMap.Map String (String, String) -> String
+getTypeBack s m =
+ case HashMap.lookup s m of
+  Just(n,t) -> t
+  Nothing -> error ("c variable name not found.. " ++ s ++ (show m))
 
 
 generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String)
@@ -1122,9 +1130,12 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
   ParserAssign lExpr rExpr lineNumber ->
    let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
-   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (HashMap.lookup (getNextIdentifier (argCounter'-1)) identifierTypeMap')) ++ ") "
+   {-error $ show $ getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap'-}
+   
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap') ++ ") "
     ++ (getNextIdentifier (argCounter' - 1)) ++ ";"
    )
+   
   ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n")
   ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code') = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
   ParserWhile rExpr statements _ -> undefined
@@ -1145,11 +1156,11 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
 generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
  case statements of
-  [] -> error "empty program.... not implemented..."
+  [] -> (identifierTypeMap, identifierMap, argCounter, "")
   (x:xs) ->
    let (identifierTypeMap', identifierMap', argCounter', code') = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
-   (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
+     (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
 
 
 
