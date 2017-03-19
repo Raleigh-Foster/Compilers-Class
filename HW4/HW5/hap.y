@@ -1146,7 +1146,10 @@ generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map
 generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
  case statements of
   [] -> error "empty program.... not implemented..."
-  (x:xs) -> generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x
+  (x:xs) ->
+   let (identifierTypeMap', identifierMap', argCounter', code') = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
 
 
 
