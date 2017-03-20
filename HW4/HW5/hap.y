@@ -1136,6 +1136,10 @@ pushVariable identifierTypeMap counter varType =
 
 
 
+
+
+
+
 generateRExpr :: RExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
 generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case rExpr of
@@ -1184,7 +1188,7 @@ generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
       Just t -> (HashMap.insert (getNextIdentifier $ argCounter)  (getNextIdentifier $ argCounter,"obj_"++t) (HashMap.insert quackVarName (getNextIdentifier $ argCounter,"obj_"++t) identifierTypeMap),
                 identifierMap,
                 argCounter + 1,
-                "obj_" ++ t ++ " " ++ (getNextIdentifier $ argCounter) ++ ";\n" ++ (getNextIdentifier $ argCounter), undefined, undefined)
+                "obj_" ++ t ++ " " ++ (getNextIdentifier $ argCounter) ++ ";\n", (getNextIdentifier $ argCounter), "obj_"++t)
   LExprDotted _ _ _ -> error "lExprDotted generation not implemented..."
 
 
@@ -1199,7 +1203,7 @@ generateElifs :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (Str
 generateElifs hierarchy classMethodMap identifierTypeMap identifierMap argCounter elifs =
  case elifs of
   [] -> (identifierTypeMap, identifierMap, argCounter, "")
-  (x:xs) -> undefined
+  (x:xs) -> error "elifs not implemented"
 
 
 
@@ -1222,29 +1226,34 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
 
 
   ParserAssign lExpr rExpr lineNumber ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _ , _ ) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
-   let (identifierTypeMap'', identifierMap'', argCounter'', code'', _, _) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' in
-   {-error $ show $ getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap'-}
-   
-   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap') ++ ") "
-    ++ (getNextIdentifier (argCounter' - 1)) ++ ";", getNextIdentifier (argCounter'' - 1), undefined
+   let (identifierTypeMap', identifierMap', argCounter', code', varName' , varType' ) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'', varName'', varType'') = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' in
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ varName'' ++ " = (" ++ (getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap') ++ ") "
+    ++ (getNextIdentifier (argCounter' - 1)) ++ ";", getNextIdentifier (argCounter'' - 1), varType' {-varType dummy value...-}
    )
    
   ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n", undefined, undefined)
   ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in undefined
-  ParserWhile rExpr statements _ -> undefined
+  ParserWhile rExpr statements _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''', varName''', varType''') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' in
+   (identifierTypeMap''', identifierMap''', argCounter''', code' ++ "while(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ code''' ++
+    {-store back in conditional-} varName' ++ " = (obj_Boolean) " ++ varName''' ++ ";\n" {-issue with varType being Boolean instead of obj_Boolean..-}
+    ++ "}\n", varName', varType') {-again, dummy values...-}
+
   ParserIfWithoutElse rExpr statements elifs _ ->
    let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
     (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ varName' ++ "){\n" ++ code'' ++ "}" ++ code''', varName', varType') {-name and type dummy values...-}
   ParserIfWithElse rExpr statements elifs elseStatements _ ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
    let (identifierTypeMap'''', identifierMap'''', argCounter'''', code'''') = generateStatements hierarchy classMethodMap identifierTypeMap''' identifierMap''' argCounter''' elseStatements in
-        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ (getNextIdentifier (argCounter' - 1)) ++ ")\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n"
-        , undefined, undefined)
+        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ varName' ++ ")\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n"
+        , varName', varType') {-name and type dummy values-}
 
 
 

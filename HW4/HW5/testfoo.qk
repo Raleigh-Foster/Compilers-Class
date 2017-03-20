@@ -11,3 +11,22 @@ q.PRINT();
 if(q){
  q.PRINT();
 }
+
+
+while (x < 10){
+ x = x + 1;
+}
+
+
+x.PRINT();
+
+
+
+
+
+/*
+x = 1;
+
+x = x + 1;
+
+*/
