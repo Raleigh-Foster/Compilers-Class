@@ -1140,7 +1140,7 @@ generateRExpr :: RExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap
 generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case rExpr of
   (RExprStringLiteral value _) ->
-   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
+   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_String" in
    (identifierTypeMap', identifierMap, counter', "obj_String " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Str) str_literal(" ++ (show value) ++ ");\n" , varName', "obj_String")
 
   (RExprIntLiteral value lineNumber) ->
