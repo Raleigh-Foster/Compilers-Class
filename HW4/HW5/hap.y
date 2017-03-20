@@ -1141,7 +1141,7 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
  case rExpr of
   (RExprStringLiteral value _) ->
    let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_String" in
-   (identifierTypeMap', identifierMap, counter', "obj_String " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Str) str_literal(" ++ (show value) ++ ");\n" , varName', "obj_String")
+   (identifierTypeMap', identifierMap, counter', "obj_String " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_String) str_literal(" ++ ("\"" ++ value ++ "\"") ++ ");\n" , varName', "obj_String")
 
   (RExprIntLiteral value lineNumber) ->
    let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
