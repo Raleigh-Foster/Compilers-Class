@@ -245,7 +245,7 @@ generateNothing :: ClassDef
 generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
 
 generateString :: ClassDef
-generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])
+generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 generateInt :: ClassDef
@@ -257,7 +257,8 @@ generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
   FFIMethod "ATMOST" [("argumentName", "Int")] "Int",
   FFIMethod "LESS" [("argumentName", "Int")] "Int",
   FFIMethod "ATLEAST" [("argumentName", "Int")] "Int",
-  FFIMethod "MORE" [("argumentName", "Int")] "Int"
+  FFIMethod "MORE" [("argumentName", "Int")] "Int",
+  FFIMethod "PRINT" [("argumentName", "String")] "String"
   
   ])
 
@@ -1071,7 +1072,7 @@ getMethodType :: String -> String -> HashMap.Map (String, String) MethodType -> 
 getMethodType classType methodName classMethodMap =
  case HashMap.lookup (classType, methodName) classMethodMap of
   Just methodType -> methodType
-  Nothing -> error "class method not found!"
+  Nothing -> error $ "class method not found!" ++ (show classMethodMap) ++ (classType) ++ (methodName)
 
 
 
@@ -1140,7 +1141,7 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
  case rExpr of
   (RExprStringLiteral value _) ->
    let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
-   (identifierTypeMap', identifierMap, counter', "obj_Str" ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Str) int_literal(" ++ value ++ ");\n" , varName', "obj_Str")
+   (identifierTypeMap', identifierMap, counter', "obj_String " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Str) str_literal(" ++ (show value) ++ ");\n" , varName', "obj_String")
 
   (RExprIntLiteral value lineNumber) ->
    let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
@@ -1154,10 +1155,11 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    let methodType = getMethodType (shaveObj_ $ getTypeBack varName' identifierTypeMap') methodName classMethodMap in
    let (MethodType mn argt rett) = methodType in
    let (identifierTypeMap'', identifierMap'', counter'', code'', pairs'') = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap' counter' (map generateRExpr arguments) in
-   let methodCall = varType' ++ "->clazz->" ++ mn ++ "(" in
+   let methodCall = varName' ++ "->clazz->" ++ mn ++ "(" in
    let nextName = getNextIdentifier counter'' in
-   let ggg = "obj_" ++ rett ++ " " ++ nextName ++ ";" in
-   (identifierTypeMap'', identifierMap'', counter''+1, (code' ++ code''++ ggg ++ nextName ++ " = " ++ methodCall ++ (generateMethodInvocation $ varName' : (map fst pairs'') ) ++ ");\n"), nextName, rett)
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' ("obj_" ++ rett) in
+   let ggg = "obj_" ++ rett ++ " " ++ nextName ++ ";\n" in
+   (identifierTypeMap''', identifierMap'', counter''', (code' ++ code''++ ggg ++ nextName ++ " = (obj_" ++ rett ++ ") " ++ methodCall ++ (generateMethodInvocation $ varName' : (map fst pairs'') ) ++ ");\n"), nextName, rett)
 
 {-  (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, [(String, String)]) -}
 {-shouldBeMonad hierarchy classMethodMap identifierTypeMap identifierMap argCounter functions =-}
@@ -1166,15 +1168,15 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    {-let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
-  (RExprConstructorInvocation _ _ _) -> undefined
-  (RExprFromLExpr lExpr _) -> let (a,b,c,d, _ ,_) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,"",undefined, undefined)
+  (RExprConstructorInvocation _ _ _) -> error "constructors not yet implemented"
+  (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
 
 generateLExpr :: LExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
 generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case lExpr of
   LExprId quackVarName _ ->
    case HashMap.lookup quackVarName identifierTypeMap of
-    Just (a,b) -> (identifierTypeMap, identifierMap, argCounter, a, undefined, undefined)
+    Just (a,b) -> (identifierTypeMap, identifierMap, argCounter, "", a, b) {-code field maybe wrong..-}
     Nothing ->
      case HashMap.lookup quackVarName identifierMap of
       Nothing -> error $ "static type not found " ++ quackVarName
