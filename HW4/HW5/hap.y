@@ -1076,12 +1076,29 @@ getMethodType classType methodName classMethodMap =
 
 
 
-shouldBeMonad :: [HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer ->
-               (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
-               ]
+shouldBeMonad :: HashMap.Map String (Maybe String, ClassDef) ->
+                 HashMap.Map (String, String) MethodType ->
+                 HashMap.Map String (String,String) ->
+                 HashMap.Map String String ->
+                 Integer ->
+                 [HashMap.Map String (Maybe String, ClassDef) ->
+                  HashMap.Map (String, String) MethodType ->
+                  HashMap.Map String (String, String) ->
+                  HashMap.Map String String ->
+                  Integer ->
+                  (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+                 ] ->
+                 (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, [(String, String)])
 
+{-the final pair here is a list of the name that a variable has, followed by its type. These are the return values from all of the subexpressions passed.-}
 
-shouldBeMonad = undefined
+shouldBeMonad hierarchy classMethodMap identifierTypeMap identifierMap argCounter functions =
+ case functions of
+  [] -> (identifierTypeMap, identifierMap, argCounter, "", [])
+  (x:xs) ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = x hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'', returns) = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
+   (identifierTypeMap'', identifierMap'', argCounter'', code'++code'', (varName',varType'):returns)
 
 {-
 
@@ -1093,17 +1110,25 @@ type of variable that value is stored in.
 
 
 -}
+{-
 
-generateRExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> RExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
-generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr =
+pushVariable :: HashMap.Map String (String,String) -> HashMap.Map String String -> Integer -> 
+-}
+
+
+generateRExpr :: RExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case rExpr of
-  (RExprStringLiteral _ _) -> undefined
+  (RExprStringLiteral _ _) -> undefined {- HashMap.insert (getNextIdentifier argCounter) ((getNextIdentifier argCounter), "obj_Str") identifierTypeMap, identifierMap, argCounter + 1, "obj_Str " ++-}
+
+
+
   (RExprIntLiteral value lineNumber) -> (HashMap.insert (getNextIdentifier argCounter) ((getNextIdentifier argCounter),"obj_Int") identifierTypeMap, identifierMap, argCounter + 1, "obj_Int " ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");", undefined, undefined)
   (RExprAnd rExpr1 rExpr2 _) -> undefined
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
   (RExprMethodInvocation rExpr methodName arguments _) ->
-   let (a,b,c,d, _ , _) = (generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr) in
+   let (a,b,c,d, _ , _) = (generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter) in
    let v = (getNextIdentifier c) in
    let methodType = getMethodType (shaveObj_ $ getTypeBack (getNextIdentifier (c-1)) a) methodName classMethodMap in
    let (MethodType mn argt rett) = methodType in
@@ -1112,10 +1137,10 @@ generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounte
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
   (RExprConstructorInvocation _ _ _) -> undefined
-  (RExprFromLExpr lExpr _) -> let (a,b,c,d, _ ,_) = generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter lExpr in (a,b,c,"",undefined, undefined)
+  (RExprFromLExpr lExpr _) -> let (a,b,c,d, _ ,_) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,"",undefined, undefined)
 
-generateLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> LExpr -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
-generateLExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter lExpr =
+generateLExpr :: LExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case lExpr of
   LExprId quackVarName _ ->
    case HashMap.lookup quackVarName identifierTypeMap of
@@ -1155,7 +1180,7 @@ getTypeBack s m =
 generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String, String, String)
 generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter statement =
  case statement of {- not sure this should be here for bare expression... but at least I can test some stuff? -}
-  ParserBareExpression rExpr lineNumber -> generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr
+  ParserBareExpression rExpr lineNumber -> generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter
   
   
 
@@ -1163,8 +1188,8 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
 
 
   ParserAssign lExpr rExpr lineNumber ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _ , _ ) = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
-   let (identifierTypeMap'', identifierMap'', argCounter'', code'', _, _) = generateLExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' lExpr in
+   let (identifierTypeMap', identifierMap', argCounter', code', _ , _ ) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'', _, _) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' in
    {-error $ show $ getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap'-}
    
    (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ " = (" ++ (getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap') ++ ") "
@@ -1172,15 +1197,15 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
    )
    
   ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n", undefined, undefined)
-  ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in undefined
+  ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in undefined
   ParserWhile rExpr statements _ -> undefined
   ParserIfWithoutElse rExpr statements elifs _ ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
+   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
     (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ (getNextIdentifier (argCounter' - 1)) ++ ")\n{" ++ code'' ++ "}" ++ code''', undefined, undefined)
   ParserIfWithElse rExpr statements elifs elseStatements _ ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter rExpr in
+   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
    let (identifierTypeMap'''', identifierMap'''', argCounter'''', code'''') = generateStatements hierarchy classMethodMap identifierTypeMap''' identifierMap''' argCounter''' elseStatements in
