@@ -254,17 +254,17 @@ generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
   FFIMethod "MINUS" [("argumentName", "Int")] "Int",
   FFIMethod "PRODUCT" [("argumentName", "Int")] "Int",
   FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int",
-  FFIMethod "ATMOST" [("argumentName", "Int")] "Int",
-  FFIMethod "LESS" [("argumentName", "Int")] "Int",
-  FFIMethod "ATLEAST" [("argumentName", "Int")] "Int",
-  FFIMethod "MORE" [("argumentName", "Int")] "Int",
+  FFIMethod "ATMOST" [("argumentName", "Int")] "Boolean",
+  FFIMethod "LESS" [("argumentName", "Int")] "Boolean",
+  FFIMethod "ATLEAST" [("argumentName", "Int")] "Boolean",
+  FFIMethod "MORE" [("argumentName", "Int")] "Boolean",
   FFIMethod "PRINT" [("argumentName", "String")] "String"
   
   ])
 
 
 generateBoolean :: ClassDef
-generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [])
+generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 
