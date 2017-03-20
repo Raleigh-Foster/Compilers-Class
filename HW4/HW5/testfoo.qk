@@ -7,3 +7,7 @@ z.PRINT();
 
 q = 2 < 3;
 q.PRINT();
+
+if(q){
+ q.PRINT();
+}

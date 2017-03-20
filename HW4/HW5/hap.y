@@ -1196,8 +1196,10 @@ generateElif :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (Stri
 generateElif = undefined
 
 generateElifs :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [(RExpr, [Statement])] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String) {-HAS TO PUT elif {} WRAPPER-}
-generateElifs _ _ _ _ _ [] = undefined
-generateElifs _ _ _ _ _ (x:xs) = undefined
+generateElifs hierarchy classMethodMap identifierTypeMap identifierMap argCounter elifs =
+ case elifs of
+  [] -> (identifierTypeMap, identifierMap, argCounter, "")
+  (x:xs) -> undefined
 
 
 
@@ -1232,10 +1234,10 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
   ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in undefined
   ParserWhile rExpr statements _ -> undefined
   ParserIfWithoutElse rExpr statements elifs _ ->
-   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
-    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ (getNextIdentifier (argCounter' - 1)) ++ ")\n{" ++ code'' ++ "}" ++ code''', undefined, undefined)
+    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ varName' ++ "){\n" ++ code'' ++ "}" ++ code''', varName', varType') {-name and type dummy values...-}
   ParserIfWithElse rExpr statements elifs elseStatements _ ->
    let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
