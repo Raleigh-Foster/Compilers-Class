@@ -1,0 +1,8 @@
+x = 1 + 2 + 3;
+y = """hello.\n""";
+y.PRINT();
+x.PRINT();
+z = """goodbye.\n""";
+z.PRINT();
+
+
