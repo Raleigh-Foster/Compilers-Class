@@ -1110,20 +1110,30 @@ type of variable that value is stored in.
 
 
 -}
-{-
 
-pushVariable :: HashMap.Map String (String,String) -> HashMap.Map String String -> Integer -> 
--}
+
+
+
+
+{-returns new identfierTypeMap, new identifierMap, new counter, and the name of the variable used.-}
+pushVariable :: HashMap.Map String (String,String) -> Integer -> String -> (HashMap.Map String (String, String),  Integer, String)
+pushVariable identifierTypeMap counter varType =
+ let varName = getNextIdentifier counter in
+ (HashMap.insert varName (varName, varType) identifierTypeMap, counter + 1, varName)
+
 
 
 generateRExpr :: RExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
 generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
  case rExpr of
-  (RExprStringLiteral _ _) -> undefined {- HashMap.insert (getNextIdentifier argCounter) ((getNextIdentifier argCounter), "obj_Str") identifierTypeMap, identifierMap, argCounter + 1, "obj_Str " ++-}
+  (RExprStringLiteral value _) ->
+   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
+   (identifierTypeMap', identifierMap, counter', "obj_Str" ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Str) int_literal(" ++ value ++ ");\n" , varName', "obj_Str")
 
+  (RExprIntLiteral value lineNumber) ->
+   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
+   (identifierTypeMap', identifierMap, counter', "obj_Int " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Int) int_literal(" ++ value ++ ");\n" ,varName',"obj_Int")
 
-
-  (RExprIntLiteral value lineNumber) -> (HashMap.insert (getNextIdentifier argCounter) ((getNextIdentifier argCounter),"obj_Int") identifierTypeMap, identifierMap, argCounter + 1, "obj_Int " ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");", undefined, undefined)
   (RExprAnd rExpr1 rExpr2 _) -> undefined
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
