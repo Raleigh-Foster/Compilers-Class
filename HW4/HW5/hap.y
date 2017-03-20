@@ -1114,6 +1114,18 @@ type of variable that value is stored in.
 
 
 
+{-
+generateArguments :: [RExpr] -> HashMap String (Maybe String, ClassDef) -> 
+-}
+
+
+
+
+
+generateMethodInvocation :: [String] -> String
+generateMethodInvocation [] = ""
+generateMethodInvocation [x] = x
+generateMethodInvocation (x1:x2:xs) = x1 ++ "," ++ generateMethodInvocation (x2 : xs)
 
 {-returns new identfierTypeMap, new identifierMap, new counter, and the name of the variable used.-}
 pushVariable :: HashMap.Map String (String,String) -> Integer -> String -> (HashMap.Map String (String, String),  Integer, String)
@@ -1138,11 +1150,19 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
   (RExprOr rExpr1 rExpr2 _) -> undefined
   (RExprNot rExpr1 _) -> undefined
   (RExprMethodInvocation rExpr methodName arguments _) ->
-   let (a,b,c,d, _ , _) = (generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter) in
-   let v = (getNextIdentifier c) in
-   let methodType = getMethodType (shaveObj_ $ getTypeBack (getNextIdentifier (c-1)) a) methodName classMethodMap in
+   let (identifierTypeMap',identifierMap',counter',code', varName' , varType') = (generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter) in
+   let methodType = getMethodType (shaveObj_ $ getTypeBack varName' identifierTypeMap') methodName classMethodMap in
    let (MethodType mn argt rett) = methodType in
-   error mn
+   let (identifierTypeMap'', identifierMap'', counter'', code'', pairs'') = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap' counter' (map generateRExpr arguments) in
+   let methodCall = varType' ++ "->clazz->" ++ mn ++ "(" in
+   let nextName = getNextIdentifier counter'' in
+   let ggg = "obj_" ++ rett ++ " " ++ nextName ++ ";" in
+   (identifierTypeMap'', identifierMap'', counter''+1, (code' ++ code''++ ggg ++ nextName ++ " = " ++ methodCall ++ (generateMethodInvocation $ varName' : (map fst pairs'') ) ++ ");\n"), nextName, rett)
+
+{-  (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, [(String, String)]) -}
+{-shouldBeMonad hierarchy classMethodMap identifierTypeMap identifierMap argCounter functions =-}
+
+   {-error (mn ++ (show argt) ++ (show rett))-}
    {-let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
