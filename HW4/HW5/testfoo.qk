@@ -1,5 +1,16 @@
 
 
+
+
+
+class Robot() {
+ def destroy_city(fierceness: Int ) : Int {
+                                /* TBD: how do we actually destroy things? */
+    return 42; // you destroy things by returning 42.
+  }
+}
+
+
 /*
 
 

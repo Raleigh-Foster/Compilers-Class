@@ -1299,18 +1299,47 @@ generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap arg
 
 
 
+getReturnTypeBlarg :: Maybe MethodType -> String
+getReturnTypeBlarg methodType =
+ case methodType of
+  Just (MethodType _ _ returnType) -> returnType
+  Nothing -> error "unexpected herp derp"
+
 generateArgumentThing :: [(String,String)] -> String
 generateArgumentThing _ = "arguments!!!!"
+
+
+{-
+
+These actually aren't typed and inferred method.
+
+I always assume methods are given their return type.
+
+If they are not, it is nothing, but I still put it in an "InferredMethod" node. This is terrible.
+-}
 
 generateMethod :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> Method -> String
 generateMethod hierarchy classMethodMap className method =
  case method of
-  TypedMethod methodName arguments returnType body -> error "typed method case... I only did one case... I should have a better AST."
-  InferredMethod methodName arguments body ->
+  TypedMethod methodName arguments returnType body -> 
    let identifierMap = generateSubtypes hierarchy classMethodMap body HashMap.empty in
-   let header = "obj_" ++ "Dummy" ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ (generateArgumentThing arguments) ++ "){\n" in
-   let typelalala = undefined in
+   let typelalala = HashMap.lookup (className, methodName) classMethodMap in
+   let returnType = getReturnTypeBlarg typelalala in
+   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ (generateArgumentThing arguments) ++ "){\n" in
+
     error (header ++  (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 body))
+
+  InferredMethod methodName arguments body -> error "methods without return type specified disabled for now"
+  
+{-
+   let identifierMap = generateSubtypes hierarchy classMethodMap body HashMap.empty in
+   let typelalala = HashMap.lookup (className, methodName) classMethodMap in
+   let returnType = getReturnTypeBlarg typelalala in
+   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ (generateArgumentThing arguments) ++ "){\n" in
+  
+    error (header ++  (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 body))
+-}
+
   FFIMethod _ _ _ -> error "I should not be generating code for the builtins..."
 
 generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> ClassDef-> String
