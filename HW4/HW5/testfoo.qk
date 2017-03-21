@@ -3,6 +3,36 @@
 
 
 
+
+
+
+
+
+
+class SecondRobot() extends Robot{
+     def destroy_city(fierceness: Int, size : Int ) : Int {
+                                         /* TBD: how do we actually destroy things? */
+                                             
+                                                 x = fierceness + 421241242412411424 * size;
+                                                     return x; // you destroy things by returning 42.
+                                                       }
+
+
+
+     def trash_talk_city(message : String) : Int{
+       message.PRINT();    
+         return 42;
+     }
+
+
+
+
+}
+
+
+
+
+
 class Robot() {
  def destroy_city(fierceness: Int, size : Int ) : Int {
                                 /* TBD: how do we actually destroy things? */

@@ -1365,6 +1365,30 @@ generateMethod hierarchy classMethodMap className method =
 
   FFIMethod _ _ _ -> error "I should not be generating code for the builtins..."
 
+
+
+
+{-
+
+I am currently not adding all of the inherited methods.
+
+I need to do that.
+
+
+-}
+
+
+
+getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [MethodType]
+getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now...-}-}
+   error $ show $ getAncestry' className hierarchy
+
+
+
+getClassMethodBelongsTo :: HashMap.Map String (Maybe String, ClassDef) -> String
+getClassMethodBelongsTo hierarchy = error $ show hierarchy                        
+
+
 generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> ClassDef-> String
 generateClass hierarchy classMethodMap classDef =
  let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructorStatements methods)) = classDef in
@@ -1378,11 +1402,21 @@ generateProgramC (program,classDefs) =
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
+   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"
 
+
+{-
+   error $ getClassMethodBelongsTo hierarchy 
+   
+   -}
+   
+   {-
    let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    putStrLn $ ((classGeneration) ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+-}
+
   Right x -> error "type error"
 
 
