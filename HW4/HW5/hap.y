@@ -1314,10 +1314,13 @@ generateArgumentThing :: HashMap.Map String (String, String) -> Integer -> [(Str
 generateArgumentThing identifierTypeMap counter [] = (identifierTypeMap, counter, "")
 generateArgumentThing identifierTypeMap counter [(varName, varType)] =
  let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap counter ("obj_" ++ varType) in
- (HashMap.insert varName (varName', "obj_" ++ varType)identifierTypeMap', counter', "obj_" ++ varType ++ " " ++ varName')
+ (HashMap.insert varName (varName', "obj_" ++ varType) identifierTypeMap', counter', "obj_" ++ varType ++ " " ++ varName')
  
-generateArgumentThing identifierTypeMap counter (x1:x2:xs) = undefined
- {-let (identifierTypeMap', counter', varName', a-}
+generateArgumentThing identifierTypeMap counter ((varName, varType):x2:xs) =
+ let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap counter ("obj_" ++ varType) in
+ let newMap = (HashMap.insert varName (varName', "obj_" ++ varType) identifierTypeMap') in
+ let (identifierTypeMap''', counter''', varList) = generateArgumentThing newMap counter' (x2:xs) in
+ (identifierTypeMap''', counter''', "obj_" ++ varType ++ " " ++ varName' ++ "," ++ varList)
 
 
 
@@ -1345,8 +1348,9 @@ generateMethod hierarchy classMethodMap className method =
    let identifierTypeMap = HashMap.empty in
    let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in
    let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ argumentListString ++ "){\n" in
+       header ++  (generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' body) ++ "return nothing;\n}"
 
-    error (header ++  (generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' body))
+{-I AM ASSUMING EVERY METHOD RETURNS!!!. (or rather, if it does not, return nothing, but return nothing at the end, anyway...)-}
 
   InferredMethod methodName arguments body -> error "methods without return type specified disabled for now"
   
@@ -1376,11 +1380,9 @@ generateProgramC (program,classDefs) =
    let hierarchy = buildHierarchyMap program in
 
    let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
-   error classGeneration{-
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
-   putStrLn $ generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
--}
+   putStrLn $ ((classGeneration) ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
   Right x -> error "type error"
 
 

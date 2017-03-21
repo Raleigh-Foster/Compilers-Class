@@ -149,5 +149,3 @@ struct  class_Pt_struct  the_class_Pt_struct = {
 class_Pt the_class_Pt = &the_class_Pt_struct; 
 
 
-void quackmain() {
-
