@@ -269,8 +269,8 @@ generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassB
 
 
 
-addBuiltIns :: Program -> Program
-addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
+addBuiltIns :: Program -> (Program, [ClassDef])
+addBuiltIns (Program classDefs statements) = (Program (classDefs ++ [generateObject, generateInt, generateNothing, generateString, generateBoolean]) statements, classDefs)
 
 okLExpr :: LExpr -> [String]
 okLExpr (LExprId _ lineNumber) = []
@@ -1250,8 +1250,10 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
     ++ (getNextIdentifier (argCounter' - 1)) ++ ";", getNextIdentifier (argCounter'' - 1), varType' {-varType dummy value...-}
    )
    
-  ParserReturnUnit _ -> (identifierTypeMap, identifierMap, argCounter, "return;\n", undefined, undefined)
-  ParserReturn rExpr _ -> let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in undefined
+  ParserReturnUnit _ -> error "empty return not implemented."{-(identifierTypeMap, identifierMap, argCounter, "return;\n", undefined, undefined)-}
+  ParserReturn rExpr _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   (identifierTypeMap', identifierMap', argCounter', code' ++ "return " ++ varName' ++ ";\n", varName', varType') {-really dummy values here.-}
   ParserWhile rExpr statements _ ->
    let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
@@ -1293,16 +1295,44 @@ generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
 generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
  let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z
 
-generateProgramC :: Program -> IO ()
-generateProgramC program =
+
+
+
+
+generateArgumentThing :: [(String,String)] -> String
+generateArgumentThing _ = "arguments!!!!"
+
+generateMethod :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> Method -> String
+generateMethod hierarchy classMethodMap className method =
+ case method of
+  TypedMethod methodName arguments returnType body -> error "typed method case... I only did one case... I should have a better AST."
+  InferredMethod methodName arguments body ->
+   let identifierMap = generateSubtypes hierarchy classMethodMap body HashMap.empty in
+   let header = "obj_" ++ "Dummy" ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ (generateArgumentThing arguments) ++ "){\n" in
+   let typelalala = undefined in
+    error (header ++  (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 body))
+  FFIMethod _ _ _ -> error "I should not be generating code for the builtins..."
+
+generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> ClassDef-> String
+generateClass hierarchy classMethodMap classDef =
+ let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructorStatements methods)) = classDef in
+  {-for now, don't do anything fancy. Just do the bodies of the methods...-}
+  concat $ map (generateMethod hierarchy classMethodMap className) methods
+
+generateProgramC :: (Program, [ClassDef]) -> IO ()
+generateProgramC (program,classDefs) =
  let (Program classes statements) = program in
  case allMethodsWorkForProgram' program of {-switched left and right from convention-}
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
+
+   let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
+   error classGeneration{-
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    putStrLn $ generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements
+-}
   Right x -> error "type error"
 
 
