@@ -376,12 +376,12 @@ printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers 
 dealWith :: Program -> IO ()
 dealWith x = do
  
- 
+ {-
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
- 
+ -}
  
  
  {-
@@ -1151,9 +1151,27 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
    (identifierTypeMap', identifierMap, counter', "obj_Int " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Int) int_literal(" ++ value ++ ");\n" ,varName',"obj_Int")
 
-  (RExprAnd rExpr1 rExpr2 _) -> undefined
-  (RExprOr rExpr1 rExpr2 _) -> undefined
-  (RExprNot rExpr1 _) -> undefined
+  (RExprAnd rExpr1 rExpr2 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', counter'', code'', varName'', varType'') = generateRExpr rExpr2 hierarchy classMethodMap identifierTypeMap' identifierMap' counter' in
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' "obj_Boolean" in
+   (identifierTypeMap''', identifierMap'', counter''', "obj_Boolean " ++ varName'''  ++ " = lit_false;\n" ++ code' ++ "if(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ "if(" ++ varName'' ++ " == lit_true){\n" ++ varName''' ++ " = (obj_Boolean) " ++ "lit_true" ++ ";\n}\n}", varName''', "obj_Boolean")
+  (RExprOr rExpr1 rExpr2 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', counter'', code'', varName'', varType'') = generateRExpr rExpr2 hierarchy classMethodMap identifierTypeMap' identifierMap' counter' in
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' "obj_Boolean" in
+   (identifierTypeMap''', identifierMap'', counter''', "obj_Boolean " ++ varName'''  ++ " = lit_true;\n" ++ code' ++ "if(" ++ varName' ++ " == lit_false){\n" ++ code'' ++ "if(" ++ varName'' ++ " == lit_false){\n" ++ varName''' ++ " = (obj_Boolean) " ++ "lit_false" ++ ";\n}\n}", varName''', "obj_Boolean")
+
+
+
+
+  (RExprNot rExpr1 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', counter'', varName'') = pushVariable identifierTypeMap' counter' "obj_Boolean" in
+   (identifierTypeMap'', identifierMap', counter'', code' ++ "obj_Boolean " ++ varName'' ++ ";\n" ++ varName'' ++ " = (obj_Boolean) " ++ varName' ++ ";\n" ++ "if(" ++ varName'' ++ " == lit_true){" ++ varName'' ++ "= lit_false;}\nelse{" ++ varName'' ++ "= lit_true;}"      , varName'', "obj_Boolean")
+
+
+
   (RExprMethodInvocation rExpr methodName arguments _) ->
    let (identifierTypeMap',identifierMap',counter',code', varName' , varType') = (generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter) in
    let methodType = getMethodType (shaveObj_ $ getTypeBack varName' identifierTypeMap') methodName classMethodMap in
