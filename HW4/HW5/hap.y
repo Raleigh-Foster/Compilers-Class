@@ -264,7 +264,7 @@ generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
 
 
 generateBoolean :: ClassDef
-generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
+generateBoolean = ClassDef (ClassSignature "Boolean" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 
@@ -1478,10 +1478,76 @@ getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now
  getActualThing hierarchy className
 
 
+getClassDef :: HashMap.Map String (Maybe String, ClassDef) -> String -> ClassDef
+getClassDef hierarchy className =
+ case HashMap.lookup className hierarchy of
+  Nothing -> error $ "error : class def not found: " ++ className
+  Just (_, classDef) -> classDef
+
+getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
+getConstructor hierarchy className =
+ let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
+ (classArguments, constructor)
+ 
+
+
+
+{- e.g. the following
+/* The Obj Class (a singleton) */
+struct  class_Obj_struct  the_class_Obj_struct = {
+  new_Obj,     /* Constructor */
+    Obj_method_STRING, 
+      Obj_method_PRINT, 
+        Obj_method_EQUALS
+        };
+-}
+
+
+
+generateCClassStructMethod :: (Method, String) -> Bool -> String
+generateCClassStructMethod (method, origin) addComma =
+ let methodName = getMethodName' method in
+ origin ++ "_method_" ++ methodName ++ (if addComma then "," else "") ++ "\n"
+
+
+generateCClassStructMethods :: [(Method,String)] -> String
+generateCClassStructMethods methods =
+ case methods of
+  [] -> ""
+  [x] -> generateCClassStructMethod x False
+  (x1:x2:xs) -> (generateCClassStructMethod x1 True) ++ (generateCClassStructMethods (x2:xs))
+
+generateCClassStruct :: (String , [(Method, String)]) -> String
+generateCClassStruct (className,methods) =
+ let header = "struct class_" ++ className ++ "_struct the_class_" ++ className ++ "_struct = {\n" in
+ let constructor = "new_" ++ className ++ ",\n" in
+ let methodStuff = generateCClassStructMethods methods in
+ let footer = "};\n" in
+ header ++ constructor ++ methodStuff ++ footer
+ 
+
+
+
+generateAllCClassStructs :: [(String, [(Method, String)])] -> String
+generateAllCClassStructs x = concat $ map generateCClassStruct x
+
+getClassName :: ClassDef -> String
+getClassName (ClassDef (ClassSignature className _ _) _) = className
+
+getAllClassNames :: [ClassDef] -> [String]
+getAllClassNames classes = map getClassName classes 
+
+
+
 taill :: [a] -> [a]
 taill (x:xs) = xs
 taill [] = error "but there is no head!"
 
+
+myShowList :: Show a => [a] -> String
+myShowList [] = ""
+myShowList [a] = "\n\n" ++ (show a) ++ "\n\n"
+myShowList (x:xs) = (myShowList [x]) ++ (myShowList xs)
 
 {- do I need this? -}
 getClassMethodBelongsTo :: HashMap.Map String (Maybe String, ClassDef) -> String
@@ -1501,7 +1567,25 @@ generateProgramC (program,classDefs) =
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"
+   {-error $ show $ classes-}
+   let classNames = (getAllClassNames classDefs) ++ ["Object", "Nothing", "String", "Int", "Boolean"] in
+   {-
+
+getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [(Method, String)]
+
+-}
+
+
+{-getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
+-}
+
+   let allInheritedMethods = map (getInheritedMethods hierarchy classMethodMap) classNames in
+   let theFoo = zip classNames allInheritedMethods in
+   let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
+   let constructorStuff = zip classNames (map (getConstructor hierarchy) classNames) in
+   error $ {-allClassVTablesIsThatWhatThisIs-} show $ constructorStuff
+
+{-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"-}
 
 
 {-
