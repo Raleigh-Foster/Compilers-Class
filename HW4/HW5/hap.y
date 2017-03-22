@@ -1415,7 +1415,7 @@ replaceThing (method1,className1) ((method2,className2):ys) =
   then
    (method1, className1) : ys
   else
-   replaceThing (method1,className1) ys
+   (method2, className2) : (replaceThing (method1,className1) ys)
 
 
 {-can use where here-}
@@ -1465,23 +1465,17 @@ getActualThing :: HashMap.Map String (Maybe String, ClassDef) -> String -> [(Met
 getActualThing hierarchy className =
  let ancestry = getAncestry' className hierarchy in
  let theFuck = getAllFuckery hierarchy ancestry in
-  undefined
+  myConcatAll theFuck
 
 
+{-also has all the original methods.-}
 
+
+{-YAYAYAYAY!!!!!!!-}
+{-I do not have constructors yet, but when I do, I will only want to add them for the original class, not for the inherited classes (can't call super) same holds for fields later...-}
 getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [(Method, String)]
 getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now...-}-}
- let ancestry = getAncestry' className hierarchy in
- let currentMethods = undefined in
- error "heheafsfs"
- {-error $ show $ getAllFuckery hierarchy ancestry-}
-
-
-{-
-error $ show $ taill $ getAncestry' className hierarchy
--}
-
-
+ getActualThing hierarchy className
 
 
 taill :: [a] -> [a]
