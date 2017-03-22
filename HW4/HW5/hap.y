@@ -1379,12 +1379,117 @@ I need to do that.
 
 
 
-getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [MethodType]
+getMethods :: HashMap.Map String (Maybe String, ClassDef) -> String -> [Method]
+getMethods hierarchy className =
+ case HashMap.lookup className hierarchy of
+  Nothing -> error "getMethods error. No such class found."
+  Just (_, ClassDef classSignature (ClassBody constructor methods)) -> undefined
+
+
+
+
+{-returns pairs of methods, along with the name of the class that they derive from-}
+
+
+
+{- this code is terrible. -}
+
+
+
+
+{-We are assuming we can't have multiple methods with the same name.-}
+getMethodName' :: Method -> String
+getMethodName' method =
+ case method of
+  TypedMethod methodName _ _ _ -> methodName
+  InferredMethod methodName _ _ -> methodName
+  FFIMethod methodName _ _ -> methodName
+
+
+
+
+replaceThing :: (Method, String) -> [(Method, String)] -> [(Method, String)]
+replaceThing x [] = [x]
+replaceThing (method1,className1) ((method2,className2):ys) =
+ if (getMethodName' method1 == getMethodName' method2)
+  then
+   (method1, className1) : ys
+  else
+   replaceThing (method1,className1) ys
+
+
+{-can use where here-}
+
+
+
+
+
+
+
+{-I AM IGNORING CONSTRUCTORS CURRENTLY.-}
+
+
+            {-start with-}      {-overwrite with-}
+myConcat :: [(Method, String)] -> [(Method, String)] -> [(Method, String)]
+myConcat [] x = x
+myConcat x [] = x
+myConcat x (y:ys) = (myConcat (replaceThing y x) ys)
+
+
+
+{-should fold-}
+myConcatAll :: [[(Method,String)]] -> [(Method,String)]
+myConcatAll [] = error "wait, nothing in hierarchy? You should at least have one thing."
+myConcatAll [x] = x
+myConcatAll (x1:x2:xs) = myConcatAll ((myConcat x2 x1) : xs)
+
+
+foobar :: String -> [Method] ->[(Method, String)]
+foobar s m = map (\x -> (x,s)) m
+
+
+
+getWhateverFuckMyLife :: HashMap.Map String (Maybe String, ClassDef) -> String -> [(Method, String)]
+getWhateverFuckMyLife hierarchy className =
+ case HashMap.lookup className hierarchy of
+  Nothing -> error "I hate my life"
+  Just (_, ClassDef classSignature (ClassBody constructor methods)) -> foobar className methods
+
+
+getAllFuckery :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [[(Method, String)]]
+getAllFuckery hierarchy classNames = map (getWhateverFuckMyLife hierarchy) classNames
+
+
+
+getActualThing :: HashMap.Map String (Maybe String, ClassDef) -> String -> [(Method, String)]
+getActualThing hierarchy className =
+ let ancestry = getAncestry' className hierarchy in
+ let theFuck = getAllFuckery hierarchy ancestry in
+  undefined
+
+
+
+getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [(Method, String)]
 getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now...-}-}
-   error $ show $ getAncestry' className hierarchy
+ let ancestry = getAncestry' className hierarchy in
+ let currentMethods = undefined in
+ error "heheafsfs"
+ {-error $ show $ getAllFuckery hierarchy ancestry-}
+
+
+{-
+error $ show $ taill $ getAncestry' className hierarchy
+-}
 
 
 
+
+taill :: [a] -> [a]
+taill (x:xs) = xs
+taill [] = error "but there is no head!"
+
+
+{- do I need this? -}
 getClassMethodBelongsTo :: HashMap.Map String (Maybe String, ClassDef) -> String
 getClassMethodBelongsTo hierarchy = error $ show hierarchy                        
 
