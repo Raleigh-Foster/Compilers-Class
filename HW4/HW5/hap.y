@@ -1538,14 +1538,29 @@ getAllClassNames :: [ClassDef] -> [String]
 getAllClassNames classes = map getClassName classes 
 
 
+
+
+{-
+
+
+  obj_String new_thing = (obj_String) malloc(sizeof(struct obj_String_struct));
+    new_thing->clazz = the_class_String;
+      return new_thing; 
+
+
+-}
+
+{-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
 generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
  let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
-{- let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in-}
- let header = "obj_" ++ className ++ "yea..whatever" in
- let body = undefined in
- let footer = undefined in
- undefined
+ let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
+ let header = "obj_" ++ className ++ " new_" ++ className ++ "(" ++ argumentListString ++ ") {\n" in
+ let secondHeader = "obj_" ++ className ++ " new_thing = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
+                          "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\nreturn new_thing" in
+ let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
+ let footer = "\n}\n" in
+ header ++ secondHeader ++ body ++ footer
 
 
 myShowList :: Show a => [a] -> String
@@ -1588,7 +1603,7 @@ getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
    let constructorStuff = zip classNames (map (getConstructor hierarchy) classNames) in
    let ha = zip classNames (map (getConstructor hierarchy) classNames) in
-   error $ show $ map (generateConstructor hierarchy classMethodMap) ha
+   let allConstructorDeclarations = concat $ map (generateConstructor hierarchy classMethodMap) ha in
 
 {-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"-}
 
@@ -1598,12 +1613,12 @@ getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
    
    -}
    
-   {-
+   
    let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    putStrLn $ ((classGeneration) ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
--}
+
 
   Right x -> error "type error"
 
