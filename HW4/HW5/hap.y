@@ -1324,6 +1324,14 @@ generateArgumentThing identifierTypeMap counter ((varName, varType):x2:xs) =
 
 
 
+generateArgumentThingJustType :: [(String, String)] -> String
+generateArgumentThingJustType arguments =
+ case arguments of
+  [] -> ""
+  [x] -> "obj_" ++ snd x
+  (x1:x2:xs) -> ("obj_"++ (snd x1)) ++ "," ++ (generateArgumentThingJustType (x2:xs))
+
+
 {-
 
 These actually aren't typed and inferred method.
@@ -1593,7 +1601,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
  let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
  
- 
+ let argumentTypeList = generateArgumentThingJustType arguments in 
  let h1 = "struct class_" ++ className ++ "_struct;\n" in
  let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
  let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
@@ -1601,20 +1609,22 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let h5 = "" in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
  let h6 = "} * obj_" ++ className ++ ";\n" in
 
+ let h = h1 ++ h2 ++ h3 ++ h4 ++ h5 ++ h6 in
 
  let k1 = "struct class_" ++ className ++ "_struct {\n" in
- let k2 = "obj_" ++ className ++ " (*constructor) ( " ++ argumentListString ++ ");\n" in
+ let k2 = "obj_" ++ className ++ " (*constructor) ( " ++ argumentTypeList ++ ");\n" in
  let k3 = "" in {-THIS IS WHERE I PUT ALL OF THE METHOD SIGNATURES AND CONSTRUCTOR SIGNATURE TODO TODO TODO TODO TODO TODO-}
  let k4 = "};\n" in
  let k5 = "extern class_Int the_class_Int;\n" in
 
- 
+ let k = k1 ++ k2 ++ k3 ++ k4 ++ k5 in
+
  let header = "obj_" ++ className ++ " new_" ++ className ++ "(" ++ argumentListString ++ ") {\n" in
  let secondHeader = "obj_" ++ className ++ " new_thing = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
                           "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\nreturn new_thing" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\n}\n" in
- header ++ secondHeader ++ body ++ footer
+ h ++ k ++ header ++ secondHeader ++ body ++ footer
 
 
 myShowList :: Show a => [a] -> String
@@ -1660,7 +1670,7 @@ generateProgramC (program,classDefs) =
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    let s = "\n////////////\n" in
-   putStrLn $ ( allClassVTablesIsThatWhatThisIs ++ s ++ s ++ s ++ allConstructorDeclarations ++ s ++ (classGeneration) ++ s ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+   putStrLn $ ( allConstructorDeclarations ++ s ++ s ++ s ++ allClassVTablesIsThatWhatThisIs ++ s ++ s ++ s ++ s ++ (classGeneration) ++ s ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
 
 
   Right x -> error "type error"
