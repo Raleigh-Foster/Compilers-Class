@@ -1479,15 +1479,16 @@ getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now
 
 
 getClassDef :: HashMap.Map String (Maybe String, ClassDef) -> String -> ClassDef
-getClassDef hierarchy className =
+getClassDef hierarchy className = error $ (show hierarchy) ++ className
+{-
  case HashMap.lookup className hierarchy of
   Nothing -> error $ "error : class def not found: " ++ className
-  Just (_, classDef) -> classDef
-
+  Just (_, classDef) -> error $ show classDef
+-}
 getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
 getConstructor hierarchy className =
  let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
- (classArguments, constructor)
+ error $ show (classArguments, constructor)
  
 
 
@@ -1583,7 +1584,7 @@ getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
    let theFoo = zip classNames allInheritedMethods in
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
    let constructorStuff = zip classNames (map (getConstructor hierarchy) classNames) in
-   error $ {-allClassVTablesIsThatWhatThisIs-} show $ constructorStuff
+   error $ {-allClassVTablesIsThatWhatThisIs-} show $ getConstructor hierarchy "Object"
 
 {-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"-}
 
