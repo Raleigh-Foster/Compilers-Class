@@ -1586,38 +1586,18 @@ generateProgramC (program,classDefs) =
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
-   {-error $ show $ classes-}
    let classNames = (getAllClassNames classDefs) ++ ["Object", "Nothing", "String", "Int", "Boolean"] in
-   {-
-
-getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [(Method, String)]
-
--}
-
-
-{-getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
--}
-
+   let userClassNames = (getAllClassNames classDefs) in
    let allInheritedMethods = map (getInheritedMethods hierarchy classMethodMap) classNames in
    let theFoo = zip classNames allInheritedMethods in
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
-   let constructorStuff = zip classNames (map (getConstructor hierarchy) classNames) in
-   let ha = zip classNames (map (getConstructor hierarchy) classNames) in
+   let ha = zip classNames (map (getConstructor hierarchy) userClassNames) in
    let allConstructorDeclarations = concat $ map (generateConstructor hierarchy classMethodMap) ha in
-
-{-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"-}
-
-
-{-
-   error $ getClassMethodBelongsTo hierarchy 
-   
-   -}
-   
-   
    let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
-   putStrLn $ ((classGeneration) ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+   let s = "\n////////////\n" in
+   putStrLn $ (allConstructorDeclarations ++ s ++ (classGeneration) ++ s ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
 
 
   Right x -> error "type error"
