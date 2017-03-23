@@ -1479,16 +1479,15 @@ getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now
 
 
 getClassDef :: HashMap.Map String (Maybe String, ClassDef) -> String -> ClassDef
-getClassDef hierarchy className = error $ (show hierarchy) ++ className
-{-
+getClassDef hierarchy className = 
  case HashMap.lookup className hierarchy of
-  Nothing -> error $ "error : class def not found: " ++ className
-  Just (_, classDef) -> error $ show classDef
--}
+  Nothing -> error $ ("error : class def not found: " ++ className)
+  Just (_, classDef) -> classDef
+
 getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
 getConstructor hierarchy className =
- let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
- error $ show (classArguments, constructor)
+ let (ClassDef (ClassSignature _ classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
+ (classArguments, constructor)
  
 
 
@@ -1539,6 +1538,15 @@ getAllClassNames :: [ClassDef] -> [String]
 getAllClassNames classes = map getClassName classes 
 
 
+generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
+generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
+ let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
+{- let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in-}
+ let header = "obj_" ++ className ++ "yea..whatever" in
+ let body = undefined in
+ let footer = undefined in
+ undefined
+
 
 taill :: [a] -> [a]
 taill (x:xs) = xs
@@ -1584,7 +1592,8 @@ getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
    let theFoo = zip classNames allInheritedMethods in
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
    let constructorStuff = zip classNames (map (getConstructor hierarchy) classNames) in
-   error $ {-allClassVTablesIsThatWhatThisIs-} show $ getConstructor hierarchy "Object"
+   let ha = zip classNames (map (getConstructor hierarchy) classNames) in
+   error $ show $ map (generateConstructor hierarchy classMethodMap) ha
 
 {-   error $ show $ getInheritedMethods hierarchy classMethodMap "SecondRobot"-}
 
