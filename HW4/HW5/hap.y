@@ -1590,6 +1590,29 @@ extern class_Int the_class_Int;
 
 
 
+getMethodSignatureBlah :: MethodType -> String
+getMethodSignatureBlah (MethodType methodName argumentTypes returnType) = 
+
+
+
+
+
+WORKING HERE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 {-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
@@ -1613,7 +1636,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
 
  let k1 = "struct class_" ++ className ++ "_struct {\n" in
  let k2 = "obj_" ++ className ++ " (*constructor) ( " ++ argumentTypeList ++ ");\n" in
- let k3 = "" in {-THIS IS WHERE I PUT ALL OF THE METHOD SIGNATURES AND CONSTRUCTOR SIGNATURE TODO TODO TODO TODO TODO TODO-}
+ let k3 = "" in {-THIS IS WHERE I PUT ALL OF THE METHOD SIGNATURES TODO TODO TODO TODO TODO TODO-}
  let k4 = "};\n" in
  let k5 = "extern class_Int the_class_Int;\n" in
 
