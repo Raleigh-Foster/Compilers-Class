@@ -237,7 +237,7 @@ getSubtypeHierarchy = map getSubtypeHierarchy'
 
 {-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM Obj, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
 generateObj :: ClassDef
-generateObj = ClassDef (ClassSignature "Obj" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Obj")] "Boolean"])
+generateObj = ClassDef (ClassSignature "Obj" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "STRING" [] "String", FFIMethod "EQUALS" [("argumentName", "Obj")] "Boolean"])
 
 {-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
 
