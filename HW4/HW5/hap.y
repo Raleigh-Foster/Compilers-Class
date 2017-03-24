@@ -1190,8 +1190,13 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    {-let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
-  (RExprConstructorInvocation _ _ _) -> error "constructors not yet implemented"
+  (RExprConstructorInvocation className rExprArguments _) -> generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter
   (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
+
+generateConstructorApplication :: String -> [RExpr] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+generateConstructorApplication className arguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter = undefined
+
+
 
 generateLExpr :: LExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
 generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
