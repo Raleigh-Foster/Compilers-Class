@@ -78,7 +78,7 @@ Classes : {[]}
 Statements : {[]}
            | Statement Statements {$1 : $2}
 Class : ClassSignature ClassBody {ClassDef $1 $2}
-ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature (stringFromIdentifierToken $2) $4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}}
+ClassSignature : class identifier lparen FormalArgs rparen {ClassSignature (stringFromIdentifierToken $2) $4 (Just "Obj") {-Michal said that I might want to use an option type here instead of default Obj, if the type itself is Obj. Perhaps though that should wait until a future point. -}}
                | class identifier lparen FormalArgs rparen extends identifier {ClassSignature (stringFromIdentifierToken $2) $4 (Just (stringFromIdentifierToken $7))}
 ClassBody : lbracket Statements Methods rbracket {ClassBody $2 $3}
 Statement : if RExpr lbracket Statements rbracket Elifs {ParserIfWithoutElse $2 $4 $6 (lineNumberFromToken $1)}
@@ -235,21 +235,21 @@ getSubtypeHierarchy' (className, (parentName, _)) = (className, parentName)
 getSubtypeHierarchy :: [(String, (Maybe String, ClassDef))] -> [(String, Maybe String)]
 getSubtypeHierarchy = map getSubtypeHierarchy'
 
-{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
-generateObject :: ClassDef
-generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Object")] "Boolean"])
+{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM Obj, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
+generateObj :: ClassDef
+generateObj = ClassDef (ClassSignature "Obj" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Obj")] "Boolean"])
 
 {-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
 
 generateNothing :: ClassDef
-generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
+generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Obj")) (ClassBody [] []) 
 
 generateString :: ClassDef
-generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
+generateString = ClassDef (ClassSignature "String" [] (Just "Obj")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 generateInt :: ClassDef
-generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
+generateInt = ClassDef (ClassSignature "Int" [] (Just "Obj")) (ClassBody []
  [FFIMethod "PLUS" [("argumentName", "Int")] "Int",
   FFIMethod "MINUS" [("argumentName", "Int")] "Int",
   FFIMethod "PRODUCT" [("argumentName", "Int")] "Int",
@@ -264,13 +264,13 @@ generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
 
 
 generateBoolean :: ClassDef
-generateBoolean = ClassDef (ClassSignature "Boolean" [] (Just "Object")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
+generateBoolean = ClassDef (ClassSignature "Boolean" [] (Just "Obj")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 
 
 addBuiltIns :: Program -> (Program, [ClassDef])
-addBuiltIns (Program classDefs statements) = (Program (classDefs ++ [generateObject, generateInt, generateNothing, generateString, generateBoolean]) statements, classDefs)
+addBuiltIns (Program classDefs statements) = (Program (classDefs ++ [generateObj, generateInt, generateNothing, generateString, generateBoolean]) statements, classDefs)
 
 okLExpr :: LExpr -> [String]
 okLExpr (LExprId _ lineNumber) = []
@@ -320,18 +320,18 @@ getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
-{-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
+{-I am using "Obj", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
 
 {-HAVE TO BUILD ALL OF THE FFI CALLS HERE INTO A CLASS DEF THAT I MAKE.... -}
 
 
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
 getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
-   [("Nothing", (Just "Object", generateNothing )),
-     ("Int",(Just "Object", generateInt)),
-       ("String", (Just "Object", generateString )),
-         ("Boolean", (Just "Object", generateBoolean )),
-           ("Object", (Nothing, generateObject))
+   [("Nothing", (Just "Obj", generateNothing )),
+     ("Int",(Just "Obj", generateInt)),
+       ("String", (Just "Obj", generateString )),
+         ("Boolean", (Just "Obj", generateBoolean )),
+           ("Obj", (Nothing, generateObj))
              ]
               
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
@@ -340,10 +340,10 @@ buildHierarchyMap program = HashMap.fromList $ getHierarchy program
 
 
 
-{-Now I have to distinguish between Nothing (not found) and Just Nothing (Object) -}
+{-Now I have to distinguish between Nothing (not found) and Just Nothing (Obj) -}
 
 {-Am I also factoring in the fact that I should at some point know that
-Objects like Integer will have methods, which I will need to know about?-}
+Objs like Integer will have methods, which I will need to know about?-}
 
 {-Is this the point where I do the desugaring if +, etc???? -}
 
@@ -418,10 +418,10 @@ main = do
  
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSubtype subtype supertype map =
- if supertype == "Object" || subtype == supertype
+ if supertype == "Obj" || subtype == supertype
   then True
   else
-   if subtype == "Object"
+   if subtype == "Obj"
     then False
     else case HashMap.lookup subtype map of Nothing -> error "is subtype error1" {-ERROR CASE-}
                                             Just (Just a,_) -> isSubtype a supertype map
@@ -524,7 +524,7 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
-                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
+                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE Obj DOES HAVE STUFF-}
                                                                  Nothing -> error ("Error when considering" ++ name)
 
 
@@ -853,7 +853,7 @@ checkTypesOkayLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Ma
 checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
  case lExpr of
   LExprId s lineNumber -> []
-  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external object", lineNumber)]
+  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external Obj", lineNumber)]
 
 
 
@@ -1617,7 +1617,7 @@ getClassThing (Just x) = x
 -}
 
 
-{-don't forget () should be ( void). the constructor is the only function with this possibility, as all other functions take the called object as an argument-}
+{-don't forget () should be ( void). the constructor is the only function with this possibility, as all other functions take the called Obj as an argument-}
 
 generateArgumentListFoo :: [String] -> String
 generateArgumentListFoo arguments =
@@ -1705,7 +1705,7 @@ generateProgramC (program,classDefs) =
   Left x ->
    let classMethodMap = generateClassMethodMap x in
    let hierarchy = buildHierarchyMap program in
-   let classNames = (getAllClassNames classDefs) ++ ["Object", "Nothing", "String", "Int", "Boolean"] in
+   let classNames = (getAllClassNames classDefs) ++ ["Obj", "Nothing", "String", "Int", "Boolean"] in
    let userClassNames = (getAllClassNames classDefs) in
    let allInheritedMethods = map (getInheritedMethods hierarchy classMethodMap) classNames in
    let theFoo = zip classNames allInheritedMethods in
