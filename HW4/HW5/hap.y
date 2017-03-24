@@ -1327,7 +1327,7 @@ generateArgumentThing identifierTypeMap counter ((varName, varType):x2:xs) =
 generateArgumentThingJustType :: [(String, String)] -> String
 generateArgumentThingJustType arguments =
  case arguments of
-  [] -> ""
+  [] -> "void"
   [x] -> "obj_" ++ snd x
   (x1:x2:xs) -> ("obj_"++ (snd x1)) ++ "," ++ (generateArgumentThingJustType (x2:xs))
 
@@ -1651,7 +1651,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let h1 = "struct class_" ++ className ++ "_struct;\n" in
  let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
  let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
- let h4 = "class_" ++ className ++ "clazz;\n" in
+ let h4 = "class_" ++ className ++ " clazz;\n" in
  let h5 = "" in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
  let h6 = "} * obj_" ++ className ++ ";\n" in
 
@@ -1667,9 +1667,9 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
 
  let header = "obj_" ++ className ++ " new_" ++ className ++ "(" ++ argumentListString ++ ") {\n" in
  let secondHeader = "obj_" ++ className ++ " new_thing = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
-                          "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\nreturn new_thing" in
+                          "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\n" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
- let footer = "\n}\n" in
+ let footer = "\nreturn new_thing;\n}\n" in
  h ++ k ++ header ++ secondHeader ++ body ++ footer
 
 
