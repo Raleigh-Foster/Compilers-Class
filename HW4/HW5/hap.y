@@ -1525,13 +1525,22 @@ generateCClassStructMethods methods =
   [x] -> generateCClassStructMethod x False
   (x1:x2:xs) -> (generateCClassStructMethod x1 True) ++ (generateCClassStructMethods (x2:xs))
 
+
+{-
+
+class_Pt the_class_Pt = &the_class_Pt_struct; 
+
+-}
+
+
 generateCClassStruct :: (String , [(Method, String)]) -> String
 generateCClassStruct (className,methods) =
  let header = "struct class_" ++ className ++ "_struct the_class_" ++ className ++ "_struct = {\n" in
  let constructor = "new_" ++ className ++ ",\n" in
  let methodStuff = generateCClassStructMethods methods in
  let footer = "};\n" in
- header ++ constructor ++ methodStuff ++ footer
+ let cIsTerriblePartOneMillion = "class_" ++ className ++ " the_class_" ++ className ++ " = &the_class_" ++ className ++ "_struct;\n" in
+ header ++ constructor ++ methodStuff ++ footer ++ cIsTerriblePartOneMillion
  
 
 
@@ -1635,6 +1644,18 @@ generateMethodTypeSigThing :: String -> [MethodType] -> String
 generateMethodTypeSigThing className methodTypes = concat $ map (generateMethodTypeSigThingSingle className) methodTypes
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 generateFinalBlah :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String, ([(String, String)], [Statement])) -> String
 generateFinalBlah = undefined
 
@@ -1642,6 +1663,12 @@ generateFinalBlah = undefined
 
 
 {-I might not be properly forward declaring everything. Some cases with multiple classes will probably crash.-}
+
+
+
+
+
+
 
 {-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
@@ -1655,7 +1682,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
  
  let argumentTypeList = generateArgumentThingJustType arguments in 
- let h0 = "struct class_" ++ className ++ "_struct  the_class_" ++ className ++ "_struct;\n" in
+ let h0 = "\n\n/// /// /// \n\nstruct class_" ++ className ++ "_struct  the_class_" ++ className ++ "_struct;\n" in
  let h1 = "struct class_" ++ className ++ "_struct;\n" in
  let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
  let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
@@ -1716,7 +1743,7 @@ generateProgramC (program,classDefs) =
    let classNames = (getAllClassNames classDefs) ++ ["Obj", "Nothing", "String", "Int", "Boolean"] in
    let userClassNames = (getAllClassNames classDefs) in
    let allInheritedMethods = map (getInheritedMethods hierarchy classMethodMap) classNames in
-   let theFoo = zip classNames allInheritedMethods in
+   let theFoo = zip userClassNames {-classNames-} allInheritedMethods in
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
    let ha = zip classNames (map (getConstructor hierarchy) userClassNames) in
    let allConstructorDeclarations = concat $ map (generateConstructor hierarchy classMethodMap) ha in
@@ -1724,7 +1751,12 @@ generateProgramC (program,classDefs) =
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    let s = "\n////////////\n" in
-   putStrLn $ ( allConstructorDeclarations ++ s ++ s ++ s ++ allClassVTablesIsThatWhatThisIs ++ s ++ s ++ s ++ s ++ (classGeneration) ++ s ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+   
+  {- error allConstructorDeclarations-}
+   {-error allClassVTablesIsThatWhatThisIs-}
+   
+   putStrLn $ ( allConstructorDeclarations ++ s ++ s ++ s ++ s ++ s ++ s ++ s ++ (classGeneration) ++ s ++ allClassVTablesIsThatWhatThisIs ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+ 
   Right x -> error "type error"
 
 
