@@ -1635,6 +1635,13 @@ generateMethodTypeSigThing :: String -> [MethodType] -> String
 generateMethodTypeSigThing className methodTypes = concat $ map (generateMethodTypeSigThingSingle className) methodTypes
 
 
+generateFinalBlah :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String, ([(String, String)], [Statement])) -> String
+generateFinalBlah = undefined
+
+
+
+
+{-I might not be properly forward declaring everything. Some cases with multiple classes will probably crash.-}
 
 {-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
@@ -1648,6 +1655,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
  
  let argumentTypeList = generateArgumentThingJustType arguments in 
+ let h0 = "struct class_" ++ className ++ "_struct  the_class_" ++ className ++ "_struct;\n" in
  let h1 = "struct class_" ++ className ++ "_struct;\n" in
  let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
  let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
@@ -1655,7 +1663,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let h5 = "" in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
  let h6 = "} * obj_" ++ className ++ ";\n" in
 
- let h = h1 ++ h2 ++ h3 ++ h4 ++ h5 ++ h6 in
+ let h = h1 ++ h2 ++ h3 ++ h4 ++ h5 ++ h6 ++ h0 in
 
  let k1 = "struct class_" ++ className ++ "_struct {\n" in
  let k2 = "obj_" ++ className ++ " (*constructor) ( " ++ argumentTypeList ++ ");\n" in
@@ -1717,8 +1725,6 @@ generateProgramC (program,classDefs) =
    let (Program classDefs statements) = program in
    let s = "\n////////////\n" in
    putStrLn $ ( allConstructorDeclarations ++ s ++ s ++ s ++ allClassVTablesIsThatWhatThisIs ++ s ++ s ++ s ++ s ++ (classGeneration) ++ s ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
-
-
   Right x -> error "type error"
 
 
