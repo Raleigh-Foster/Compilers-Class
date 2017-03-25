@@ -1198,8 +1198,8 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
   (RExprConstructorInvocation className rExprArguments _) ->
-   let (identifierTypeMap', counter', code', varName', varType') = generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter
-   in (identifierTypeMap', identifierMap, counter', code', varName', varType')
+   {-let (identifierTypeMap', counter', code', varName', varType') = generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter in-}
+   trace "here in constructor thing..." $ error (show identifierMap) {-$ error "fuck this"-} {-(identifierTypeMap', identifierMap, counter', code', varName', varType')-}
   (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
 
 generateConstructorApplication :: String -> [RExpr] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), Integer, String, String, String)
@@ -1305,7 +1305,7 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
 generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
 generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
  case statements of
-  [] -> (identifierTypeMap, identifierMap, argCounter, "")
+  [] -> trace (show identifierMap) $ (identifierTypeMap, identifierMap, argCounter, "")
   (x:xs) ->
    let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
@@ -1318,7 +1318,7 @@ generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argC
 
 generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> String
 generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
-  trace "in generateStatments'" ( let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z)
+  trace "in generateStatments'" $ trace (show $ take 100 [0]{-(HashMap.toList identifierMap)-}) $ ( let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z)
 
 
 
