@@ -767,7 +767,7 @@ okStatement :: Statement -> [String]
 
 getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
 getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
-getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = HashMap.lookup s currentIdentifierMap
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = HashMap.lookup (thisDotFieldHack ++ s) currentIdentifierMap
 
 
 
@@ -953,7 +953,21 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
     Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
     Nothing -> (currentIdentifierMap,False)
 
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = error ("who") {-(currentIdentifierMap, False)-}
+
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr fieldName lineNumber2) rExpr2 lineNumber3) currentIdentifierMap =
+ let nameThing = thisDotFieldHack ++ fieldName in
+ let currentType = HashMap.lookup nameThing currentIdentifierMap in
+  case currentType of
+   Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
+    Just s -> (HashMap.insert nameThing s currentIdentifierMap, True)
+    Nothing -> (currentIdentifierMap, False)
+   Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
+    Just s ->
+     let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in
+     (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
+    Nothing -> (currentIdentifierMap, False)
+
+
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
 generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> [Statement] -> HashMap.Map String String -> (HashMap.Map String String, Bool)
@@ -1234,8 +1248,11 @@ generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
                 identifierMap,
                 argCounter + 1,
                 "obj_" ++ t ++ " " ++ (getNextIdentifier $ argCounter) ++ ";\n", (getNextIdentifier $ argCounter), "obj_"++t)
-  LExprDotted _ _ _ -> error "lExprDotted generation not implemented..."
-
+  LExprDotted rExpr fieldName _ ->
+   let (identifierTypeMap', _, counter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+    (identifierTypeMap', identifierMap, counter', code', varName', varType')
+    
+{-INCOMPLETE!!!!!!!!!!!!!!!!!!!!!-}
 
 
 
