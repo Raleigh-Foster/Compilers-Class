@@ -763,9 +763,9 @@ okStatement :: Statement -> [String]
 
 
 
-getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
-getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
-getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing
+getTypeLExpr :: HashMap.Map String String -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
+getTypeLExpr thisMap hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
+getTypeLExpr thisMap hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing {-FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-}
 
 
 
