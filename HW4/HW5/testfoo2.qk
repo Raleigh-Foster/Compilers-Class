@@ -38,6 +38,10 @@ class SecondRobot(q : Int, r : String) extends Robot{
 
 
 class Robot() {
+ 
+ s = "constructors work maybe.";
+ s.PRINT();
+
  def destroy_city(fierceness: Int, size : Int ) : Int {
                                 /* TBD: how do we actually destroy things? */
     

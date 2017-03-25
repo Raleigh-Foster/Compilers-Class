@@ -1194,7 +1194,13 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
   (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
 
 generateConstructorApplication :: String -> [RExpr] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
-generateConstructorApplication className arguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter = undefined
+generateConstructorApplication className arguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
+ let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter ("obj_" ++ className) in
+ let (identifierTypeMap'', identifierMap'', counter'', code'', pairs'') = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap counter' (map generateRExpr arguments) in
+ let constructorCall = "the_class_" ++ className ++ "->constructor(" ++ (generateMethodInvocation $ map fst pairs'') ++ ");\n" in
+ let foo = "obj_" ++ className ++ " " ++ varName' ++ ";\n" in
+ let bar = varName' ++ " = " in
+ (identifierTypeMap'', identifierMap, counter'',foo ++ bar ++ constructorCall, "", "")
 
 
 
