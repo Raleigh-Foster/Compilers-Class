@@ -958,7 +958,7 @@ generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map 
 generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
 generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
  let (newMap, wasUpdated) = updateSubtypesSingleStatement hierarchy classMethodMap x currentIdentifierMap in
- let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated || wasUpdated')
+ let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in trace (if wasUpdated then (show x) else "") (newMap', wasUpdated || wasUpdated')
 
 generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
 generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
