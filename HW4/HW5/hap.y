@@ -165,6 +165,8 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 data LExpr = LExprId String Int
            | LExprDotted RExpr String Int
            deriving Show
+thisDotFieldHack :: String
+thisDotFieldHack = "this_dot_"
 data RExpr = RExprStringLiteral String Int
            | RExprIntLiteral String Int
            | RExprFromLExpr LExpr Int
@@ -763,9 +765,9 @@ okStatement :: Statement -> [String]
 
 
 
-getTypeLExpr :: HashMap.Map String String -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
-getTypeLExpr thisMap hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
-getTypeLExpr thisMap hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing {-FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-}
+getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = HashMap.lookup s currentIdentifierMap
 
 
 
@@ -1798,6 +1800,21 @@ generateProgramC (program,classDefs) =
  
   Right x -> error "type error"
 
+
+
+
+{-
+identifier type map in generate subtypes
+fix parser to allow this.method and not just this.field
+add all of the LExpr dot cases to code gen.
+undo that change to LExpr gen with the extra map.
+test code gen, etc.
+
+* Can prefix "this_dot_" in identifierMap (name -> type)
+
+* Do not need anything extra in identifier type map, I think.
+I think I likely do not need to add extra temporaries for the this. terms, as everything is already stored in the object.
+-}
 
 
 }
