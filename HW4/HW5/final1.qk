@@ -39,19 +39,12 @@ class Color() {
 }
 
 
-t = 1;
-y = 10;
-z = 20;
-
-if(1 > 2){
- x = Red();    
-}
-else{
- x = Color();
-}
-q = 10;
-q = t;
+x = Red();
 
 x.getRedness().PRINT();
 
+
+x = Color();
+
+x.getRedness().PRINT();
 

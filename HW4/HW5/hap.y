@@ -948,7 +948,7 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
     Just s -> (HashMap.insert identifier s currentIdentifierMap, True)
     Nothing -> (currentIdentifierMap,False)
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
-    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
     Nothing -> (currentIdentifierMap,False)
 
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = error ("who") {-(currentIdentifierMap, False)-}
