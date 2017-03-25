@@ -5,6 +5,8 @@ import Tokens
 import qualified Data.Map.Strict as HashMap
 import Data.List
 import System.IO
+import Debug.Trace
+
 
 }
 
@@ -1200,7 +1202,7 @@ generateConstructorApplication className arguments hierarchy classMethodMap iden
  let constructorCall = "the_class_" ++ className ++ "->constructor(" ++ (generateMethodInvocation $ map fst pairs'') ++ ");\n" in
  let foo = "obj_" ++ className ++ " " ++ varName' ++ ";\n" in
  let bar = varName' ++ " = " in
- (identifierTypeMap'', identifierMap, counter'',foo ++ bar ++ constructorCall, "", "")
+ trace "returning from generateConstructorApplication" (identifierTypeMap'', identifierMap, counter'',foo ++ bar ++ constructorCall, "", "")
 
 
 
@@ -1295,7 +1297,7 @@ generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argC
   (x:xs) ->
    let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
-     (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
+     trace("counter is " ++ (show argCounter'')) (trace ("adding code" ++ (show code')) (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code''))
 
 
 
@@ -1773,8 +1775,14 @@ generateProgramC (program,classDefs) =
    
   {- error allConstructorDeclarations-}
    {-error allClassVTablesIsThatWhatThisIs-}
-   
-   putStrLn $ ( allConstructorDeclarations ++ s ++ s ++ s ++ s ++ s ++ s ++ s ++ (classGeneration) ++ s ++ allClassVTablesIsThatWhatThisIs ++ "\nvoid quackmain() {\n" ++ (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+   trace "about to do the big print"
+   putStrLn $ ( (trace "do constructor declarations" allConstructorDeclarations)
+                ++ s ++ s ++ s ++ s ++ s ++ s ++ s ++
+                (trace "do class generation" classGeneration)
+                ++ s ++
+                (trace "do class vtables" allClassVTablesIsThatWhatThisIs)
+                ++ "\nvoid quackmain() {\n" ++
+                (trace "do statements" (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements)))
  
   Right x -> error "type error"
 
