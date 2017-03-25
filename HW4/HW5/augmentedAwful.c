@@ -1,0 +1,225 @@
+/*
+ * A sample of code that uses the Quack runtime. 
+ * We'll write the kind of C we would expect to 
+ * produce by code generation. 
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "Builtins.h"
+
+void quackmain(); 
+
+/* Boilerplate --- 
+ * let C build us a main program. 
+ */
+int main(int argc, char** argv) {
+  quackmain();
+  printf("--- Terminated successfully (woot!) ---\n");
+  exit(0);
+}
+
+/* ---- User-written class -----
+ * -  Hand-generated, but what we
+ * -  would want to generate for 
+ * 
+ class Pt(x: Int, y: Int) {
+    this.x = x;
+    this.y = y; 
+
+    def PRINT( ):Pt {
+       "( ".PRINT(); 
+       this.x.PRINT(); 
+       ", ".PRINT();
+       ")".PRINT(); 
+     }
+
+     def PLUS(other: Pt) {
+         return Pt(this.x+other.x, this.y+other.y); 
+     }
+  }
+  *-----------------------------
+  */
+
+/* ================
+ * Pt
+ * Fields: 
+ *    x, y: Int
+ * Methods: 
+ *    STRING  (inherit, since we don't have concatenation yet)
+ *    PRINT   (override)
+ *    EQUALS  (inherit, since our EQUALS is busted) 
+ *    and introducing
+ *    PLUS    (add x and y values pointwise)
+ * =================
+ */
+
+/* Declarations based on pattern in Builtins.h */ 
+
+struct class_Pt_struct;
+typedef struct class_Pt_struct* class_Pt; 
+
+typedef struct obj_Pt_struct {
+  class_Pt  clazz;
+  obj_Int x;
+  obj_Int y;
+} * obj_Pt;
+
+struct  class_Pt_struct  the_class_Pt_struct;  /* So I can use it in PLUS */ 
+
+struct class_Pt_struct {
+  /* Method table */
+  obj_Pt (*constructor) (obj_Int, obj_Int );  
+  obj_String (*STRING) (obj_Obj);           /* Inherit for now */
+  obj_Pt (*PRINT) (obj_Pt);                 /* Overridden */
+  obj_Boolean (*EQUALS) (obj_Obj, obj_Obj); /* Inherited */
+  obj_Pt (*PLUS) (obj_Pt, obj_Pt);          /* Introduced */
+};
+
+extern class_Pt the_class_Pt;
+
+/* Definitions based on pattern in Builtins.c */
+
+/* Constructor */
+obj_Pt new_Pt(obj_Int x, obj_Int y ) {
+  obj_Pt new_thing = (obj_Pt)
+    malloc(sizeof(struct obj_Pt_struct));
+  new_thing->clazz = the_class_Pt;
+  /* Quack code: 
+    this.x = x;
+    this.y = y; 
+  */
+  new_thing->x = x;
+  new_thing->y = y; 
+  return new_thing; 
+}
+
+/* Pt:STRING --- omitted for now  */
+
+/* Override PRINT method wit this Quack code: 
+    def PRINT( ):Pt {
+       "( ".PRINT(); 
+       this.x.PRINT(); 
+       ", ".PRINT();
+       ")".PRINT(); 
+     }
+*/
+obj_Pt Pt_method_PRINT(obj_Pt this) {
+  obj_String lparen = str_literal("(");
+  lparen->clazz->PRINT(lparen);
+  this->x->clazz->PRINT((obj_Obj) this->x);
+  obj_String comma=str_literal(",");
+  comma->clazz->PRINT(comma);
+  this->y->clazz->PRINT((obj_Obj) this->y);
+  obj_String rparen = str_literal(")");
+  rparen->clazz->PRINT(rparen);
+  return this;
+}
+/* A note on optimization: A good compiler would not create those 
+ * string literals each time Pt_method_PRINT is called.  Since they 
+ * are "compile time constants", they would be computed once, 
+ * stored, and reused. Maybe we'll do this week 9. 
+ */ 
+
+/* PLUS (new method) from this Quack code: 
+     def PLUS(other: Pt) {
+         return Pt(this.x+other.x, this.y+other.y); 
+     }
+*/
+obj_Pt Pt_method_PLUS(obj_Pt this, obj_Pt other) {
+  obj_Int this_x = this->x;
+  obj_Int other_x = other->x;
+  obj_Int this_y = this->y;
+  obj_Int other_y = other->y; 
+  obj_Int x_sum = this_x->clazz->PLUS(this_x, other_x);
+  obj_Int y_sum = this_y->clazz->PLUS(this_y, other_y); 
+  return the_class_Pt->constructor(x_sum, y_sum); 
+}
+
+/* The Pt Class (a singleton) */
+struct  class_Pt_struct  the_class_Pt_struct = {
+  new_Pt,     /* Constructor */
+  Obj_method_STRING, 
+  Pt_method_PRINT, 
+  Obj_method_EQUALS,
+  Pt_method_PLUS
+};
+
+class_Pt the_class_Pt = &the_class_Pt_struct; 
+
+
+struct class_Color_struct;
+typedef struct class_Color_struct* class_Color;
+typedef struct obj_Color_struct {
+class_Color clazz;
+} * obj_Color;
+
+
+/// /// /// 
+
+struct class_Color_struct  the_class_Color_struct;
+struct class_Color_struct {
+obj_Color (*constructor) ( void);
+obj_Int (*getRedness) (obj_Color);
+};
+extern class_Color the_class_Color;
+obj_Color new_Color() {
+obj_Color new_thing = (obj_Color) malloc(sizeof(struct obj_Color_struct));
+new_thing->clazz = the_class_Color;
+obj_String varName2;
+varName2 = (obj_String) str_literal("calling color constructor");
+
+obj_String varName3;
+varName3 = (obj_String) varName2;
+obj_String varName4;
+varName4 = (obj_String) varName3->clazz->PRINT(varName3);
+
+
+return new_thing;
+}
+
+////////////
+
+////////////
+
+////////////
+
+////////////
+
+////////////
+
+////////////
+
+////////////
+obj_Int Color_method_getRedness(){
+fprintf(stderr, "%s", "I am here!\n"); // Error message on stderr (usign fprintf)
+obj_Int varName2;
+varName2 = (obj_Int) int_literal(100);
+return varName2;
+
+return nothing;
+}
+////////////
+struct class_Color_struct the_class_Color_struct = {
+new_Color,
+Obj_method_PRINT,
+Obj_method_STRING,
+Obj_method_EQUALS,
+Color_method_getRedness
+};
+class_Color the_class_Color = &the_class_Color_struct;
+
+void quackmain() {
+obj_Color varName2;
+varName2 = the_class_Color->constructor();
+
+obj_Color varName3;
+varName3 = (obj_Color) varName2;
+obj_Int varName4;
+fprintf(stderr, "%s", "I am here!\n"); // Error message on stderr (usign fprintf)
+varName4 = varName3->clazz->getRedness(varName3);
+
+
+}
+/* // yea, I know, lame. */
