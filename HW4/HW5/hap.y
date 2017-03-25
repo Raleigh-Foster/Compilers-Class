@@ -1198,8 +1198,8 @@ generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    (a,b,c,d ++ "\n" ++ call) {-incorrect-}
   -}
   (RExprConstructorInvocation className rExprArguments _) ->
-   {-let (identifierTypeMap', counter', code', varName', varType') = generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter in-}
-   trace "here in constructor thing..." $ error (show identifierMap) {-$ error "fuck this"-} {-(identifierTypeMap', identifierMap, counter', code', varName', varType')-}
+   let (identifierTypeMap', counter', code', varName', varType') = generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   trace "here in constructor thing..." $ {-error (show identifierMap) -}{-$ error "fuck this"-} (identifierTypeMap', identifierMap, counter', code', varName', varType')
   (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
 
 generateConstructorApplication :: String -> [RExpr] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), Integer, String, String, String)
