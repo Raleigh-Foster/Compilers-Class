@@ -41,8 +41,7 @@ class Color() {
 
 x = Color();
 
-y = x.getRedness();
-y.PRINT();
+x.getRedness();
 
 
 x = Red();
