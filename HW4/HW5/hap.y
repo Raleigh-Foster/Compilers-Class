@@ -1680,14 +1680,22 @@ generateFinalBlah = undefined
 
 
 
+marshalMethodToMethodType :: Method -> MethodType
+marshalMethodToMethodType method =
+ case method of
+ TypedMethod methodName arguments returnType statements -> MethodType methodName (map snd arguments) returnType
+ InferredMethod methodName arguments statements -> error "cannot marshal type of inferred method"
+ FFIMethod methodName arguments returnType -> MethodType methodName (map snd arguments) returnType
+
+
 
 {-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
 generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
  
- let x = getMethodTypeList hierarchy className in
-
- let y = generateMethodTypeSigThing className x in
+ {-let x = getMethodTypeList hierarchy className in-}
+ let z = getInheritedMethods hierarchy classMethodMap className in
+ let y = generateMethodTypeSigThing className (map marshalMethodToMethodType $ map fst z) in
  
  let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
  let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
