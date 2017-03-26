@@ -1,6 +1,6 @@
 
 
-// Dynamic dispatch WORKS(static type and dynamic type different), and also handles the *this* reference correctly.
+// Dynamic dispatch WORKS(static type and dynamic type different), and also handles the this reference correctly.
 
 class Parent(){
   this.x = 10;
@@ -8,7 +8,7 @@ class Parent(){
    return this.bar();
   }    
   def bar() : Int{
-    return (this.x)*3;  // careful! without parens, we're trying to index x*3 in this.... or something terrible like that.
+    return this.x; 
   }
     
 }
@@ -17,7 +17,7 @@ class Parent(){
 class Child() extends Parent{
   this.x = 5;
   def bar() : Int{
-   return this.x;
+   return this.x; // I might actually have an issue with my compiler here. If I try to multiply this by 3, I get a weird error. It's also really late and I might be doing something stupid.
   }
     
 }
