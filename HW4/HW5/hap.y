@@ -1775,7 +1775,7 @@ marshalMethodToMethodType method =
 
 
 {-doing this for builtins as well currently.-}
-generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> String
+generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> ([(String,String)],String)
 generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
  
  {-let x = getMethodTypeList hierarchy className in-}
@@ -1809,7 +1809,8 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
                           "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\n" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\nreturn new_thing;\n}\n" in
- trace ("IDENTIFIERMAP" ++ (show identifierMap)) (h ++ k ++ header ++ secondHeader ++ body ++ footer)
+
+ trace ("IDENTIFIERMAP" ++ (show identifierMap)) (identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
 
 
 myShowList :: Show a => [a] -> String
