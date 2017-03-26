@@ -1343,7 +1343,7 @@ generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argC
   (x:xs) ->
    let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
-     (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code''))
+     (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
 
 
 
@@ -1823,7 +1823,7 @@ whatAreTheThis
                           "_struct));\nthis->clazz = the_class_" ++ className ++ ";\n" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\nreturn this;\n}\n" in
- whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer)
+ (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
 
 
 myShowList :: Show a => [a] -> String
