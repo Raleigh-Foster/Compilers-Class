@@ -388,23 +388,21 @@ dealWith x = do
  -}
  
  
- {-
+ 
 
 
-I NEED THIS FOR MY NICE TYPECHECKING ERROR MESSAGES, BUT IT IS CAUSING AN ISSUE WITH MY PROGRAM GENERATION (IT JUST STOPS THE COMPUTATION :()
-
+{-
  _ <- allMethodsWorkForProgram x
- -}
  
  
- {-
+ 
+ 
 
-This is also not worknig for some reason. getStatements x giving some undefined stuff.... 
  
  _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
  
- 
  -}
+ 
  
  
  
