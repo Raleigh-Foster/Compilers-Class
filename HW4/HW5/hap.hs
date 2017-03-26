@@ -1,10 +1,11 @@
 {-# OPTIONS_GHC -w #-}
 module Main where    
-
+import qualified Data.Set as Set
 import Tokens
 import qualified Data.Map.Strict as HashMap
 import Data.List
 import System.IO
+import Debug.Trace
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
@@ -885,7 +886,7 @@ happyReduction_7 (_ `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
-		 (ClassSignature (stringFromIdentifierToken happy_var_2) happy_var_4 (Just "Object") {-Michal said that I might want to use an option type here instead of default object, if the type itself is Object. Perhaps though that should wait until a future point. -}
+		 (ClassSignature (stringFromIdentifierToken happy_var_2) happy_var_4 (Just "Obj") {-Michal said that I might want to use an option type here instead of default Obj, if the type itself is Obj. Perhaps though that should wait until a future point. -}
 	) `HappyStk` happyRest
 
 happyReduce_8 = happyReduce 7 8 happyReduction_8
@@ -1024,21 +1025,21 @@ happyReduction_20 (_ `HappyStk`
 happyReduce_21 = happySpecReduce_1  13 happyReduction_21
 happyReduction_21 (HappyTerminal (Token (Number happy_var_1) (_)))
 	 =  HappyAbsSyn13
-		 (RExprIntLiteral happy_var_1 (lineNumberFromToken undefined)
+		 (RExprIntLiteral happy_var_1 (-1000)
 	)
 happyReduction_21 _  = notHappyAtAll 
 
 happyReduce_22 = happySpecReduce_1  13 happyReduction_22
 happyReduction_22 (HappyTerminal (Token (TargetString happy_var_1) (_)))
 	 =  HappyAbsSyn13
-		 (RExprStringLiteral happy_var_1 (lineNumberFromToken undefined)
+		 (RExprStringLiteral happy_var_1 (-1000)
 	)
 happyReduction_22 _  = notHappyAtAll 
 
 happyReduce_23 = happySpecReduce_1  13 happyReduction_23
 happyReduction_23 (HappyAbsSyn16  happy_var_1)
 	 =  HappyAbsSyn13
-		 (RExprFromLExpr happy_var_1 undefined
+		 (RExprFromLExpr happy_var_1 (-1000)
 	)
 happyReduction_23 _  = notHappyAtAll 
 
@@ -1219,7 +1220,7 @@ happyReduction_44 (HappyTerminal happy_var_3)
 	_
 	(HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn16
-		 (LExprDotted happy_var_1 (stringFromIdentifierToken happy_var_3) (lineNumberFromToken undefined)
+		 (LExprDotted happy_var_1 (stringFromIdentifierToken happy_var_3) (-1000)
 	)
 happyReduction_44 _ _ _  = notHappyAtAll 
 
@@ -1360,151 +1361,23 @@ happySeq = happyDontSeq
 
 stringFromIdentifierToken :: Token -> String
 stringFromIdentifierToken (Token (Identifier s) _) = s
-
-
 lineNumberFromToken :: Token -> Int
 lineNumberFromToken (Token _ n) = n                
-
-
-
-
-
-{-Program : Classes Statements {Program $1 $2}-}
-
-
-
-
-
-{-
-
-data ParseResult a = Ok a | Failed String
-type P a = String -> ParseResult a
-
-thenP :: P a -> (a -> P b) -> P b
-m `thenP` k = \s -> case m s of Ok a -> k a s
-                                Failed e -> Failed e
-
-returnP :: a -> P a
-returnP a = \s -> Ok a
-
-failP :: String -> P a
-failP err = \s -> Failed err
-
-catchP :: P a -> (String -> P a) -> P a
-catchP m k = \s -> case m s of Ok a -> Ok a
-                               Failed e -> k e s
-
-
--}
-
-
-
-
-
-
 type P a = Alex a
-
-
-
 thenP = (>>=)
-
 returnP = return
-{-
-failP = fail
--}
 catchP m c = fail "catch not implemented"
-
-
-
-
-
-
-
-
-
-
-
-{-
-fooBar :: ((Token,Int) -> P a) -> P a
-fooBar  = (alexMonadScan >>=)
--}
-
-
-
 lexer :: (Token -> P a) -> P a
 lexer = (alexMonadScan >>=)
-
-
-{-lexer cont = undefined `thenP` \token -> cont token
--}
-
-{-
-
-data E a = Ok a | Failed String
-                deriving Show
-thenE :: E a -> (a -> E b) -> E b
-m `thenE` k = case m of Ok a -> k a
-	                Failed e -> Failed e
-
-returnE :: a -> E a
-returnE a = Ok a
-
-failE :: String -> E a
-failE err = Failed err
-
-catchE :: E a -> (String -> E a) -> E a
-catchE m k = case m of Ok a -> Ok a
-	               Failed e -> k e
-
--}
-
-
-
-
-
-
-
-
-
-
-
-
-
-{-I'm currently throwing away typing information in my AST.-}
-
-
-{-parseError :: [Token] -> a-}
-{-parseError _ = error "Parse error"-}
-
-
-
-{-
-parseError tokens = failP "Parse error"
--}
-
-
 parseError tokens = do
  i <- getLineNumber
  alexError $ show i
-
-
-
-{-(alexError $ "Parse error: " ++ show tokens)-}
-
 data Program = Program [ClassDef] [Statement]
              deriving Show
 data Method = TypedMethod String [(String,String)] String [Statement]
             | InferredMethod String [(String,String)] [Statement]
             | FFIMethod String [(String, String)] String
             deriving Show
-{- Formal arguments have to supply a type? -}
-
-
-{-
-data FormalArgs = FormalArgs [(String, String)]
-                deriving Show
--}
-
 data ClassBody = ClassBody [Statement] [Method]
                deriving Show 
 data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
@@ -1522,6 +1395,8 @@ data Statement = ParserIfWithElse RExpr [Statement] [(RExpr, [Statement])] [Stat
 data LExpr = LExprId String Int
            | LExprDotted RExpr String Int
            deriving Show
+thisDotFieldHack :: String
+thisDotFieldHack = "this_dot_"
 data RExpr = RExprStringLiteral String Int
            | RExprIntLiteral String Int
            | RExprFromLExpr LExpr Int
@@ -1531,110 +1406,44 @@ data RExpr = RExprStringLiteral String Int
            | RExprMethodInvocation RExpr String [RExpr] Int
            | RExprConstructorInvocation String [RExpr] Int
            deriving Show
-{-
-getTokens :: String -> [Token] {-For now, no error handling-}
-getTokens s = undefined {- case runAlex s gather of
-                   Left _ -> []
-                   Right x -> x {-(map fst x)-}
--}
--}
-
-
-
 getTokens :: String -> [Token] {-For now, no error handling-}
 getTokens s = case runAlex s gather of Left _ -> []
                                        Right x -> x {-(map fst x)-}
-
-programPrint :: Program -> IO ()
-programPrint p = print p
-
-getProgram :: IO (P Program)
-getProgram = undefined
-
-
- {-do
-             s <- getContents
-             pure (calc $ getTokens s)
--}
-
-
-
-
-
-
-
-
 data HierarchyError = NoHierarchyError
                     | ParentClassNotPresent String {-This is the string for the parent. ignores child for now.-}
                     | CycleDetected String {-Just gives one of the classes in the cycle for now.-}
                     deriving Show
-
-
-
-
-
 exists :: Eq a => a -> [a] -> Bool
 exists a [] = False
 exists a (x:xs) = if a == x then True else exists a xs
-
 subset :: [String] -> [String] -> [String] {- not subset... -}
 subset (x:xs) all = if exists x all then subset xs all else x:(subset xs all)
 subset [] all = []
-
-
 classNameExists :: String -> [(String, Maybe String)] -> Bool
 classNameExists n l = exists n (map fst l)
-
 checkParentExists :: (String, Maybe String) -> [(String, Maybe String)] -> Bool
 checkParentExists (_,Just parentName) l = classNameExists parentName l
 checkParentExists (_,Nothing) _ = True
-
-
-
 get :: String -> [(String, Maybe String)] -> Maybe (Maybe String)
 get n [] = Nothing
 get n (x:xs) = if n == fst x then Just $ snd x else get n xs
-
-
-
-
-
-
 getAncestry :: String -> [(String, Maybe String)] -> [String]
 getAncestry name hierarchy = case get name hierarchy of Nothing -> [name] {-ERROR CASE-}
                                                         Just Nothing -> [name]
                                                         Just (Just parentName) -> name : (getAncestry parentName hierarchy)
-
-
 getAncestry' :: String -> HashMap.Map String (Maybe String, ClassDef) -> [String]
 getAncestry' name myMap = getAncestry name (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
-
 getUsefulAncestry :: String -> [(String, Maybe String)] -> [String]
 getUsefulAncestry className hierarchy = reverse $ getAncestry className hierarchy
-
-
-
 {-THIS IS AN INCOMPLETE PATTERN MATCH!!!-}
 getCommonAncestor' :: [String] -> [String] -> String
 getCommonAncestor' (x:(x2:xs)) (y:(y2:ys)) = if x2 == y2 then getCommonAncestor' (x2:xs) (y2:ys) else x
 getCommonAncestor' (x:xs) (y:ys) = x
-
-
-
 getCommonAncestor :: String -> String -> [(String, Maybe String)] -> String
 getCommonAncestor x y hierarchy = getCommonAncestor' (getUsefulAncestry x hierarchy) (getUsefulAncestry y hierarchy)
-
-
-
 getCommonAncestorFromMap :: HashMap.Map String (Maybe String, ClassDef) -> String -> String -> String
 getCommonAncestorFromMap myMap s1 s2 = getCommonAncestor s1 s2 (map (\x -> (fst x, fst $ snd x)) $ HashMap.toList myMap)
-
 {-This code for common ancestors might be correct, but I am not testing it yet. It's really a type checking thing.-}
-
-
-
-
-
 
 
 {-My cycle detection runs in time cubic in the number of class definitions. This is terrible, and I may change it later.-}
@@ -1647,128 +1456,55 @@ checkForCyclesOneClass' (name, Just parentName) hierarchy seenNames deep =
  if exists name seenNames then CycleDetected name
  else case get parentName hierarchy of Nothing -> if deep then NoHierarchyError else ParentClassNotPresent parentName 
                                        Just grandParentName -> checkForCyclesOneClass' (parentName, grandParentName) hierarchy (name:seenNames) True
-
-
 checkForCyclesOneClass :: [(String, Maybe String)] -> (String, Maybe String) -> HierarchyError
 checkForCyclesOneClass x y = checkForCyclesOneClass' y x [] False
-
-
-
 filterErrors :: [HierarchyError] -> [HierarchyError]
 filterErrors (NoHierarchyError:xs) = filterErrors xs
 filterErrors (x:xs) = x:(filterErrors xs)
 filterErrors [] = []
-
 checkForCycles :: [(String, Maybe String)] -> [HierarchyError]
 checkForCycles l = filterErrors $ map (checkForCyclesOneClass l) l
-
-
-
-
-
-
-
-
 getSubtypeHierarchy' :: (String, (Maybe String, ClassDef)) -> (String, Maybe String)
 getSubtypeHierarchy' (className, (parentName, _)) = (className, parentName)
-
 getSubtypeHierarchy :: [(String, (Maybe String, ClassDef))] -> [(String, Maybe String)]
 getSubtypeHierarchy = map getSubtypeHierarchy'
 
-
-
-
-{-For now, I'm only going to add in Object and its methods to the built in stuff. Eventually I may need to add more-}
-
-
-
-
-{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM OBJECT, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
-generateObject :: ClassDef
-generateObject = ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "toStr" [] "String", FFIMethod "EQUALS" [("argumentName", "Object")] "Boolean"])
-
-
+{-RIGHT NOW, NONE OF THE BUILTINS OVERRIDE ANYTHING FROM Obj, INCLUDING PRINTING OUT. THEY WILL ONCE I KNOW WHAT THAT MEANS-}
+generateObj :: ClassDef
+generateObj = ClassDef (ClassSignature "Obj" [] Nothing) (ClassBody [] [FFIMethod "PRINT" [] "Nothing", FFIMethod "STRING" [] "String", FFIMethod "EQUALS" [("argumentName", "Obj")] "Boolean"])
 
 {-I AM NOT ENFORCING THAT THE USER CANNOT CREATE A NOTHING CURRENTLY-}
 
 generateNothing :: ClassDef
-generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] []) 
-
+generateNothing = ClassDef (ClassSignature "Nothing" [] (Just "Obj")) (ClassBody [] []) 
 
 generateString :: ClassDef
-generateString = ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] [])
+generateString = ClassDef (ClassSignature "String" [] (Just "Obj")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 generateInt :: ClassDef
-generateInt = ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody []
+generateInt = ClassDef (ClassSignature "Int" [] (Just "Obj")) (ClassBody []
  [FFIMethod "PLUS" [("argumentName", "Int")] "Int",
   FFIMethod "MINUS" [("argumentName", "Int")] "Int",
   FFIMethod "PRODUCT" [("argumentName", "Int")] "Int",
   FFIMethod "QUOTIENT" [("argumentName", "Int")] "Int",
-  FFIMethod "ATMOST" [("argumentName", "Int")] "Int",
-  FFIMethod "LESS" [("argumentName", "Int")] "Int",
-  FFIMethod "ATLEAST" [("argumentName", "Int")] "Int",
-  FFIMethod "MORE" [("argumentName", "Int")] "Int"
+  FFIMethod "ATMOST" [("argumentName", "Int")] "Boolean",
+  FFIMethod "LESS" [("argumentName", "Int")] "Boolean",
+  FFIMethod "ATLEAST" [("argumentName", "Int")] "Boolean",
+  FFIMethod "MORE" [("argumentName", "Int")] "Boolean",
+  FFIMethod "PRINT" [("argumentName", "String")] "String"
   
   ])
 
 
 generateBoolean :: ClassDef
-generateBoolean = ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [])
+generateBoolean = ClassDef (ClassSignature "Boolean" [] (Just "Obj")) (ClassBody [] [ FFIMethod "PRINT" [("argumentName", "String")] "String"])
 
 
 
 
-addBuiltIns :: Program -> Program
-addBuiltIns (Program classDefs statements) = Program (classDefs ++ [generateObject]) statements
-
-
-{- I am assuming for now that the user did not add in anything called "Object", etc.
-That is not a reasonable assumption, but this is due soon.
--}
-
-
-
-
-
-
-
-{-
-
-
-{-Where am I putting these return types in? Are these actually required? Did I mess up my parser??-}
-
-data Program = Program [ClassDef] [Statement]
-             deriving Show
-data Method = TypedMethod String [(String,String)] String [Statement]
-            | InferredMethod String [(String,String)] [Statement]
-            | FFIMethod String [(String, String)] String
-            deriving Show
-{- Formal arguments have to supply a type? -}
-
-
-{-
-data FormalArgs = FormalArgs [(String, String)]
-                deriving Show
--}
-
-data ClassBody = ClassBody [Statement] [Method]
-               deriving Show
-data ClassSignature = ClassSignature String [(String,String)] (Maybe String)
-                    deriving Show
-data ClassDef = ClassDef ClassSignature ClassBody
-              deriving Show
-
-
--}
-
-
-
-{- DO I HAVE TO CHECK CONSTRUCTORS TO MAKE SURE THAT EVERYTHING IS THERE??? -}
-
-
-
-
+addBuiltIns :: Program -> (Program, [ClassDef])
+addBuiltIns (Program classDefs statements) = (Program (classDefs ++ [generateObj, generateInt, generateNothing, generateString, generateBoolean]) statements, classDefs)
 
 okLExpr :: LExpr -> [String]
 okLExpr (LExprId _ lineNumber) = []
@@ -1818,58 +1554,32 @@ getSelfParentDef :: ClassDef -> (String,(Maybe String, ClassDef))
 getSelfParentDef x = case x of (ClassDef (ClassSignature self _ super) _) -> (self, (super, x))
 
 
-{-ARG!!! I HAVE TO ADD BUILTINS FOR NOTHING, ETC!!!-}
-
-{-I am using "Object", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
-
-
-
-
+{-I am using "Obj", not "Obj" (which is in the manual) The manual is inconsistent about whether Int or Integer is what is defined.-}
 
 {-HAVE TO BUILD ALL OF THE FFI CALLS HERE INTO A CLASS DEF THAT I MAKE.... -}
 
 
 getHierarchy :: Program -> [(String,(Maybe String, ClassDef))]
 getHierarchy (Program classDefs _) = (map getSelfParentDef classDefs) ++
-   [("Nothing", (Just "Object", generateNothing )),
-     ("Int",(Just "Object", generateInt)),
-       ("String", (Just "Object", generateString )),
-         ("Boolean", (Just "Object", generateBoolean )),
-           ("Object", (Nothing, generateObject))
+   [("Nothing", (Just "Obj", generateNothing )),
+     ("Int",(Just "Obj", generateInt)),
+       ("String", (Just "Obj", generateString )),
+         ("Boolean", (Just "Obj", generateBoolean )),
+           ("Obj", (Nothing, generateObj))
              ]
               
-
-
-{-
- [("Nothing", (Just "Object", ClassDef (ClassSignature "Nothing" [] (Just "Object")) (ClassBody [] [] ))),
- ("Int",(Just "Object", ClassDef (ClassSignature "Int" [] (Just "Object")) (ClassBody [] []))),
- ("String", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
- ("Boolean", (Just "Object", ClassDef (ClassSignature "String" [] (Just "Object")) (ClassBody [] []))),
- ("Object", (Nothing, ClassDef (ClassSignature "Object" [] Nothing) (ClassBody [] [] )))
- ]
--}
-
 buildHierarchyMap :: Program -> HashMap.Map String (Maybe String, ClassDef)
 buildHierarchyMap program = HashMap.fromList $ getHierarchy program
 
 
 
 
-{-Now I have to distinguish between Nothing (not found) and Just Nothing (Object) -}
+{-Now I have to distinguish between Nothing (not found) and Just Nothing (Obj) -}
 
 {-Am I also factoring in the fact that I should at some point know that
-Objects like Integer will have methods, which I will need to know about?-}
+Objs like Integer will have methods, which I will need to know about?-}
 
 {-Is this the point where I do the desugaring if +, etc???? -}
-
-{-
-fooPrint :: Either String String -> IO ()
-fooPrint (Left s) = putStrLn s
-fooPrint (Right s) = hPutStrLn stderr s
--}
-
-{-Also have to add in the built in classes, Object, etc.-}
-
 
 toPrintCheckForCycles :: [HierarchyError] -> Either String String
 toPrintCheckForCycles [] = Left ""
@@ -1883,15 +1593,8 @@ toPrintErroneousConstructorCalls x = Right ("These constructors do not exist! I 
 
 {- I can print out the AST, but I am not supposed to. You will have to believe me that I made it. -}
 
-
-
 getStatements :: Program -> [Statement]
 getStatements (Program _ statements) = statements
-
-
-
-
-
 
 printOutInitFail :: (String,Int) -> IO ()
 printOutInitFail (s,x) = (hPutStrLn stderr $ "identifier " ++ s ++  " on line " ++ (show x))
@@ -1904,55 +1607,57 @@ printOutInitFails :: [(String, Int)] -> IO ()
 printOutInitFails [] = pure ()                
 printOutInitFails (x:xs) = (hPutStrLn stderr "You use the following identifiers without initializing:") >> (printOutInitFails' (x:xs)) 
 
-
-
-
-
 dealWith :: Program -> IO ()
 dealWith x = do
+ 
+ {-
  _ <- print $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
  _ <- fooPrint $ toPrintCheckForCycles $ checkForCycles $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x)
+ 
  _ <- fooPrint $ toPrintErroneousConstructorCalls $ subset ( okProgram x)  (map fst $ getSubtypeHierarchy $ HashMap.toList $ buildHierarchyMap (addBuiltIns x) )
- _ <- allMethodsWorkForProgram x
- _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
- programPrint (addBuiltIns x)
- {-pure ()-}
+ -}
+ 
+ 
+ 
 
+
+{-
+ _ <- allMethodsWorkForProgram x
+ 
+ 
+ 
+ 
+
+ 
+ _ <- printOutInitFails $ checkInitializationBeforeUse $ getStatements x
+ 
+ -}
+ 
+ 
+ 
+ 
+ {-_ <- programPrint (addBuiltIns x)-}
+ generateProgramC (addBuiltIns x) {-doing this even if typechecking fails.-}
+ {-pure ()-}
 
 
 main = do
  x <- getContents
+
+
  case runAlex x calc of Right x -> dealWith x
                         Left x -> error x
  
- {- do
- s <- getContents
- {-print $ getTokens s-}
- 
- case runAlex s calc of Right x -> print x
-                        Left y -> print y
-
--}
-
-
-
-
-
-{-do
-       x <- getProgram
-       dealWith (x "")
-{-added "" to make typecheck-}
--}
 isSubtype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSubtype subtype supertype map =
- if supertype == "Object" || subtype == supertype
+ if supertype == "Obj" || subtype == supertype
   then True
   else
-   if subtype == "Object"
+   if subtype == "Obj"
     then False
-    else case HashMap.lookup subtype map of Nothing -> undefined {-ERROR CASE-}
+    else case HashMap.lookup subtype map of Nothing -> error "is subtype error1" {-ERROR CASE-}
                                             Just (Just a,_) -> isSubtype a supertype map
-                                            Just _ -> undefined
+                                            Just _ -> error "is subtype error 2"
 
 isSupertype :: String -> String -> HashMap.Map String (Maybe String, ClassDef) -> Bool
 isSupertype supertype subtype map = isSubtype subtype supertype map
@@ -2005,11 +1710,6 @@ listMaybe Nothing = []
 collectMaybe :: [Maybe a] -> [a]
 collectMaybe arg = concat $ (map listMaybe arg)
 
-
-
-
-
-
 {-
 
 This is where I need to be working with maps from String to Method Type.
@@ -2020,11 +1720,6 @@ IGNORING THIS FOR NOW.
 
 
 -}
-
-{-
-data MethodType = MethodType String [String] String {-name, argument types, return type-}
--}
-
 
 generateMethodMap :: [MethodType] -> HashMap.Map String MethodType
 generateMethodMap [] = HashMap.empty
@@ -2044,8 +1739,6 @@ checkClassMethodsCompatibleWithOneAncestor myMap childMethods parentMethods =
 
 {- collectMaybe $ {-zipWith (checkClassSingleMethodCompatibleWithParent myMap) childMethods parentMethods-} -}
 
-
-
 checkClassMethodsCompatibleWithAllAncestors :: HashMap.Map String (Maybe String, ClassDef) -> [MethodType] -> [[MethodType]] -> [String]
 checkClassMethodsCompatibleWithAllAncestors myMap childMethods ancestorsMethods = concat $ map (checkClassMethodsCompatibleWithOneAncestor myMap childMethods) ancestorsMethods
 
@@ -2061,16 +1754,10 @@ I AM NOT HANDLING FIELDS YET, ONLY METHODS.
 
 -}
 
-
-
-
 getMethodTypeList :: HashMap.Map String (Maybe String, ClassDef) -> String -> [MethodType]
 getMethodTypeList myMap name = case HashMap.lookup name myMap of Just (Just _, classDef) -> let (_, methods) = generateRawMethodTypesSingleClass classDef in methods
-                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE OBJECT DOES HAVE STUFF-}
+                                                                 Just (Nothing, classDef) -> [] {-NEED TO CHANGE BECAUSE Obj DOES HAVE STUFF-}
                                                                  Nothing -> error ("Error when considering" ++ name)
-
-
-
 
 
 {-I think I'm including the class itself as its ancestor here... though it doesn't matter for now.-}
@@ -2080,8 +1767,6 @@ methodsWorkForAllAncestors myMap name = let ancestry = getAncestry' name myMap i
 
 methodsWorkForAllAncestorsAllClasses :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [String]
 methodsWorkForAllAncestorsAllClasses myMap names = concat $ map (methodsWorkForAllAncestors myMap) names
-
-
 
 getAncestry'' :: HashMap.Map String (Maybe String, ClassDef) -> String -> (String, [String])
 getAncestry'' a b = (b, (getAncestry' b a))
@@ -2104,7 +1789,6 @@ allMethodsWorkForProgram' program =
 
 
 {- I DO NOT HAVE TRUE AND FALSE AS BOOLEAN LITERALS!!!!!!!!!! -}
-
 
 allMethodsWorkForProgram :: Program -> IO ()
 allMethodsWorkForProgram program =
@@ -2271,14 +1955,8 @@ checkInitializationBeforeUse' (statement:statements) =
  (checkInitializationBeforeUse' statements)
 
 
-
 checkInitializationBeforeUse :: [Statement] -> [(String,Int)]
 checkInitializationBeforeUse statements = checkInitializationBeforeUse' $ reverse statements
-
-
-{-This is not a statement in a constructor or method... well maybe it could be used for that eventually...-}
-typecheckStatements :: HashMap.Map String [MethodType] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map String String -> [Statement] -> [String]
-typecheckStatements classMethodTypeMap classHierarchy derivedTypes statements = undefined
 
 
 
@@ -2317,7 +1995,7 @@ okStatement :: Statement -> [String]
 
 getTypeLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> Maybe String
 getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprId s lineNumber) = HashMap.lookup s currentIdentifierMap
-getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = Nothing
+getTypeLExpr hierarchy classMethodMap currentIdentifierMap (LExprDotted rExpr s lineNumber) = HashMap.lookup (thisDotFieldHack ++ s) currentIdentifierMap
 
 
 
@@ -2401,13 +2079,13 @@ checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr =
      NOT DONE YET!!!!!!
      -}
      )
-   RExprConstructorInvocation constructorName arguments lineNumber -> undefined
+   RExprConstructorInvocation constructorName arguments lineNumber -> error "constructor type checking not implemented yet"
 
 checkTypesOkayLExpr :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> LExpr -> [(String, Int)]
 checkTypesOkayLExpr hierarchy classMethodMap identifierMap lExpr =
  case lExpr of
   LExprId s lineNumber -> []
-  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external object", lineNumber)]
+  LExprDotted rExpr s lineNumber -> (checkTypesOkayRExpr hierarchy classMethodMap identifierMap rExpr) ++ [("Cannot access fields of external Obj", lineNumber)]
 
 
 
@@ -2475,7 +2153,7 @@ getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr =
  case rExpr of
   (RExprStringLiteral s lineNumber) -> Just "String"
   (RExprIntLiteral s lineNumber) -> Just "Int"
-  (RExprFromLExpr lExpr lineNumber) -> undefined
+  (RExprFromLExpr lExpr lineNumber) -> getTypeLExpr hierarchy classMethodMap currentIdentifierMap lExpr
   (RExprAnd rExpr1 rExpr2 lineNumber) -> Just "Boolean"
   (RExprOr rExpr1 rExpr2 lineNumber) -> Just "Boolean"
   (RExprNot rExpr lineNumber) -> Just "Boolean"
@@ -2497,19 +2175,34 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
  let currentType = HashMap.lookup identifier currentIdentifierMap in
   case currentType of
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
-    Just s -> (HashMap.insert identifier s undefined, True)
+    Just s -> (HashMap.insert identifier s currentIdentifierMap, True)
     Nothing -> (currentIdentifierMap,False)
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr of
-    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == s then False else True)
+    Just s -> let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in (HashMap.insert identifier unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
     Nothing -> (currentIdentifierMap,False)
-updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr string lineNumber2) rExpr2 lineNumber3) currentIdentifierMap = (currentIdentifierMap, False)
+
+
+updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr fieldName lineNumber2) rExpr2 lineNumber3) currentIdentifierMap =
+ let nameThing = thisDotFieldHack ++ fieldName in
+ let currentType = HashMap.lookup nameThing currentIdentifierMap in
+  case currentType of
+   Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
+    Just s -> (HashMap.insert nameThing s currentIdentifierMap, True)
+    Nothing -> (currentIdentifierMap, False)
+   Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
+    Just s ->
+     let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in
+     (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
+    Nothing -> (currentIdentifierMap, False)
+
+
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
 generateSubtypes' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> [Statement] -> HashMap.Map String String -> (HashMap.Map String String, Bool)
 generateSubtypes' hierarchy classMethodMap [] currentIdentifierMap = (currentIdentifierMap,False)
 generateSubtypes' hierarchy classMethodMap (x:xs) currentIdentifierMap =
  let (newMap, wasUpdated) = updateSubtypesSingleStatement hierarchy classMethodMap x currentIdentifierMap in
- let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated && wasUpdated')
+ let (newMap', wasUpdated') = generateSubtypes' hierarchy classMethodMap xs newMap in (newMap', wasUpdated || wasUpdated')
 
 generateSubtypes :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String,String) MethodType -> [Statement] -> HashMap.Map String String -> HashMap.Map String String
 generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
@@ -2517,6 +2210,17 @@ generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
   case wasUpdated of
    True -> generateSubtypes hierarchy classMethodMap statements newMap
    False -> newMap
+
+
+
+keepThisOrNot :: (String,String) -> [(String,String)]
+keepThisOrNot (varName, varType) =
+ if (take 9 varName == "this_dot_") then [({-drop 9 -}varName, varType)] else []
+
+
+whatAreTheThis :: [(String,String)] -> [(String,String)]
+whatAreTheThis identifierMap = concat $ map keepThisOrNot identifierMap
+
 
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
@@ -2549,6 +2253,890 @@ generateClassMethodMap ((s,m):xs) = HashMap.union (generateClassMethods s m) (ge
 
 getProgramStatements :: Program -> [Statement] {-Just get the statements after the class definitions...-}
 getProgramStatements (Program _ statements) = statements
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+getNextIdentifier :: Integer -> String
+getNextIdentifier x = "varName" ++ ( show $ x + 1   )               
+
+{-
+
+ checkTypesOkaySingleStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String String -> Statement -> [(String,Int)]
+  checkTypesOkaySingleStatement hierarchy classMethodMap identifierMap statement =
+
+-}
+
+{-
+
+
+switched to using separate argument for this. identifierTypeMap . Oh identifier type map has name and type, as opposed to just type. UGH
+
+Wait, I should have the C type as well.... let's just say that's what it has.
+
+
+
+This whole scheme doesn't really work.. :(
+
+ hierarchy, classMethodMap, identifierMap. Here identifierMap maps to (name,type), where name is the name of the term in the generated C file
+-}
+
+
+
+
+
+
+
+
+{-
+    case rExpr of
+         RExprIntLiteral value lineNumber -> (HashMap.empty {-WRONG-} , HashMap.empty {-WRONG-},argCounter + 1,"obj_Int " ++ (getNextIdentifier argCounter) ++ ";\n" ++ (getNextIdentifier   argCounter) ++ " = (obj_Int) int_literal(" ++ (value) ++ ");")
+              _ -> undefined
+                 -}
+
+
+
+
+shaveObj_ :: String -> String
+shaveObj_ s = drop 4 s
+
+
+getMethodType :: String -> String -> HashMap.Map (String, String) MethodType -> MethodType
+getMethodType classType methodName classMethodMap =
+ case HashMap.lookup (classType, methodName) classMethodMap of
+  Just methodType -> methodType
+  Nothing -> error $ "class method not found!" ++ (show classMethodMap) ++ "\n" ++ (classType) ++ "\n" ++ (methodName)
+
+
+
+
+shouldBeMonad :: HashMap.Map String (Maybe String, ClassDef) ->
+                 HashMap.Map (String, String) MethodType ->
+                 HashMap.Map String (String,String) ->
+                 HashMap.Map String String ->
+                 Integer ->
+                 [HashMap.Map String (Maybe String, ClassDef) ->
+                  HashMap.Map (String, String) MethodType ->
+                  HashMap.Map String (String, String) ->
+                  HashMap.Map String String ->
+                  Integer ->
+                  (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+                 ] ->
+                 (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, [(String, String)])
+
+{-the final pair here is a list of the name that a variable has, followed by its type. These are the return values from all of the subexpressions passed.-}
+
+shouldBeMonad hierarchy classMethodMap identifierTypeMap identifierMap argCounter functions =
+ case functions of
+  [] -> (identifierTypeMap, identifierMap, argCounter, "", [])
+  (x:xs) ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = x hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'', returns) = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
+   let retVal = (identifierTypeMap'', identifierMap'', argCounter'', code'++code'', (varName',varType'):returns) in
+   retVal
+
+
+
+
+{-
+
+return:
+
+code,
+name of variable that value is stored in,
+type of variable that value is stored in.
+
+
+-}
+
+
+
+
+{-
+generateArguments :: [RExpr] -> HashMap String (Maybe String, ClassDef) -> 
+-}
+
+
+
+
+
+generateMethodInvocation :: [String] -> String
+generateMethodInvocation [] = ""
+generateMethodInvocation [x] = x
+generateMethodInvocation (x1:x2:xs) = x1 ++ "," ++ generateMethodInvocation (x2 : xs)
+
+{-returns new identfierTypeMap, new identifierMap, new counter, and the name of the variable used.-}
+pushVariable :: HashMap.Map String (String,String) -> Integer -> String -> (HashMap.Map String (String, String),  Integer, String)
+pushVariable identifierTypeMap counter varType =
+ let varName = getNextIdentifier counter in
+ (HashMap.insert varName (varName, varType) identifierTypeMap, counter + 1, varName)
+
+
+
+
+
+
+
+generateRExpr :: RExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
+ case rExpr of
+  (RExprStringLiteral value _) ->
+   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_String" in
+   (identifierTypeMap', identifierMap, counter', "obj_String " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_String) str_literal(" ++ ("\"" ++ value ++ "\"") ++ ");\n" , varName', "obj_String")
+
+  (RExprIntLiteral value lineNumber) ->
+   let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter "obj_Int" in
+   (identifierTypeMap', identifierMap, counter', "obj_Int " ++ varName' ++ ";\n" ++ varName' ++ " = (obj_Int) int_literal(" ++ value ++ ");\n" ,varName',"obj_Int")
+
+  (RExprAnd rExpr1 rExpr2 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', counter'', code'', varName'', varType'') = generateRExpr rExpr2 hierarchy classMethodMap identifierTypeMap' identifierMap' counter' in
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' "obj_Boolean" in
+   (identifierTypeMap''', identifierMap'', counter''', "obj_Boolean " ++ varName'''  ++ " = lit_false;\n" ++ code' ++ "if(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ "if(" ++ varName'' ++ " == lit_true){\n" ++ varName''' ++ " = (obj_Boolean) " ++ "lit_true" ++ ";\n}\n}", varName''', "obj_Boolean")
+  (RExprOr rExpr1 rExpr2 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', counter'', code'', varName'', varType'') = generateRExpr rExpr2 hierarchy classMethodMap identifierTypeMap' identifierMap' counter' in
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' "obj_Boolean" in
+   (identifierTypeMap''', identifierMap'', counter''', "obj_Boolean " ++ varName'''  ++ " = lit_true;\n" ++ code' ++ "if(" ++ varName' ++ " == lit_false){\n" ++ code'' ++ "if(" ++ varName'' ++ " == lit_false){\n" ++ varName''' ++ " = (obj_Boolean) " ++ "lit_false" ++ ";\n}\n}", varName''', "obj_Boolean")
+
+
+
+
+  (RExprNot rExpr1 _) ->
+   let (identifierTypeMap', identifierMap', counter', code', varName', varType') = generateRExpr rExpr1 hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', counter'', varName'') = pushVariable identifierTypeMap' counter' "obj_Boolean" in
+   (identifierTypeMap'', identifierMap', counter'', code' ++ "obj_Boolean " ++ varName'' ++ ";\n" ++ varName'' ++ " = (obj_Boolean) " ++ varName' ++ ";\n" ++ "if(" ++ varName'' ++ " == lit_true){" ++ varName'' ++ "= lit_false;}\nelse{" ++ varName'' ++ "= lit_true;}"      , varName'', "obj_Boolean")
+
+
+
+  (RExprMethodInvocation rExpr methodName arguments _) ->
+   let (identifierTypeMap',identifierMap',counter',code', varName' , varType') = (generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter) in
+   let methodType = getMethodType (shaveObj_ $ getTypeBack varName' identifierTypeMap') methodName classMethodMap in
+   let (MethodType mn argt rett) = methodType in
+   let (identifierTypeMap'', identifierMap'', counter'', code'', pairs'') = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap' counter' (map generateRExpr arguments) in
+   let methodCall = varName' ++ "->clazz->" ++ mn ++ "(" in
+   let nextName = getNextIdentifier counter'' in
+   let (identifierTypeMap''', counter''', varName''') = pushVariable identifierTypeMap'' counter'' ("obj_" ++ rett) in
+   let ggg = "obj_" ++ rett ++ " " ++ nextName ++ ";\n" in
+   (identifierTypeMap''', identifierMap'', counter''', (code' ++ code''++ ggg ++ nextName ++ " = (obj_" ++ rett ++ ") " ++ methodCall ++ (generateMethodInvocation $ varName' : (map fst pairs'') ) ++ ");\n"), nextName, rett)
+
+{-  (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, [(String, String)]) -}
+{-shouldBeMonad hierarchy classMethodMap identifierTypeMap identifierMap argCounter functions =-}
+
+   {-error (mn ++ (show argt) ++ (show rett))-}
+   {-let call = (getTypeBack (getNextIdentifier (c-1{-really -1 here?-})) a) ++ "__" ++ methodName ++ "(" ++ ")" in
+   (a,b,c,d ++ "\n" ++ call) {-incorrect-}
+  -}
+  (RExprConstructorInvocation className rExprArguments _) ->
+   let (identifierTypeMap', counter', code', varName', varType') = generateConstructorApplication className rExprArguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   (identifierTypeMap', identifierMap, counter', code', varName', varType')
+  (RExprFromLExpr lExpr _) -> let (a,b,c,d, e ,f) = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in (a,b,c,d,e, f)
+
+generateConstructorApplication :: String -> [RExpr] -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), Integer, String, String, String)
+
+
+generateConstructorApplication className arguments hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
+
+
+ let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap argCounter ("obj_" ++ className) in
+ let (identifierTypeMap'', _, counter'', code'', pairs'') = shouldBeMonad hierarchy classMethodMap identifierTypeMap' identifierMap counter' (map generateRExpr arguments) in
+ let constructorCall = "the_class_" ++ className ++ "->constructor(" ++ (generateMethodInvocation $ map fst pairs'') ++ ");\n" in
+ let foo = "obj_" ++ className ++ " " ++ varName' ++ ";\n" in
+ let bar = varName' ++ " = " in
+ let retVal = (identifierTypeMap'', counter'',foo ++ bar ++ constructorCall, varName', "obj_" ++ className) in
+ retVal
+
+
+getThisType :: HashMap.Map String String -> String
+getThisType identifierMap =
+ case HashMap.lookup "this" identifierMap of
+  Nothing -> error "error: this not found"
+  Just s -> s
+
+generateLExpr :: LExpr -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String, String, String)
+generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter =
+ case lExpr of
+  LExprId quackVarName _ ->
+   case HashMap.lookup quackVarName identifierTypeMap of
+    Just (a,b) -> (identifierTypeMap, identifierMap, argCounter, "", a, b) {-code field maybe wrong..-}
+    Nothing ->
+     case HashMap.lookup quackVarName identifierMap of
+      Nothing -> error $ "static type not found " ++ quackVarName
+      {-This way x = ... will insert both x and the cvar used for x into the key.-}
+      Just t -> (HashMap.insert (getNextIdentifier $ argCounter)  (getNextIdentifier $ argCounter,"obj_"++t) (HashMap.insert quackVarName (getNextIdentifier $ argCounter,"obj_"++t) identifierTypeMap),
+                identifierMap,
+                argCounter + 1,
+                "obj_" ++ t ++ " " ++ (getNextIdentifier $ argCounter) ++ ";\n", (getNextIdentifier $ argCounter), "obj_"++t)
+  LExprDotted rExpr fieldName _ ->
+   let (identifierTypeMap', _, counter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let thisType = getThisType identifierMap in
+   let (identifierTypeMap'', counter'', varName'') = pushVariable identifierTypeMap' counter' thisType in
+   let code'' = "obj_" ++ thisType ++ " " ++ varName'' ++ " = this->" ++ fieldName ++ ";\n" in
+   (identifierTypeMap'', identifierMap, counter'', code'++code'', {-varName''-} "this->" ++ fieldName, thisType)
+    
+{-wrong type as I care about the type of the field...  eventually I will have that in my identifierMap....-}
+
+
+
+
+generateElif :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> (RExpr, [Statement]) -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
+generateElif = undefined
+
+generateElifs :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [(RExpr, [Statement])] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String) {-HAS TO PUT elif {} WRAPPER-}
+generateElifs hierarchy classMethodMap identifierTypeMap identifierMap argCounter elifs =
+ case elifs of
+  [] -> (identifierTypeMap, identifierMap, argCounter, "")
+  (x:xs) -> error "elifs not implemented"
+
+
+
+
+getTypeBack :: String -> HashMap.Map String (String, String) -> String
+getTypeBack s m =
+ case HashMap.lookup s m of
+  Just(n,t) -> t
+  Nothing -> error ("c variable name not found.. " ++ s ++ (show m))
+
+
+generateStatement :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> Statement -> (HashMap.Map String (String,String), HashMap.Map String String, Integer, String, String, String)
+generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter statement =
+ case statement of {- not sure this should be here for bare expression... but at least I can test some stuff? -}
+  ParserBareExpression rExpr lineNumber -> generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter
+  
+  
+
+
+
+
+  ParserAssign lExpr rExpr lineNumber ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName' , varType' ) = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'', varName'', varType'') = generateLExpr lExpr hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' in
+   (identifierTypeMap'', identifierMap'', argCounter'', code' ++"\n"++ code'' ++ varName'' ++ " = (" ++ (getTypeBack (getNextIdentifier (argCounter'-1)) identifierTypeMap') ++ ") "
+    ++ (getNextIdentifier (argCounter' - 1)) ++ ";", getNextIdentifier (argCounter'' - 1), varType' {-varType dummy value...-}
+   )
+   
+  ParserReturnUnit _ -> error "empty return not implemented."{-(identifierTypeMap, identifierMap, argCounter, "return;\n", undefined, undefined)-}
+  ParserReturn rExpr _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   (identifierTypeMap', identifierMap', argCounter', code' ++ "return " ++ varName' ++ ";\n", varName', varType') {-really dummy values here.-}
+  ParserWhile rExpr statements _ ->
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''', varName''', varType''') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' in
+   (identifierTypeMap''', identifierMap''', argCounter''', code' ++ "while(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ code''' ++
+    {-store back in conditional-} varName' ++ " = (obj_Boolean) " ++ varName''' ++ ";\n" {-issue with varType being Boolean instead of obj_Boolean..-}
+    ++ "}\n", varName', varType') {-again, dummy values...-}
+
+  ParserIfWithoutElse rExpr statements elifs _ -> 
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
+    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ "}" ++ code''', varName', varType') {-name and type dummy values...-}
+  ParserIfWithElse rExpr statements elifs elseStatements _ -> 
+   let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
+   let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
+   let (identifierTypeMap'''', identifierMap'''', argCounter'''', code'''') = generateStatements hierarchy classMethodMap identifierTypeMap''' identifierMap''' argCounter''' elseStatements in
+        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ varName' ++ " == lit_true)\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n"
+        , varName', varType') {-name and type dummy values-}
+
+
+
+generateStatements :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> (HashMap.Map String (String, String), HashMap.Map String String, Integer, String)
+generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
+ case statements of
+  [] -> (identifierTypeMap, identifierMap, argCounter, "")
+  (x:xs) ->
+   let (identifierTypeMap', identifierMap', argCounter', code', _, _) = generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCounter x in
+   let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' xs in
+     (identifierTypeMap'', identifierMap'', argCounter'', code' ++ "\n" ++ code'')
+
+
+
+
+
+
+generateStatements' :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> HashMap.Map String (String, String) -> HashMap.Map String String -> Integer -> [Statement] -> String
+generateStatements' hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements =
+  let (w,x,y,z) = generateStatements hierarchy classMethodMap identifierTypeMap identifierMap argCounter statements in z
+
+
+
+
+
+getReturnTypeBlarg :: Maybe MethodType -> String
+getReturnTypeBlarg methodType =
+ case methodType of
+  Just (MethodType _ _ returnType) -> returnType
+  Nothing -> error "unexpected herp derp"
+
+
+
+
+{-REMEMBER TO ADD THIS TO ARGUMENT LIST-}
+
+generateArgumentThing :: HashMap.Map String (String, String) -> Integer -> [(String,String)] -> (HashMap.Map String (String, String) , Integer, String)
+generateArgumentThing identifierTypeMap counter [] = (identifierTypeMap, counter, "")
+generateArgumentThing identifierTypeMap counter [(varName, varType)] =
+ let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap counter ("obj_" ++ varType) in
+ (HashMap.insert varName (varName', "obj_" ++ varType) identifierTypeMap', counter', "obj_" ++ varType ++ " " ++ varName')
+ 
+generateArgumentThing identifierTypeMap counter ((varName, varType):x2:xs) =
+ let (identifierTypeMap', counter', varName') = pushVariable identifierTypeMap counter ("obj_" ++ varType) in
+ let newMap = (HashMap.insert varName (varName', "obj_" ++ varType) identifierTypeMap') in
+ let (identifierTypeMap''', counter''', varList) = generateArgumentThing newMap counter' (x2:xs) in
+ (identifierTypeMap''', counter''', "obj_" ++ varType ++ " " ++ varName' ++ "," ++ varList)
+
+
+
+generateArgumentThingJustType :: [(String, String)] -> String
+generateArgumentThingJustType arguments =
+ case arguments of
+  [] -> "void"
+  [x] -> "obj_" ++ snd x
+  (x1:x2:xs) -> ("obj_"++ (snd x1)) ++ "," ++ (generateArgumentThingJustType (x2:xs))
+
+
+{-
+
+These actually aren't typed and inferred method.
+
+I always assume methods are given their return type.
+
+If they are not, it is nothing, but I still put it in an "InferredMethod" node. This is terrible.
+-}
+
+
+doComma x =
+ case x of
+ [] -> ""
+ _ -> ","
+
+
+
+
+argumentsIdentifierMap :: [(String, String)] -> HashMap.Map String String
+argumentsIdentifierMap = HashMap.fromList  
+
+generateMethod :: HashMap.Map String String -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> Method -> String
+generateMethod identifierMap__ hierarchy classMethodMap className method =
+ case method of
+  TypedMethod methodName arguments returnType body ->
+   let identifierMap_ = generateSubtypes hierarchy classMethodMap body (HashMap.union identifierMap__ $ argumentsIdentifierMap arguments) in
+   let identifierMap = (HashMap.insert "this" className identifierMap_) in
+
+{-NEED TO PUT THIS IN CONSTRUCTORS AS WELL, AND ALSO NEED TO PUT FIELDS IN THE METHOD CALLS GENERATION AND SUBTYPING... AND IN GENERATION FOR CONSTRUCTORS....-}
+{-IDENTIFIER TYPE MAP MIGHT ALSO NEED TO HAVE THIS ADDED.... NOT 100% SURE... -}
+
+   let typelalala = HashMap.lookup (className, methodName) classMethodMap in
+   let returnType = getReturnTypeBlarg typelalala in
+   let counter = 1 in
+   let identifierTypeMap = (HashMap.insert "this" ("this","obj_" ++ className) HashMap.empty) in
+   let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in
+   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(obj_" ++ className ++ " this " ++ (doComma arguments) ++ argumentListString ++ "){\n" in
+       header ++  (generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' body) ++ "return nothing;\n}"
+
+{-I AM ASSUMING EVERY METHOD RETURNS!!!. (or rather, if it does not, return nothing, but return nothing at the end, anyway...)-}
+
+  InferredMethod methodName arguments body -> error "methods without return type specified disabled for now"
+  
+{-
+   let identifierMap = generateSubtypes hierarchy classMethodMap body HashMap.empty in
+   let typelalala = HashMap.lookup (className, methodName) classMethodMap in
+   let returnType = getReturnTypeBlarg typelalala in
+   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ (generateArgumentThing arguments) ++ "){\n" in
+  
+    error (header ++  (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 body))
+-}
+
+  FFIMethod _ _ _ -> error "I should not be generating code for the builtins..."
+
+
+
+
+{-
+
+I am currently not adding all of the inherited methods.
+
+I need to do that.
+
+
+-}
+
+
+
+getMethods :: HashMap.Map String (Maybe String, ClassDef) -> String -> [Method]
+getMethods hierarchy className =
+ case HashMap.lookup className hierarchy of
+  Nothing -> error "getMethods error. No such class found."
+  Just (_, ClassDef classSignature (ClassBody constructor methods)) -> undefined
+
+
+
+
+{-returns pairs of methods, along with the name of the class that they derive from-}
+
+
+
+{- this code is terrible. -}
+
+
+
+
+{-We are assuming we can't have multiple methods with the same name.-}
+getMethodName' :: Method -> String
+getMethodName' method =
+ case method of
+  TypedMethod methodName _ _ _ -> methodName
+  InferredMethod methodName _ _ -> methodName
+  FFIMethod methodName _ _ -> methodName
+
+
+
+
+replaceThing :: (Method, String) -> [(Method, String)] -> [(Method, String)]
+replaceThing x [] = [x]
+replaceThing (method1,className1) ((method2,className2):ys) =
+ if (getMethodName' method1 == getMethodName' method2)
+  then
+   (method1, className1) : ys
+  else
+   (method2, className2) : (replaceThing (method1,className1) ys)
+
+
+{-can use where here-}
+
+
+
+
+
+
+
+{-I AM IGNORING CONSTRUCTORS CURRENTLY.-}
+
+
+            {-start with-}      {-overwrite with-}
+myConcat :: [(Method, String)] -> [(Method, String)] -> [(Method, String)]
+myConcat [] x = x
+myConcat x [] = x
+myConcat x (y:ys) = (myConcat (replaceThing y x) ys)
+
+
+
+{-should fold-}
+myConcatAll :: [[(Method,String)]] -> [(Method,String)]
+myConcatAll [] = error "wait, nothing in hierarchy? You should at least have one thing."
+myConcatAll [x] = x
+myConcatAll (x1:x2:xs) = myConcatAll ((myConcat x2 x1) : xs)
+
+
+foobar :: String -> [Method] ->[(Method, String)]
+foobar s m = map (\x -> (x,s)) m
+
+
+
+getWhateverFuckMyLife :: HashMap.Map String (Maybe String, ClassDef) -> String -> [(Method, String)]
+getWhateverFuckMyLife hierarchy className =
+ case HashMap.lookup className hierarchy of
+  Nothing -> error "I hate my life"
+  Just (_, ClassDef classSignature (ClassBody constructor methods)) -> foobar className methods
+
+
+getAllFuckery :: HashMap.Map String (Maybe String, ClassDef) -> [String] -> [[(Method, String)]]
+getAllFuckery hierarchy classNames = map (getWhateverFuckMyLife hierarchy) classNames
+
+
+
+getActualThing :: HashMap.Map String (Maybe String, ClassDef) -> String -> [(Method, String)]
+getActualThing hierarchy className =
+ let ancestry = getAncestry' className hierarchy in
+ let theFuck = getAllFuckery hierarchy ancestry in
+  myConcatAll theFuck
+
+
+{-also has all the original methods.-}
+
+
+{-YAYAYAYAY!!!!!!!-}
+{-I do not have constructors yet, but when I do, I will only want to add them for the original class, not for the inherited classes (can't call super) same holds for fields later...-}
+getInheritedMethods :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> [(Method, String)]
+getInheritedMethods hierarchy classMethodMap className = {- [] {-nothing for now...-}-}
+ getActualThing hierarchy className
+
+
+getClassDef :: HashMap.Map String (Maybe String, ClassDef) -> String -> ClassDef
+getClassDef hierarchy className = 
+ case HashMap.lookup className hierarchy of
+  Nothing -> error $ ("error : class def not found: " ++ className)
+  Just (_, classDef) -> classDef
+
+getConstructor :: HashMap.Map String (Maybe String, ClassDef) -> String -> ([(String,String)], [Statement])
+getConstructor hierarchy className =
+ let (ClassDef (ClassSignature _ classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
+ (classArguments, constructor)
+ 
+
+
+
+{-from stackoverflow, though pretty obvious.-}
+mkUniq :: Ord a => [a] -> [a]
+mkUniq = Set.toList . Set.fromList
+{-actually I probably won't use this....-}
+
+
+
+{-
+{-I also need to know the type, so better to grab out of identifer map...-}
+getConstructorDerivedFieldsSingleStatement :: Statement -> [String]
+getConstructorDerivedFieldsSingleStatement statement =
+ case statement of
+  ParserAssign lExpr _ _ -> 
+  _ -> []
+
+getConstructorDerivedFields :: [Statement] -> [String]
+getConstructorDerivedFields statements = mkUniq $ concat $ map getConstructorDerivedFieldsSingleStatement statements
+
+-}
+
+
+
+
+
+{- e.g. the following
+/* The Obj Class (a singleton) */
+struct  class_Obj_struct  the_class_Obj_struct = {
+  new_Obj,     /* Constructor */
+    Obj_method_STRING, 
+      Obj_method_PRINT, 
+        Obj_method_EQUALS
+        };
+-}
+
+
+
+generateCClassStructMethod :: (Method, String) -> Bool -> String
+generateCClassStructMethod (method, origin) addComma =
+ let methodName = getMethodName' method in
+ origin ++ "_method_" ++ methodName ++ (if addComma then "," else "") ++ "\n"
+
+
+generateCClassStructMethods :: [(Method,String)] -> String
+generateCClassStructMethods methods =
+ case methods of
+  [] -> ""
+  [x] -> generateCClassStructMethod x False
+  (x1:x2:xs) -> (generateCClassStructMethod x1 True) ++ (generateCClassStructMethods (x2:xs))
+
+
+{-
+
+class_Pt the_class_Pt = &the_class_Pt_struct; 
+
+-}
+
+
+generateCClassStruct :: (String , [(Method, String)]) -> String
+generateCClassStruct (className,methods) =
+ let header = "struct class_" ++ className ++ "_struct the_class_" ++ className ++ "_struct = {\n" in
+ let constructor = "new_" ++ className ++ ",\n" in
+ let methodStuff = generateCClassStructMethods methods in
+ let footer = "};\n" in
+ let cIsTerriblePartOneMillion = "class_" ++ className ++ " the_class_" ++ className ++ " = &the_class_" ++ className ++ "_struct;\n" in
+ header ++ constructor ++ methodStuff ++ footer ++ cIsTerriblePartOneMillion
+ 
+
+
+
+generateAllCClassStructs :: [(String, [(Method, String)])] -> String
+generateAllCClassStructs x = concat $ map generateCClassStruct x
+
+getClassName :: ClassDef -> String
+getClassName (ClassDef (ClassSignature className _ _) _) = className
+
+getAllClassNames :: [ClassDef] -> [String]
+getAllClassNames classes = map getClassName classes 
+
+
+
+
+{-
+
+
+  obj_String new_thing = (obj_String) malloc(sizeof(struct obj_String_struct));
+    new_thing->clazz = the_class_String;
+      return new_thing; 
+
+
+
+
+
+
+
+
+
+
+struct class_Int_struct;
+typedef struct class_Int_struct* class_Int; 
+
+typedef struct obj_Int_struct {
+  class_Int  clazz;
+    int value; 
+    } * obj_Int;
+
+struct class_Int_struct {
+  /* Method table: Inherited or overridden */
+    obj_Int (*constructor) ( void );
+      obj_String (*STRING) (obj_Int);  /* Overridden */
+        obj_Obj (*PRINT) (obj_Obj);      /* Inherited */
+          obj_Boolean (*EQUALS) (obj_Int, obj_Obj); /* Overridden */
+            obj_Boolean (*LESS) (obj_Int, obj_Int);   /* Introduced */
+              obj_Int (*PLUS) (obj_Int, obj_Int);       /* Introduced */
+              };
+
+extern class_Int the_class_Int; 
+
+
+
+-}
+
+
+
+
+
+{-
+
+getMethodSignatureBlah :: MethodType -> String
+getMethodSignatureBlah (MethodType methodName argumentTypes returnType) = 
+
+
+
+
+
+WORKING HERE
+
+
+
+
+-}
+
+
+{-
+
+getClassThing :: Maybe a -> a
+getClassThing Nothing = error "it's not there..."
+getClassThing (Just x) = x
+-}
+
+
+{-don't forget () should be ( void). the constructor is the only function with this possibility, as all other functions take the called Obj as an argument-}
+
+generateArgumentListFoo :: [String] -> String
+generateArgumentListFoo arguments =
+ case arguments of
+ [] -> "void"
+ [x] -> "obj_" ++ x
+ (x1:x2:xs) -> "obj_" ++ x1 ++ "," ++ (generateArgumentListFoo (x2:xs))
+
+
+generateMethodTypeSigThingSingle :: String -> MethodType -> String
+generateMethodTypeSigThingSingle className (MethodType methodName arguments returnType) =
+ "obj_" ++ returnType ++ " (*" ++ methodName ++ ") (" ++ (generateArgumentListFoo ((className):arguments)) ++ ");\n"
+
+generateMethodTypeSigThing :: String -> [MethodType] -> String
+generateMethodTypeSigThing className methodTypes = concat $ map (generateMethodTypeSigThingSingle className) methodTypes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+generateFinalBlah :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String, ([(String, String)], [Statement])) -> String
+generateFinalBlah = undefined
+
+
+
+
+{-I might not be properly forward declaring everything. Some cases with multiple classes will probably crash.-}
+
+
+
+
+
+
+marshalMethodToMethodType :: Method -> MethodType
+marshalMethodToMethodType method =
+ case method of
+ TypedMethod methodName arguments returnType statements -> MethodType methodName (map snd arguments) returnType
+ InferredMethod methodName arguments statements -> error "cannot marshal type of inferred method"
+ FFIMethod methodName arguments returnType -> MethodType methodName (map snd arguments) returnType
+
+
+
+
+
+generateFieldBlah :: (String, String) -> String
+generateFieldBlah (fieldName, fieldType) =
+ let actualFieldName = drop 9 fieldName in
+ let actualFieldType = "obj_" ++ fieldType in
+ actualFieldType ++ " " ++ actualFieldName ++ ";\n"
+
+
+{-doing this for builtins as well currently.-}
+generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> ([(String,String)],String)
+generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
+ 
+ {-let x = getMethodTypeList hierarchy className in-}
+ let z = getInheritedMethods hierarchy classMethodMap className in
+ let y = generateMethodTypeSigThing className (map marshalMethodToMethodType $ map fst z) in
+ 
+ let identifierMap = generateSubtypes hierarchy classMethodMap statements (HashMap.insert "this" className HashMap.empty) in
+ let (identifierTypeMap', counter', argumentListString) = generateArgumentThing HashMap.empty 1 arguments in
+ 
+ let argumentTypeList = generateArgumentThingJustType arguments in 
+ let h0 = "\n\n/// /// /// \n\nstruct class_" ++ className ++ "_struct  the_class_" ++ className ++ "_struct;\n" in
+ let h1 = "struct class_" ++ className ++ "_struct;\n" in
+ let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
+ let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
+ let h4 = "class_" ++ className ++ " clazz;\n" in
+{-
+whatAreTheThis
+-}
+ let zap = whatAreTheThis $ HashMap.toList $ identifierMap in
+ 
+ let h5 = concat $ map generateFieldBlah zap in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
+ let h6 = "} * obj_" ++ className ++ ";\n" in
+
+ let h = h1 ++ h2 ++ h3 ++ h4 ++ h5 ++ h6 ++ h0 in
+
+ let k1 = "struct class_" ++ className ++ "_struct {\n" in
+ let k2 = "obj_" ++ className ++ " (*constructor) ( " ++ argumentTypeList ++ ");\n" in
+ let k3 = y in {-THIS IS WHERE I PUT ALL OF THE METHOD SIGNATURES TODO TODO TODO TODO TODO TODO-}
+ let k4 = "};\n" in
+ let k5 = "extern class_"++className++" the_class_"++className++";\n" in
+
+ let k = k1 ++ k2 ++ k3 ++ k4 ++ k5 in
+
+ let header = "obj_" ++ className ++ " new_" ++ className ++ "(" ++ argumentListString ++ ") {\n" in
+ let secondHeader = "obj_" ++ className ++ " this = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
+                          "_struct));\nthis->clazz = the_class_" ++ className ++ ";\n" in
+ let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
+ let footer = "\nreturn this;\n}\n" in
+ (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
+
+
+myShowList :: Show a => [a] -> String
+myShowList [] = ""
+myShowList [a] = "\n\n" ++ (show a) ++ "\n\n"
+myShowList (x:xs) = (myShowList [x]) ++ (myShowList xs)
+
+{- do I need this? -}
+getClassMethodBelongsTo :: HashMap.Map String (Maybe String, ClassDef) -> String
+getClassMethodBelongsTo hierarchy = error $ show hierarchy                        
+
+
+generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (HashMap.Map String String , ClassDef) -> String
+generateClass hierarchy classMethodMap (identifierMap,classDef) =
+ let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructorStatements methods)) = classDef in
+  {-for now, don't do anything fancy. Just do the bodies of the methods...-}
+  concat $ map (generateMethod identifierMap hierarchy classMethodMap className) methods
+
+
+
+
+
+
+
+
+addThis :: String -> HashMap.Map String String -> HashMap.Map String String
+addThis className identifierMap = HashMap.insert "this" className identifierMap
+
+
+
+generateProgramC :: (Program, [ClassDef]) -> IO ()
+generateProgramC (program,classDefs) =
+ let (Program classes statements) = program in
+ case allMethodsWorkForProgram' program of {-switched left and right from convention-}
+  Left x ->
+   let classMethodMap = generateClassMethodMap x in
+   let hierarchy = buildHierarchyMap program in
+   let classNames = (getAllClassNames classDefs) ++ ["Obj", "Nothing", "String", "Int", "Boolean"] in
+   let userClassNames = (getAllClassNames classDefs) in
+   let allInheritedMethods = map (getInheritedMethods hierarchy classMethodMap) classNames in
+   let theFoo = zip userClassNames {-classNames-} allInheritedMethods in
+   let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
+   let ha = zip classNames (map (getConstructor hierarchy) userClassNames) in
+   let allConstructorDeclarations_ = map (generateConstructor hierarchy classMethodMap) ha in
+   let allConstructorDeclarations = concat $ map snd allConstructorDeclarations_ in
+   let allIdentifierThings = map fst allConstructorDeclarations_ in
+
+   let allIdentifierMaps = map HashMap.fromList allIdentifierThings in
+   let allIdentifierMaps' = zipWith addThis userClassNames allIdentifierMaps in
+   let arg = zip allIdentifierMaps' classDefs in
+   let classGeneration = concat $ map (generateClass hierarchy classMethodMap) arg in
+   let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
+   let (Program classDefs statements) = program in
+   let s = "\n////////////\n" in
+   
+  {- error allConstructorDeclarations-}
+   {-error allClassVTablesIsThatWhatThisIs-}
+
+   putStrLn $ ( allConstructorDeclarations
+                ++ s ++ s ++ s ++ s ++ s ++ s ++ s ++
+                classGeneration
+                ++ s ++
+                allClassVTablesIsThatWhatThisIs
+                ++ "\nvoid quackmain() {\n" ++
+                 (generateStatements' hierarchy classMethodMap HashMap.empty identifierMap 1 statements))
+ 
+  Right x -> error "type error"
+
+
+
+
+{-
+identifier type map in generate subtypes
+fix parser to allow this.method and not just this.field
+add all of the LExpr dot cases to code gen.
+undo that change to LExpr gen with the extra map.
+test code gen, etc.
+
+* Can prefix "this_dot_" in identifierMap (name -> type)
+
+* Do not need anything extra in identifier type map, I think.
+I think I likely do not need to add extra temporaries for the this. terms, as everything is already stored in the object.
+-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
