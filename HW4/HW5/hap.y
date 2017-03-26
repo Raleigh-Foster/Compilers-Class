@@ -1777,6 +1777,15 @@ marshalMethodToMethodType method =
 
 
 
+
+
+generateFieldBlah :: (String, String) -> String
+generateFieldBlah (fieldName, fieldType) =
+ let actualFieldName = drop 9 fieldName in
+ let actualFieldType = "obj_" ++ fieldType in
+ actualFieldType ++ " " ++ actualFieldName ++ ";\n"
+
+
 {-doing this for builtins as well currently.-}
 generateConstructor :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (String,([(String,String)], [Statement])) -> ([(String,String)],String)
 generateConstructor hierarchy classMethodMap (className, (arguments, statements)) =
@@ -1794,7 +1803,12 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let h2 = "typedef struct class_" ++ className ++ "_struct* class_" ++ className ++ ";\n" in
  let h3 = "typedef struct obj_" ++ className ++ "_struct {\n" in
  let h4 = "class_" ++ className ++ " clazz;\n" in
- let h5 = "" in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
+{-
+whatAreTheThis
+-}
+ let zap = whatAreTheThis $ HashMap.toList $ identifierMap in
+ 
+ let h5 = concat $ map generateFieldBlah zap in {- all fields go here. Not methods and not this. TODOTODO TODO TODO TODO-}
  let h6 = "} * obj_" ++ className ++ ";\n" in
 
  let h = h1 ++ h2 ++ h3 ++ h4 ++ h5 ++ h6 ++ h0 in
@@ -1813,7 +1827,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\nreturn new_thing;\n}\n" in
 
- trace ("IDENTIFIERMAP" ++ (show identifierMap)) (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
+ trace ("ZAAAAAAAAAAAAAAAAAAP" ++ (show zap)) (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
 
 
 myShowList :: Show a => [a] -> String
