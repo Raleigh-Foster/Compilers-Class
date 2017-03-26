@@ -31,13 +31,12 @@ class Color() {
   s = "calling color constructor";
   
   s.PRINT();
-  this.x = 6;
+  this.z = 6;
   d = "calling still";
   d.PRINT();
 
-  def getRedness() : Int{
-      
-      return 100;
+  def getRedness() : Int{  
+      return this.z;
 
     
 }

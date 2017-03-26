@@ -1,6 +1,6 @@
 {
 module Main where    
-
+import qualified Data.Set as Set
 import Tokens
 import qualified Data.Map.Strict as HashMap
 import Data.List
@@ -955,18 +955,20 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
 
 
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr fieldName lineNumber2) rExpr2 lineNumber3) currentIdentifierMap =
- let nameThing = thisDotFieldHack ++ fieldName in
+ error "YES I DO REACH THIS CASE!!!!!!!!!!!"
+ 
+ {-let nameThing = thisDotFieldHack ++ fieldName in
  let currentType = HashMap.lookup nameThing currentIdentifierMap in
   case currentType of
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
-    Just s -> (HashMap.insert nameThing s currentIdentifierMap, True)
-    Nothing -> (currentIdentifierMap, False)
+    Just s -> trace "FOO!" (HashMap.insert nameThing s currentIdentifierMap, True)
+    Nothing -> trace "FO!!!!!" (currentIdentifierMap, False)
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
     Just s ->
      let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in
-     (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
-    Nothing -> (currentIdentifierMap, False)
-
+     trace "SGJAKGJAGJAGJGJASD" (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
+    Nothing -> trace "FOFOFOFOFO" (currentIdentifierMap, False)
+-}
 
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
@@ -981,7 +983,7 @@ generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
  let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
   case wasUpdated of
    True -> generateSubtypes hierarchy classMethodMap statements newMap
-   False -> newMap
+   False -> trace ("RETURNING MAP FROM GENERATE SUBTYPES!!!" ++ (show newMap)) newMap
 
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
@@ -1393,6 +1395,11 @@ If they are not, it is nothing, but I still put it in an "InferredMethod" node. 
 -}
 
 
+doComma x =
+ case x of
+ [] -> ""
+ _ -> ","
+
 argumentsIdentifierMap :: [(String, String)] -> HashMap.Map String String
 argumentsIdentifierMap = HashMap.fromList  
 
@@ -1404,14 +1411,14 @@ generateMethod hierarchy classMethodMap className method =
    let identifierMap = (HashMap.insert "this" className identifierMap_) in
 
 {-NEED TO PUT THIS IN CONSTRUCTORS AS WELL, AND ALSO NEED TO PUT FIELDS IN THE METHOD CALLS GENERATION AND SUBTYPING... AND IN GENERATION FOR CONSTRUCTORS....-}
-
+{-IDENTIFIER TYPE MAP MIGHT ALSO NEED TO HAVE THIS ADDED.... NOT 100% SURE... -}
 
    let typelalala = HashMap.lookup (className, methodName) classMethodMap in
    let returnType = getReturnTypeBlarg typelalala in
    let counter = 1 in
    let identifierTypeMap = HashMap.empty in
    let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in
-   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(" ++ argumentListString ++ "){\n" in
+   let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(obj_" ++ className ++ " this " ++ (doComma arguments) ++ argumentListString ++ "){\n" in
        header ++  (generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' body) ++ "return nothing;\n}"
 
 {-I AM ASSUMING EVERY METHOD RETURNS!!!. (or rather, if it does not, return nothing, but return nothing at the end, anyway...)-}
@@ -1553,6 +1560,30 @@ getConstructor hierarchy className =
  let (ClassDef (ClassSignature _ classArguments parent) (ClassBody constructor methods)) = getClassDef hierarchy className in
  (classArguments, constructor)
  
+
+
+
+{-from stackoverflow, though pretty obvious.-}
+mkUniq :: Ord a => [a] -> [a]
+mkUniq = Set.toList . Set.fromList
+{-actually I probably won't use this....-}
+
+
+
+{-
+{-I also need to know the type, so better to grab out of identifer map...-}
+getConstructorDerivedFieldsSingleStatement :: Statement -> [String]
+getConstructorDerivedFieldsSingleStatement statement =
+ case statement of
+  ParserAssign lExpr _ _ -> 
+  _ -> []
+
+getConstructorDerivedFields :: [Statement] -> [String]
+getConstructorDerivedFields statements = mkUniq $ concat $ map getConstructorDerivedFieldsSingleStatement statements
+
+-}
+
+
 
 
 
@@ -1769,7 +1800,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
                           "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\n" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\nreturn new_thing;\n}\n" in
- h ++ k ++ header ++ secondHeader ++ body ++ footer
+ trace ("IDENTIFIERMAP" ++ (show identifierMap)) (h ++ k ++ header ++ secondHeader ++ body ++ footer)
 
 
 myShowList :: Show a => [a] -> String
