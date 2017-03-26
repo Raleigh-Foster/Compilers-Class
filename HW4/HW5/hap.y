@@ -1409,14 +1409,17 @@ doComma x =
  [] -> ""
  _ -> ","
 
+
+
+
 argumentsIdentifierMap :: [(String, String)] -> HashMap.Map String String
 argumentsIdentifierMap = HashMap.fromList  
 
-generateMethod :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> Method -> String
-generateMethod hierarchy classMethodMap className method =
+generateMethod :: HashMap.Map String String -> HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> String -> Method -> String
+generateMethod identifierMap__ hierarchy classMethodMap className method =
  case method of
   TypedMethod methodName arguments returnType body ->
-   let identifierMap_ = generateSubtypes hierarchy classMethodMap body (argumentsIdentifierMap arguments) in
+   let identifierMap_ = generateSubtypes hierarchy classMethodMap body (HashMap.union identifierMap__ $ argumentsIdentifierMap arguments) in
    let identifierMap = (HashMap.insert "this" className identifierMap_) in
 
 {-NEED TO PUT THIS IN CONSTRUCTORS AS WELL, AND ALSO NEED TO PUT FIELDS IN THE METHOD CALLS GENERATION AND SUBTYPING... AND IN GENERATION FOR CONSTRUCTORS....-}
@@ -1810,7 +1813,7 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
  let footer = "\nreturn new_thing;\n}\n" in
 
- trace ("IDENTIFIERMAP" ++ (show identifierMap)) (identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
+ trace ("IDENTIFIERMAP" ++ (show identifierMap)) (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
 
 
 myShowList :: Show a => [a] -> String
@@ -1823,11 +1826,11 @@ getClassMethodBelongsTo :: HashMap.Map String (Maybe String, ClassDef) -> String
 getClassMethodBelongsTo hierarchy = error $ show hierarchy                        
 
 
-generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> ClassDef-> String
-generateClass hierarchy classMethodMap classDef =
+generateClass :: HashMap.Map String (Maybe String, ClassDef) -> HashMap.Map (String, String) MethodType -> (HashMap.Map String String , ClassDef) -> String
+generateClass hierarchy classMethodMap (identifierMap,classDef) =
  let (ClassDef (ClassSignature className classArguments parent) (ClassBody constructorStatements methods)) = classDef in
   {-for now, don't do anything fancy. Just do the bodies of the methods...-}
-  concat $ map (generateMethod hierarchy classMethodMap className) methods
+  concat $ map (generateMethod identifierMap hierarchy classMethodMap className) methods
 
 
 
@@ -1835,6 +1838,9 @@ generateClass hierarchy classMethodMap classDef =
 
 
 
+
+addThis :: String -> HashMap.Map String String -> HashMap.Map String String
+addThis className identifierMap = HashMap.insert "this" className identifierMap
 
 
 
@@ -1851,8 +1857,14 @@ generateProgramC (program,classDefs) =
    let theFoo = zip userClassNames {-classNames-} allInheritedMethods in
    let allClassVTablesIsThatWhatThisIs = generateAllCClassStructs theFoo in
    let ha = zip classNames (map (getConstructor hierarchy) userClassNames) in
-   let allConstructorDeclarations = concat $ map (generateConstructor hierarchy classMethodMap) ha in
-   let classGeneration = concat $ map (generateClass hierarchy classMethodMap) classDefs in
+   let allConstructorDeclarations_ = map (generateConstructor hierarchy classMethodMap) ha in
+   let allConstructorDeclarations = concat $ map snd allConstructorDeclarations_ in
+   let allIdentifierThings = map fst allConstructorDeclarations_ in
+
+   let allIdentifierMaps = map HashMap.fromList allIdentifierThings in
+   let allIdentifierMaps' = zipWith addThis userClassNames allIdentifierMaps in
+   let arg = zip allIdentifierMaps' classDefs in
+   let classGeneration = concat $ map (generateClass hierarchy classMethodMap) arg in
    let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
    let (Program classDefs statements) = program in
    let s = "\n////////////\n" in
