@@ -1,6 +1,6 @@
 
 
-// Dynamic dispatch WORKS, and also handles the *this* reference correctly.
+// Dynamic dispatch WORKS(static type and dynamic type different), and also handles the *this* reference correctly.
 
 class Parent(){
   this.x = 10;

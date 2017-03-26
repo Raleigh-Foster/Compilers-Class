@@ -1,6 +1,10 @@
 
 
 
+// I show that short circuit evaluation works by evaluating side-effecting boolean expressions.
+// I evaluate both "and" and "or".
+
+
 class Foo (){
     
   def bar(x : Int) : Boolean{

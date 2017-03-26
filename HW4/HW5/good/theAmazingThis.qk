@@ -1,6 +1,11 @@
 
 
 
+// I'm really proud of this code. It worked the first time I tested it.
+// Remember when we talked about how you can have a function that returns a this pointer?
+// Well, this is that case. I correctly run that code, get the this pointer back, and perform the next reference.
+// the code that returns the this pointer is side-effecting, to show it actually works.
+
 class Foo(){
 
 

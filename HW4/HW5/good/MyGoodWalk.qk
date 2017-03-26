@@ -1,10 +1,23 @@
+
+
+
+
+
+
+
+
+
+
 /**
- * How should one perform type inference 
- * for variable x in this program? 
- *
- * Iterate to a fixed point (abstract interpretation)? 
- * Somehow short-circuit the walk up the type system? 
- * Impose some restriction that prevents this problem? 
+ * This was an old version of Good walk before
+   we decided what we were doing.
+
+   I had to change it a bit to get it to work, but I think that it needed to be changed.
+
+   I would have tested with the latest good walk but I couldn't find it.
+
+
+
  */
 
 class C1() {

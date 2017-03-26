@@ -1,5 +1,8 @@
 
 
+
+// factorial again, but implemented with method recursion
+
 class Foo(){
     
     

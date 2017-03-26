@@ -1,5 +1,7 @@
 
 
+// making sure that while loops can handle complex expressions in their condition (they can)
+
 x = 10;
 y = 1;
 while((x >= 1) and (x >= 0)){
