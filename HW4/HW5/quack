@@ -1,0 +1,7 @@
+./hap < $1 > myTerrible.c
+cat start.c myTerrible.c closingBrace > augmentedAwful.c
+
+gcc -g -O -c Builtins.c 2> donotcare
+gcc -w augmentedAwful.c Builtins.c -o $1.exe 2> donotcare2
+
+
