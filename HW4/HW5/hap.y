@@ -1785,8 +1785,8 @@ generateConstructor hierarchy classMethodMap (className, (arguments, statements)
  let z = getInheritedMethods hierarchy classMethodMap className in
  let y = generateMethodTypeSigThing className (map marshalMethodToMethodType $ map fst z) in
  
- let identifierMap = generateSubtypes hierarchy classMethodMap statements HashMap.empty in
- let (identifierTypeMap', counter', argumentListString) = generateArgumentThing (HashMap.empty) 1 arguments in
+ let identifierMap = generateSubtypes hierarchy classMethodMap statements (HashMap.insert "this" className HashMap.empty) in
+ let (identifierTypeMap', counter', argumentListString) = generateArgumentThing HashMap.empty 1 arguments in
  
  let argumentTypeList = generateArgumentThingJustType arguments in 
  let h0 = "\n\n/// /// /// \n\nstruct class_" ++ className ++ "_struct  the_class_" ++ className ++ "_struct;\n" in
