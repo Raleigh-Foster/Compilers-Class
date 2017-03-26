@@ -1822,10 +1822,10 @@ whatAreTheThis
  let k = k1 ++ k2 ++ k3 ++ k4 ++ k5 in
 
  let header = "obj_" ++ className ++ " new_" ++ className ++ "(" ++ argumentListString ++ ") {\n" in
- let secondHeader = "obj_" ++ className ++ " new_thing = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
-                          "_struct));\nnew_thing->clazz = the_class_" ++ className ++ ";\n" in
+ let secondHeader = "obj_" ++ className ++ " this = (obj_" ++ className ++ ") malloc(sizeof(struct obj_" ++className ++
+                          "_struct));\nthis->clazz = the_class_" ++ className ++ ";\n" in
  let body = generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' statements in
- let footer = "\nreturn new_thing;\n}\n" in
+ let footer = "\nreturn this;\n}\n" in
 
  trace ("ZAAAAAAAAAAAAAAAAAAP" ++ (show zap)) (whatAreTheThis $ HashMap.toList identifierMap, (h ++ k ++ header ++ secondHeader ++ body ++ footer))
 
