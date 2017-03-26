@@ -1269,7 +1269,7 @@ generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    let thisType = getThisType identifierMap in
    let (identifierTypeMap'', counter'', varName'') = pushVariable identifierTypeMap' counter' thisType in
    let code'' = "obj_" ++ thisType ++ " " ++ varName'' ++ " = this->" ++ fieldName ++ ";\n" in
-    (identifierTypeMap'', identifierMap, counter'', code'++code'', varName'', thisType)
+    (identifierTypeMap'', identifierMap, counter'', code'++code'', {-varName''-} "this->" ++ fieldName, thisType)
     
 {-wrong type as I care about the type of the field...  eventually I will have that in my identifierMap....-}
 
