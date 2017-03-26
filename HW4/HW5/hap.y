@@ -1325,13 +1325,13 @@ generateStatement hierarchy classMethodMap identifierTypeMap identifierMap argCo
    let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
-    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ varName' ++ "){\n" ++ code'' ++ "}" ++ code''', varName', varType') {-name and type dummy values...-}
+    (identifierTypeMap''',identifierMap''',argCounter''',code' ++ "if(" ++ varName' ++ " == lit_true){\n" ++ code'' ++ "}" ++ code''', varName', varType') {-name and type dummy values...-}
   ParserIfWithElse rExpr statements elifs elseStatements _ -> 
    let (identifierTypeMap', identifierMap', argCounter', code', varName', varType') = generateRExpr rExpr hierarchy classMethodMap identifierTypeMap identifierMap argCounter in
    let (identifierTypeMap'', identifierMap'', argCounter'', code'') = generateStatements hierarchy classMethodMap identifierTypeMap' identifierMap' argCounter' statements in
    let (identifierTypeMap''', identifierMap''', argCounter''', code''') = generateElifs hierarchy classMethodMap identifierTypeMap'' identifierMap'' argCounter'' elifs in
    let (identifierTypeMap'''', identifierMap'''', argCounter'''', code'''') = generateStatements hierarchy classMethodMap identifierTypeMap''' identifierMap''' argCounter''' elseStatements in
-        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ varName' ++ ")\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n"
+        (identifierTypeMap'''',identifierMap'''',argCounter'''',code' ++ "if(" ++ varName' ++ " == lit_true)\n{" ++ code'' ++ "}" ++ code''' ++ "else {\n" ++ code'''' ++ "\n}\n"
         , varName', varType') {-name and type dummy values-}
 
 
