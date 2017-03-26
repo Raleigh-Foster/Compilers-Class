@@ -1101,7 +1101,7 @@ getMethodType :: String -> String -> HashMap.Map (String, String) MethodType -> 
 getMethodType classType methodName classMethodMap =
  case HashMap.lookup (classType, methodName) classMethodMap of
   Just methodType -> methodType
-  Nothing -> error $ "class method not found!" ++ (show classMethodMap) ++ (classType) ++ (methodName)
+  Nothing -> error $ "class method not found!" ++ (show classMethodMap) ++ "\n" ++ (classType) ++ "\n" ++ (methodName)
 
 
 
@@ -1269,7 +1269,7 @@ generateLExpr lExpr hierarchy classMethodMap identifierTypeMap identifierMap arg
    let thisType = getThisType identifierMap in
    let (identifierTypeMap'', counter'', varName'') = pushVariable identifierTypeMap' counter' thisType in
    let code'' = "obj_" ++ thisType ++ " " ++ varName'' ++ " = this->" ++ fieldName ++ ";\n" in
-    (identifierTypeMap'', identifierMap, counter'', code'++code'', {-varName''-} "this->" ++ fieldName, thisType)
+    trace ("LEXPR!!!" ++ (show $ LExprDotted rExpr fieldName 10000)) (identifierTypeMap'', identifierMap, counter'', code'++code'', {-varName''-} "this->" ++ fieldName, thisType)
     
 {-wrong type as I care about the type of the field...  eventually I will have that in my identifierMap....-}
 
@@ -1428,7 +1428,7 @@ generateMethod identifierMap__ hierarchy classMethodMap className method =
    let typelalala = HashMap.lookup (className, methodName) classMethodMap in
    let returnType = getReturnTypeBlarg typelalala in
    let counter = 1 in
-   let identifierTypeMap = HashMap.empty in
+   let identifierTypeMap = (HashMap.insert "this" ("this","obj_" ++ className) HashMap.empty) in
    let (identifierTypeMap', counter', argumentListString) = generateArgumentThing identifierTypeMap counter arguments in
    let header = "obj_" ++ returnType ++ " " ++ className ++ "_method_" ++ methodName ++ "(obj_" ++ className ++ " this " ++ (doComma arguments) ++ argumentListString ++ "){\n" in
        header ++  (generateStatements' hierarchy classMethodMap identifierTypeMap' identifierMap counter' body) ++ "return nothing;\n}"

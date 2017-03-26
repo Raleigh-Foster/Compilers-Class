@@ -34,9 +34,12 @@ class Color() {
   this.z = 6;
   d = "calling still";
   d.PRINT();
-
+  def well() : Int{
+   return 10;    
+      
+  }
   def getRedness() : Int{  
-      return this.z;
+      return this.well();
 
     
 }
