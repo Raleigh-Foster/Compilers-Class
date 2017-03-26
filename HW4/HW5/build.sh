@@ -1,6 +1,6 @@
 happy hap.y -o hap.hs
 ghc hap.hs -o hap
-./hap < final3.qk > myTerrible.c
+./hap < $1 > myTerrible.c
 
 cat start.c myTerrible.c closingBrace > augmentedAwful.c
 
