@@ -955,20 +955,18 @@ updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprId id
 
 
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserAssign (LExprDotted rExpr fieldName lineNumber2) rExpr2 lineNumber3) currentIdentifierMap =
- error "YES I DO REACH THIS CASE!!!!!!!!!!!"
- 
- {-let nameThing = thisDotFieldHack ++ fieldName in
+ let nameThing = thisDotFieldHack ++ fieldName in
  let currentType = HashMap.lookup nameThing currentIdentifierMap in
   case currentType of
    Nothing -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
-    Just s -> trace "FOO!" (HashMap.insert nameThing s currentIdentifierMap, True)
-    Nothing -> trace "FO!!!!!" (currentIdentifierMap, False)
+    Just s -> (HashMap.insert nameThing s currentIdentifierMap, True)
+    Nothing -> (currentIdentifierMap, False)
    Just currentType' -> case getTypeRExpr hierarchy classMethodMap currentIdentifierMap rExpr2 of
     Just s ->
      let unifiedTypes = getCommonAncestorFromMap hierarchy s currentType' in
-     trace "SGJAKGJAGJAGJGJASD" (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
-    Nothing -> trace "FOFOFOFOFO" (currentIdentifierMap, False)
--}
+     (HashMap.insert nameThing unifiedTypes currentIdentifierMap, if unifiedTypes == currentType' then False else True)
+    Nothing -> (currentIdentifierMap, False)
+
 
 updateSubtypesSingleStatement hierarchy classMethodMap (ParserBareExpression rexpr lineNumber) currentIdentifierMap = (currentIdentifierMap, False)
 
@@ -983,7 +981,18 @@ generateSubtypes hierarchy classMethodMap statements currentIdentifierMap =
  let (newMap,wasUpdated) = generateSubtypes' hierarchy classMethodMap statements currentIdentifierMap in
   case wasUpdated of
    True -> generateSubtypes hierarchy classMethodMap statements newMap
-   False -> trace ("RETURNING MAP FROM GENERATE SUBTYPES!!!" ++ (show newMap)) newMap
+   False -> trace ("RETURNING MAP FROM GENERATE SUBTYPES!!!" ++ (show $ whatAreTheThis $ HashMap.toList newMap)) newMap
+
+
+
+keepThisOrNot :: (String,String) -> [(String,String)]
+keepThisOrNot (varName, varType) =
+ if (take 9 varName == "this_dot_") then [({-drop 9 -}varName, varType)] else []
+
+
+whatAreTheThis :: [(String,String)] -> [(String,String)]
+whatAreTheThis identifierMap = concat $ map keepThisOrNot identifierMap
+
 
 
 makeSureBooleanL :: HashMap.Map (String,String) MethodType -> HashMap.Map String String -> LExpr -> Bool
