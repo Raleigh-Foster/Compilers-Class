@@ -1,0 +1,42 @@
+
+
+
+class Foo (){
+    
+  def bar(x : Int) : Boolean{
+     s = """in bar!\nx is: """;
+     s.PRINT();
+     x.PRINT();
+     s = """\n""";
+     s.PRINT();
+     return (x > 5);     
+  }
+
+}
+
+z = """\n\n---------\n\n""";
+
+a = Foo().bar(10) or Foo().bar(2);
+
+a.PRINT();
+
+z.PRINT();
+
+b = Foo().bar(2) or Foo().bar(10);
+
+b.PRINT();
+
+z.PRINT();
+
+c = Foo().bar(10) and Foo().bar(2);
+
+c.PRINT();
+
+z.PRINT();
+
+d = Foo().bar(2) and Foo().bar(10);
+
+d.PRINT();
+
+
+z.PRINT();

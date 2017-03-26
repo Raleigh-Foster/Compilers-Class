@@ -1,0 +1,25 @@
+
+
+class Foo(){
+    
+    
+
+  def factorial(x : Int) : Int{
+   if(x < 2){ // == is only partially implemented.
+    return x; // I hate nonterminating code..    
+   }
+   else{
+    return x * this.factorial(x-1);
+   }
+
+
+  }
+    
+    
+}
+
+
+
+
+
+Foo().factorial(10).PRINT();
